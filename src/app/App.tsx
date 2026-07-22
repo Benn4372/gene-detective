@@ -7,7 +7,6 @@ import { OrdersPanel } from '../ui/orders/OrdersPanel'
 import { BreedingRoom } from '../ui/breeding/BreedingRoom'
 import { ShopPanel } from '../ui/shop/ShopPanel'
 import { LabPanel } from '../ui/lab/LabPanel'
-import { Celebration } from '../ui/shared/Celebration'
 import { useGameStore } from '../state/gameStore'
 import { orderTemplateById } from '../content'
 
@@ -22,14 +21,13 @@ export default function App() {
   const completedLessons = useGameStore(s => s.completedLessons)
   const currentLessonId = useGameStore(s => s.currentLessonId)
   const startLesson = useGameStore(s => s.startLesson)
+  const setCurrentLesson = useGameStore(s => s.setCurrentLesson)
   const activeLabOrderId = useGameStore(s => s.activeLabOrderId)
   const closeLab = useGameStore(s => s.closeLab)
-  const justCompletedLessonId = useGameStore(s => s.justCompletedLessonId)
-  const clearJustCompleted = useGameStore(s => s.clearJustCompleted)
 
-  // Auto-open Orders on load when there's an unfinished lesson available.
+  // Auto-open Orders on first-ever load when there's an unfinished lesson.
   // Guarded by `hasAutoOpened` in the store so strict-mode remounts and HMR
-  // don't repeatedly yank the player back into a modal.
+  // don't keep opening the panel after the player closed it.
   useEffect(() => {
     if (hasAutoOpened) return
     const availableLesson = unlockedLessons.find(
@@ -45,7 +43,15 @@ export default function App() {
 
   const showLab = activeLabOrderId !== null
   const activeLab = showLab ? orderTemplateById[activeLabOrderId] : null
-  const suppress = !!justCompletedLessonId
+
+  // Closing the Orders modal also finalizes any completed-but-lingering lesson
+  // (promotes starters to the village, discards scratch offspring).
+  const closeOrders = () => {
+    if (currentLessonId && completedLessons.includes(currentLessonId)) {
+      setCurrentLesson(null)
+    }
+    setActiveModal(null)
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -54,8 +60,8 @@ export default function App() {
       <NavBar active={activeModal} onOpen={setActiveModal} />
 
       <Modal
-        open={activeModal === 'orders' && !showLab && !suppress}
-        onClose={() => setActiveModal(null)}
+        open={activeModal === 'orders' && !showLab}
+        onClose={closeOrders}
         title="Orders & Lessons"
         icon="📋"
         wide
@@ -64,7 +70,7 @@ export default function App() {
       </Modal>
 
       <Modal
-        open={showLab && !suppress}
+        open={showLab}
         onClose={closeLab}
         title={activeLab ? `Lab · ${activeLab.flavorText.slice(0, 60)}` : 'Lab'}
         icon="🔬"
@@ -74,7 +80,7 @@ export default function App() {
       </Modal>
 
       <Modal
-        open={activeModal === 'breed' && !showLab && !suppress}
+        open={activeModal === 'breed' && !showLab}
         onClose={() => setActiveModal(null)}
         title="Breeding Room"
         icon="❤️"
@@ -83,18 +89,13 @@ export default function App() {
       </Modal>
 
       <Modal
-        open={activeModal === 'shop' && !showLab && !suppress}
+        open={activeModal === 'shop' && !showLab}
         onClose={() => setActiveModal(null)}
         title="Shop"
         icon="🛒"
       >
         <ShopPanel />
       </Modal>
-
-      <Celebration
-        lessonId={justCompletedLessonId}
-        onDismiss={clearJustCompleted}
-      />
     </div>
   )
 }

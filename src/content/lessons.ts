@@ -62,6 +62,7 @@ Your job: figure out what the invisible alleles are inside these two blobs. You 
       characters: ['dr-mendel'],
     },
     gateOrderIds: ['order-mendel-1', 'order-mendel-2'],
+    awardsStarterBlobs: true,
   },
   {
     id: 'lesson-2',

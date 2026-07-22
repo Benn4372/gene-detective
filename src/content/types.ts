@@ -47,6 +47,10 @@ export interface Lesson {
   // Orders that must be completed after this lesson before the NEXT lesson
   // unlocks. Empty array means the next lesson unlocks immediately.
   gateOrderIds: string[]
+  // If true, the two starter creatures are promoted to the player's village
+  // when the lesson completes. Otherwise the whole lesson pool is discarded on
+  // exit — only Lesson 1 is intended to seed the village.
+  awardsStarterBlobs?: boolean
 }
 
 export interface Character {

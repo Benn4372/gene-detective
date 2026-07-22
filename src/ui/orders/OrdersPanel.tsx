@@ -12,8 +12,10 @@ export function OrdersPanel() {
   const completedOrders = useGameStore(s => s.completedOrders)
   const openLab = useGameStore(s => s.openLab)
 
-  // If a lesson is in progress, the runner takes over the whole panel.
-  if (currentLessonId && !completedLessons.includes(currentLessonId)) {
+  // Runner takes over the whole panel as long as a lesson is active — even
+  // after it's been completed, so the player can keep reading the glossary
+  // and dismiss on their own terms.
+  if (currentLessonId) {
     return <LessonRunner />
   }
 

@@ -4,10 +4,11 @@ import { useGameStore, useLabCreatures } from '../../state/gameStore'
 import { orderTemplateById, characterById, blobSpecies } from '../../content'
 import { computePhenotype } from '../../engine/phenotype'
 import { Notecard } from './Notecard'
+import { PhenotypeTally } from '../shared/PhenotypeTally'
+import { Modal } from '../shared/Modal'
+import { BlobRenderer, SexBadge } from '../../renderer/BlobRenderer'
+import type { Creature } from '../../engine/types'
 
-// Self-contained puzzle for a single order. Player starts with two unknown
-// "sample" blobs, breeds them one at a time, and tries to produce a blob
-// matching the target phenotype — with only their own notes to help.
 export function LabPanel() {
   const activeLabOrderId = useGameStore(s => s.activeLabOrderId)
   const labCreatures = useLabCreatures(activeLabOrderId)
@@ -16,18 +17,20 @@ export function LabPanel() {
   const closeLab = useGameStore(s => s.closeLab)
   const [selectedM, setSelectedM] = useState<string | null>(null)
   const [selectedF, setSelectedF] = useState<string | null>(null)
-  const [banner, setBanner] = useState<string | null>(null)
+  const [deliverOpen, setDeliverOpen] = useState(false)
 
   const order = activeLabOrderId ? orderTemplateById[activeLabOrderId] : null
   const character = order ? characterById[order.characterId] : null
 
-  // Reset selection when order changes.
   useEffect(() => {
     setSelectedM(null)
     setSelectedF(null)
-    setBanner(null)
+    setDeliverOpen(false)
   }, [activeLabOrderId])
 
+  // Starters have no parentIds — everything else is a bred offspring.
+  const starters = useMemo(() => labCreatures.filter(c => !c.parentIds), [labCreatures])
+  const offspring = useMemo(() => labCreatures.filter(c => c.parentIds), [labCreatures])
   const females = useMemo(() => labCreatures.filter(c => c.sex === 'F'), [labCreatures])
   const males = useMemo(() => labCreatures.filter(c => c.sex === 'M'), [labCreatures])
 
@@ -35,23 +38,22 @@ export function LabPanel() {
   const handleBreed = () => {
     if (!selectedM || !selectedF) return
     breed(selectedF, selectedM, 1)
-    setBanner('New offspring below — check its phenotype.')
-    setTimeout(() => setBanner(null), 3000)
   }
 
   if (!order || !character) {
     return <div className="text-slate-500 italic">No lab open.</div>
   }
 
-  // A blob is "deliverable" if its phenotype matches every required trait.
-  const isDeliverable = (creatureId: string) => {
-    const c = labCreatures.find(x => x.id === creatureId)
-    if (!c) return false
+  // A blob is deliverable if:
+  //   (1) it's a bred offspring (never one of the starter samples), AND
+  //   (2) its phenotype matches every required trait.
+  const isDeliverable = (c: Creature) => {
+    if (!c.parentIds) return false
     const phen = computePhenotype(c, blobSpecies)
-    return Object.entries(order.requiredPhenotype).every(
-      ([t, v]) => phen[t] === v,
-    )
+    return Object.entries(order.requiredPhenotype).every(([t, v]) => phen[t] === v)
   }
+
+  const deliverable = offspring.filter(isDeliverable)
 
   const targetText = Object.entries(order.requiredPhenotype)
     .map(([t, v]) => `${t}=${v}`)
@@ -71,9 +73,7 @@ export function LabPanel() {
             </div>
           </div>
         </div>
-        <div className="text-sm text-slate-700 italic">
-          "{character.voice.orderIntro}"
-        </div>
+        <div className="text-sm text-slate-700 italic">"{character.voice.orderIntro}"</div>
         <div className="text-sm text-slate-700 mt-1">{order.flavorText}</div>
       </div>
 
@@ -81,21 +81,9 @@ export function LabPanel() {
         <strong>Lab rules:</strong> two unknown blobs are on the bench. Their
         genotypes are a mystery — you'll have to figure them out on your own,
         with no validation. Breed to test hypotheses, fill in the notecards, and
-        deliver a blob that matches the target.
+        deliver a bred offspring that matches the target. The two starter
+        samples themselves can never be delivered — they belong to the lab.
       </div>
-
-      <AnimatePresence>
-        {banner && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="mb-4 p-3 rounded bg-green-50 border border-green-200 text-sm text-green-800"
-          >
-            {banner}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <div className="grid grid-cols-2 gap-6 mb-6">
         <div>
@@ -107,26 +95,13 @@ export function LabPanel() {
           ) : (
             <div className="space-y-3">
               {females.map(c => (
-                <div key={c.id} className="flex items-start gap-2">
-                  <div className="flex-1">
-                    <Notecard
-                      creature={c}
-                      visibleGeneIds={order.visibleGeneIds}
-                      selected={selectedF === c.id}
-                      onSelect={() => setSelectedF(c.id)}
-                    />
-                  </div>
-                  {isDeliverable(c.id) && (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => fulfillOrder(order.id, c.id)}
-                      className="px-3 py-2 bg-green-600 text-white text-xs rounded hover:bg-green-700 whitespace-nowrap"
-                    >
-                      Deliver ✓
-                    </motion.button>
-                  )}
-                </div>
+                <Notecard
+                  key={c.id}
+                  creature={c}
+                  visibleGeneIds={order.visibleGeneIds}
+                  selected={selectedF === c.id}
+                  onSelect={() => setSelectedF(c.id)}
+                />
               ))}
             </div>
           )}
@@ -140,33 +115,30 @@ export function LabPanel() {
           ) : (
             <div className="space-y-3">
               {males.map(c => (
-                <div key={c.id} className="flex items-start gap-2">
-                  <div className="flex-1">
-                    <Notecard
-                      creature={c}
-                      visibleGeneIds={order.visibleGeneIds}
-                      selected={selectedM === c.id}
-                      onSelect={() => setSelectedM(c.id)}
-                    />
-                  </div>
-                  {isDeliverable(c.id) && (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => fulfillOrder(order.id, c.id)}
-                      className="px-3 py-2 bg-green-600 text-white text-xs rounded hover:bg-green-700 whitespace-nowrap"
-                    >
-                      Deliver ✓
-                    </motion.button>
-                  )}
-                </div>
+                <Notecard
+                  key={c.id}
+                  creature={c}
+                  visibleGeneIds={order.visibleGeneIds}
+                  selected={selectedM === c.id}
+                  onSelect={() => setSelectedM(c.id)}
+                />
               ))}
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      {offspring.length > 0 && (
+        <div className="mb-6">
+          <PhenotypeTally
+            offspring={offspring}
+            visibleTraitIds={order.visibleGeneIds}
+            label={`Running totals across ${offspring.length} bred offspring`}
+          />
+        </div>
+      )}
+
+      <div className="flex items-center justify-between gap-3">
         <motion.button
           whileHover={{ scale: canBreed ? 1.03 : 1 }}
           whileTap={{ scale: canBreed ? 0.97 : 1 }}
@@ -181,13 +153,112 @@ export function LabPanel() {
         >
           ❤️ Cross selected pair (1 offspring)
         </motion.button>
-        <button
-          onClick={closeLab}
-          className="text-sm text-slate-500 hover:text-slate-700"
-        >
-          Pause and return to orders →
-        </button>
+
+        <div className="flex items-center gap-3">
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setDeliverOpen(true)}
+            className="px-6 py-3 rounded-lg font-medium shadow-sm bg-green-600 text-white hover:bg-green-700"
+          >
+            📦 Deliver a blob…
+          </motion.button>
+          <button
+            onClick={closeLab}
+            className="text-sm text-slate-500 hover:text-slate-700"
+          >
+            Pause and leave lab
+          </button>
+        </div>
       </div>
+
+      <DeliverPicker
+        open={deliverOpen}
+        onClose={() => setDeliverOpen(false)}
+        deliverable={deliverable}
+        offspringCount={offspring.length}
+        starterCount={starters.length}
+        targetText={targetText}
+        visibleGeneIds={order.visibleGeneIds}
+        onDeliver={id => {
+          const ok = fulfillOrder(order.id, id)
+          if (ok) setDeliverOpen(false)
+        }}
+      />
     </div>
+  )
+}
+
+interface DeliverProps {
+  open: boolean
+  onClose(): void
+  deliverable: Creature[]
+  offspringCount: number
+  starterCount: number
+  targetText: string
+  visibleGeneIds: string[]
+  onDeliver(id: string): void
+}
+
+function DeliverPicker({
+  open,
+  onClose,
+  deliverable,
+  offspringCount,
+  starterCount,
+  targetText,
+  visibleGeneIds,
+  onDeliver,
+}: DeliverProps) {
+  return (
+    <Modal open={open} onClose={onClose} title="Deliver a blob" icon="📦">
+      <div className="mb-3 text-sm text-slate-600">
+        Only bred offspring can be delivered — the {starterCount} starter
+        samples belong to the lab and never leave.
+      </div>
+      <div className="mb-4 text-sm">
+        <strong>Target phenotype:</strong>{' '}
+        <span className="font-mono">{targetText}</span>
+      </div>
+      {deliverable.length === 0 ? (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded text-sm text-slate-700">
+          {offspringCount === 0
+            ? 'No offspring bred yet. Cross the sample pair to produce your first offspring.'
+            : `None of your ${offspringCount} bred offspring match the target yet. Keep crossing.`}
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-3">
+          <AnimatePresence>
+            {deliverable.map(c => {
+              const phen = computePhenotype(c, blobSpecies)
+              return (
+                <motion.div
+                  key={c.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="rounded-lg border-2 border-green-300 bg-green-50 p-3 flex flex-col items-center"
+                >
+                  <BlobRenderer creature={c} species={blobSpecies} size={72} />
+                  <div className="flex items-center gap-1 text-xs mt-2 text-slate-700">
+                    <SexBadge sex={c.sex} />
+                    <span className="font-mono">
+                      {visibleGeneIds.map(t => phen[t]).join(' · ')}
+                    </span>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => onDeliver(c.id)}
+                    className="mt-3 w-full px-3 py-2 bg-green-600 text-white text-sm rounded font-medium hover:bg-green-700"
+                  >
+                    Deliver this one ✓
+                  </motion.button>
+                </motion.div>
+              )
+            })}
+          </AnimatePresence>
+        </div>
+      )}
+    </Modal>
   )
 }

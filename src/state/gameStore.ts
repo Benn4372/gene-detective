@@ -156,6 +156,13 @@ export const useGameStore = create<GameState & GameActions>()(
       },
 
       setCurrentLesson(lessonId) {
+        const prev = get().currentLessonId
+        if (prev && prev !== lessonId) {
+          // Leaving a lesson — run cleanup (promotes starters if this lesson
+          // awardsStarterBlobs; discards everything otherwise, but only if the
+          // lesson was completed).
+          finishLessonInternal(prev, set, get)
+        }
         set({ currentLessonId: lessonId, breedsSinceLastNotebookProgress: 0 })
       },
 
@@ -451,6 +458,10 @@ export const useGameStore = create<GameState & GameActions>()(
 // -- lesson-completion logic (kept outside the action object so setHypothesis
 //    can call it without going through the action lookup) ------------------
 
+// Mark the lesson complete: unlock rewards, note completion. Do NOT touch
+// currentLessonId or activeModal — the runner stays open so the player can
+// keep reading. Creature cleanup happens later in finishLessonInternal when
+// the player leaves the runner.
 function completeCurrentLessonInternal(
   set: (partial: Partial<GameState>) => void,
   get: () => GameState & GameActions,
@@ -462,32 +473,11 @@ function completeCurrentLessonInternal(
   const lesson = lessonById[lessonId]
   if (!lesson) return
 
-  const assignments = state.lessonCreatures[lessonId]
-  const keepIds = assignments
-    ? new Set([assignments.motherId, assignments.fatherId])
-    : new Set<string>()
-
-  const nextCreatures: Record<string, Creature> = {}
-  for (const [id, c] of Object.entries(state.creatures)) {
-    const belongsToThisLesson = isLessonScope(c.scope, lessonId)
-    if (belongsToThisLesson) {
-      if (keepIds.has(id)) nextCreatures[id] = { ...c, scope: 'village' }
-      // else: scratch offspring — dropped
-    } else {
-      nextCreatures[id] = c
-    }
-  }
-
-  const nextHistory = state.crossHistory.filter(
-    r => nextCreatures[r.motherId] && nextCreatures[r.fatherId],
-  )
-
   const nextCompletedLessons = [...state.completedLessons, lessonId]
   const nextUnlockedLessons = recomputeUnlockedLessons(
     nextCompletedLessons,
     state.completedOrders,
   )
-
   const newChars = Array.from(new Set([
     ...state.unlockedCharacters,
     ...(lesson.unlocks.characters ?? []),
@@ -498,15 +488,56 @@ function completeCurrentLessonInternal(
   ]))
 
   set({
-    creatures: nextCreatures,
-    crossHistory: nextHistory,
     completedLessons: nextCompletedLessons,
     unlockedLessons: nextUnlockedLessons,
     unlockedCharacters: newChars,
     unlockedTraits: newTraits,
     justCompletedLessonId: lessonId,
-    currentLessonId: null,
-    activeModal: null, // force every modal closed so village is visible
+  })
+}
+
+// Called when the player leaves an active lesson (Return-to-orders / X close).
+// If the lesson was completed:
+//   - and lesson.awardsStarterBlobs → promote the two starters to the village,
+//     discard other lesson-scoped offspring for this lesson.
+//   - otherwise → discard the whole lesson pool.
+// If the lesson was NOT completed, keep the pool intact so the player can
+// resume where they left off.
+function finishLessonInternal(
+  lessonId: string,
+  set: (partial: Partial<GameState>) => void,
+  get: () => GameState & GameActions,
+): void {
+  const state = get()
+  const lesson = lessonById[lessonId]
+  if (!lesson) return
+  const wasCompleted = state.completedLessons.includes(lessonId)
+  if (!wasCompleted) return
+
+  const assignments = state.lessonCreatures[lessonId]
+  const keepIds = new Set<string>()
+  if (lesson.awardsStarterBlobs && assignments) {
+    keepIds.add(assignments.motherId)
+    keepIds.add(assignments.fatherId)
+  }
+
+  const nextCreatures: Record<string, Creature> = {}
+  for (const [id, c] of Object.entries(state.creatures)) {
+    if (isLessonScope(c.scope, lessonId)) {
+      if (keepIds.has(id)) nextCreatures[id] = { ...c, scope: 'village' }
+    } else {
+      nextCreatures[id] = c
+    }
+  }
+  const nextHistory = state.crossHistory.filter(
+    r => nextCreatures[r.motherId] && nextCreatures[r.fatherId],
+  )
+  const { [lessonId]: _drop, ...remainingLessonCreatures } = state.lessonCreatures
+  set({
+    creatures: nextCreatures,
+    crossHistory: nextHistory,
+    lessonCreatures: remainingLessonCreatures,
+    justCompletedLessonId: null,
   })
 }
 
