@@ -1,6 +1,7 @@
+import { useMemo } from 'react'
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { Creature } from '../engine/types'
+import type { Creature, CreatureScope } from '../engine/types'
 import { cross as engineCross } from '../engine/cross'
 import { makeRandom } from '../engine/random'
 import { computePhenotype } from '../engine/phenotype'
@@ -56,6 +57,18 @@ interface GameActions {
   reset(): void
 }
 
+// Small helpers for the scope tag.
+function lessonScope(lessonId: string): CreatureScope {
+  return { kind: 'lesson', lessonId }
+}
+function isLessonScope(scope: CreatureScope, lessonId?: string): boolean {
+  if (typeof scope === 'string') return false
+  return lessonId ? scope.lessonId === lessonId : true
+}
+function isVillageScope(scope: CreatureScope): boolean {
+  return scope === 'village'
+}
+
 export const useGameStore = create<GameState & GameActions>()(
   persist(
     (set, get) => ({
@@ -64,13 +77,11 @@ export const useGameStore = create<GameState & GameActions>()(
       startLesson(lessonId) {
         const lesson = lessonById[lessonId]
         if (!lesson) return
-        // If we've already set up creatures for this lesson, just reactivate.
         const existing = get().lessonCreatures[lessonId]
         if (existing) {
           set({ currentLessonId: lessonId, breedsSinceLastNotebookProgress: 0 })
           return
         }
-        // Otherwise create the starter creatures.
         const newCreatures: Record<string, Creature> = {}
         let motherId = ''
         let fatherId = ''
@@ -83,6 +94,7 @@ export const useGameStore = create<GameState & GameActions>()(
             sex: starter.sex,
             genotype: starter.genotype,
             age: 1,
+            scope: lessonScope(lessonId),
           }
           newCreatures[id] = creature
           if (starter.role === 'mother') motherId = id
@@ -110,12 +122,24 @@ export const useGameStore = create<GameState & GameActions>()(
         if (!mom || !dad) return null
         if (mom.sex === dad.sex) return null
 
-        // Enforce storage cap; if full, refuse and let UI show a message.
-        const currentSize = Object.keys(state.creatures).length
         const lesson = state.currentLessonId ? lessonById[state.currentLessonId] : null
         const requestedLitter = litterSize ?? lesson?.litterSize ?? 6
-        if (currentSize + requestedLitter > state.stableCap) {
-          return null
+
+        // Determine offspring scope. If either parent is lesson-scoped, offspring
+        // inherit that lesson's scope (scratch). Village breeding produces
+        // village-scoped offspring.
+        const parentLessonScope =
+          !isVillageScope(mom.scope) ? mom.scope
+          : !isVillageScope(dad.scope) ? dad.scope
+          : null
+        const offspringScope: CreatureScope = parentLessonScope ?? 'village'
+
+        // Only village creatures count against the stable cap. Lesson scratch is free.
+        if (offspringScope === 'village') {
+          const villageSize = Object.values(state.creatures).filter(
+            c => isVillageScope(c.scope),
+          ).length
+          if (villageSize + requestedLitter > state.stableCap) return null
         }
 
         const rng = makeRandom()
@@ -134,6 +158,7 @@ export const useGameStore = create<GameState & GameActions>()(
             genotype: child.genotype,
             age: 0,
             parentIds: [mom.id, dad.id],
+            scope: offspringScope,
           }
         }
         const record: CrossRecord = {
@@ -149,8 +174,8 @@ export const useGameStore = create<GameState & GameActions>()(
           breedsSinceLastNotebookProgress:
             s.breedsSinceLastNotebookProgress + 1,
         }))
-        // Re-run validation for any pending hypotheses on the two parents — new
-        // evidence may have just made a previously-insufficient hypothesis pass.
+        // Re-run validation for any pending hypotheses on the two parents —
+        // new evidence may have just made a previously-insufficient hypothesis pass.
         get().setHypothesis(motherId, '', '')
         get().setHypothesis(fatherId, '', '')
         return record
@@ -161,7 +186,6 @@ export const useGameStore = create<GameState & GameActions>()(
         const creature = state.creatures[creatureId]
         if (!creature) return
 
-        // Special call form: geneId === '' means "re-validate everything for this creature".
         const geneIds = geneId ? [geneId] : Object.keys(state.hypotheses[creatureId] ?? {})
 
         const hypotheses = { ...state.hypotheses }
@@ -175,7 +199,6 @@ export const useGameStore = create<GameState & GameActions>()(
           if (!hypotheses[creatureId]) hypotheses[creatureId] = {}
           hypotheses[creatureId] = { ...hypotheses[creatureId], [g]: canonical }
 
-          // Find the correct genotype for this creature+gene by looking up the current lesson.
           const correct = findCorrectGenotype(state, creatureId, g)
           const wasValidated = state.validated[creatureId]?.[g] ?? false
           let isValid = false
@@ -213,15 +236,17 @@ export const useGameStore = create<GameState & GameActions>()(
             : state.breedsSinceLastNotebookProgress,
         })
 
-        // Check if the current lesson is now complete.
         if (state.currentLessonId) {
           const lesson = lessonById[state.currentLessonId]
-          if (lesson && lesson.correctAssertions.every(a => {
-            const assignments = get().lessonCreatures[lesson.id]
-            if (!assignments) return false
-            const cId = assignments[a.creatureRole === 'mother' ? 'motherId' : 'fatherId']
-            return get().validated[cId]?.[a.geneId]
-          })) {
+          if (
+            lesson &&
+            lesson.correctAssertions.every(a => {
+              const assignments = get().lessonCreatures[lesson.id]
+              if (!assignments) return false
+              const cId = assignments[a.creatureRole === 'mother' ? 'motherId' : 'fatherId']
+              return get().validated[cId]?.[a.geneId]
+            })
+          ) {
             get().completeCurrentLesson()
           }
         }
@@ -251,6 +276,8 @@ export const useGameStore = create<GameState & GameActions>()(
         const state = get()
         const creature = state.creatures[creatureId]
         if (!t || !creature) return false
+        // Only village creatures can be delivered — lesson scratch stays scratch.
+        if (!isVillageScope(creature.scope)) return false
         const phenotype = computePhenotype(creature, blobSpecies)
         for (const [traitId, expected] of Object.entries(t.requiredPhenotype)) {
           if (phenotype[traitId] !== expected) return false
@@ -294,6 +321,10 @@ export const useGameStore = create<GameState & GameActions>()(
         set(initialState())
       },
 
+      // Fires when setHypothesis sees every required assertion validate.
+      // Promotes the two starter parents to the village, discards every other
+      // lesson-scoped creature for this lesson, and unlocks the next lesson +
+      // any character/trait rewards.
       completeCurrentLesson() {
         const state = get()
         const lessonId = state.currentLessonId
@@ -302,7 +333,33 @@ export const useGameStore = create<GameState & GameActions>()(
         const lesson = lessonById[lessonId]
         if (!lesson) return
 
-        // Unlock next lesson if there is one.
+        const assignments = state.lessonCreatures[lessonId]
+        const keepIds = assignments
+          ? new Set([assignments.motherId, assignments.fatherId])
+          : new Set<string>()
+
+        // Rebuild creatures: keep the two parents (promoted to village); drop the rest
+        // of this lesson's scratch offspring; leave every other creature alone.
+        const nextCreatures: Record<string, Creature> = {}
+        for (const [id, c] of Object.entries(state.creatures)) {
+          const belongsToThisLesson = isLessonScope(c.scope, lessonId)
+          if (belongsToThisLesson) {
+            if (keepIds.has(id)) {
+              nextCreatures[id] = { ...c, scope: 'village' }
+            }
+            // else: dropped (scratch offspring)
+          } else {
+            nextCreatures[id] = c
+          }
+        }
+
+        // Trim cross history for this lesson's discarded offspring — those records
+        // reference IDs that no longer exist. Keep records where both parents remain.
+        const nextHistory = state.crossHistory.filter(
+          r => nextCreatures[r.motherId] && nextCreatures[r.fatherId],
+        )
+
+        // Unlock next lesson, characters, traits per lesson definition.
         const allLessons = Object.values(lessonById).sort((a, b) => a.order - b.order)
         const idx = allLessons.findIndex(l => l.id === lessonId)
         const nextLesson = allLessons[idx + 1]
@@ -320,6 +377,8 @@ export const useGameStore = create<GameState & GameActions>()(
         ]))
 
         set({
+          creatures: nextCreatures,
+          crossHistory: nextHistory,
           completedLessons: [...state.completedLessons, lessonId],
           unlockedLessons: newUnlocked,
           unlockedCharacters: newChars,
@@ -328,7 +387,8 @@ export const useGameStore = create<GameState & GameActions>()(
       },
     }),
     {
-      name: 'gene-detective-save-v1',
+      name: 'gene-detective-save-v2',
+      version: 2,
       storage: createJSONStorage(() => localStorage),
     },
   ),
@@ -341,8 +401,6 @@ function findCorrectGenotype(
   creatureId: string,
   geneId: string,
 ): string | null {
-  // For MVP: only lesson creatures have correct genotypes tracked.
-  // Look through all lessons to find which creature this is and what genotype the lesson asserts.
   for (const [lessonId, assignments] of Object.entries(state.lessonCreatures)) {
     const lesson = lessonById[lessonId]
     if (!lesson) continue
@@ -362,7 +420,18 @@ function findCorrectGenotype(
   return null
 }
 
-// Convenience selectors
+// Selector: creatures that live in the village (the player's permanent collection).
+// Selects the raw creatures map (stable ref) and derives the filtered list in
+// a useMemo so the array reference is stable across renders.
+export function useVillageCreatures(): Creature[] {
+  const creatures = useGameStore(s => s.creatures)
+  return useMemo(
+    () => Object.values(creatures).filter(c => isVillageScope(c.scope)),
+    [creatures],
+  )
+}
+
+// Selector: the currently-active lesson definition, if any.
 export function useCurrentLesson() {
   return useGameStore(s => (s.currentLessonId ? lessonById[s.currentLessonId] : null))
 }

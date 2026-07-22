@@ -59,6 +59,7 @@ describe('cross — statistical properties', () => {
           sex: child.sex,
           genotype: child.genotype,
           age: 0,
+          scope: 'village',
         },
         testBlob,
       )

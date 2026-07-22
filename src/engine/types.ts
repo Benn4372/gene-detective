@@ -91,7 +91,13 @@ export interface Creature {
   age: number
   parentIds?: [string, string]
   birthCrossId?: string
+  // Where this creature "lives". Lesson-scoped creatures are scratch — they exist
+  // only for observation during that lesson and are discarded on completion.
+  // Village-scoped creatures are permanent residents.
+  scope: CreatureScope
 }
+
+export type CreatureScope = 'village' | { kind: 'lesson'; lessonId: string }
 
 export interface Gamete {
   alleles: Record<string, AlleleId>

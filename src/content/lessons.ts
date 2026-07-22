@@ -46,15 +46,15 @@ Your job: figure out what the invisible alleles are inside these two blobs. You 
     hints: [
       {
         stage: 'reframe',
-        text: 'The mother has antennae; the father doesn\'t. If mother were AA, could any offspring lack antennae? What if she were Aa?',
+        text: 'Two things are true at once: the mother shows the antennae trait, and the father doesn\'t. What must each of those tell you about which alleles they carry?',
       },
       {
         stage: 'point',
-        text: 'Look at your litters so far. If any offspring lack antennae, that tells you a lot about the mother — she must be hiding a recessive allele.',
+        text: 'Focus on which parent could possibly be hiding a recessive allele. A parent who shows a recessive trait is easy — but a parent showing a dominant trait might be homozygous, or might be hiding one recessive copy.',
       },
       {
         stage: 'suggest',
-        text: 'Breed the pair a few more times. If any offspring turn out without antennae, the mother must be Aa. Enter that genotype in her notebook card.',
+        text: 'Count offspring across every litter you\'ve bred. Group them by whether they show the trait or not. What ratio would you expect if the mother were fully homozygous? Does the actual ratio match that, or something else?',
       },
     ],
     unlocks: {

@@ -8,12 +8,25 @@ interface Props {
   onClick?(): void
   selected?: boolean
   compact?: boolean
+  // Restrict which traits the details footer lists. Omit → show all species traits.
+  visibleTraitIds?: string[]
+  hideDetails?: boolean
 }
 
-export function CreatureCard({ creature, onClick, selected, compact }: Props) {
+export function CreatureCard({
+  creature,
+  onClick,
+  selected,
+  compact,
+  visibleTraitIds,
+  hideDetails,
+}: Props) {
   const phenotype = computePhenotype(creature, blobSpecies)
   const name = creature.ownerName ?? `Blob #${creature.id.slice(-4)}`
   const size = compact ? 60 : 100
+  const traits = visibleTraitIds
+    ? blobSpecies.traits.filter(t => visibleTraitIds.includes(t.id))
+    : blobSpecies.traits
 
   return (
     <div
@@ -30,9 +43,9 @@ export function CreatureCard({ creature, onClick, selected, compact }: Props) {
           <SexBadge sex={creature.sex} />
           <span>{name}</span>
         </div>
-        {!compact && (
+        {!compact && !hideDetails && traits.length > 0 && (
           <div className="text-xs text-slate-500 text-center">
-            {blobSpecies.traits.map(t => {
+            {traits.map(t => {
               const val = phenotype[t.id]
               const isRecessive = val === val?.toLowerCase()
               return (
