@@ -97,7 +97,10 @@ export interface Creature {
   scope: CreatureScope
 }
 
-export type CreatureScope = 'village' | { kind: 'lesson'; lessonId: string }
+export type CreatureScope =
+  | 'village'
+  | { kind: 'lesson'; lessonId: string }
+  | { kind: 'lab'; orderId: string }
 
 export interface Gamete {
   alleles: Record<string, AlleleId>

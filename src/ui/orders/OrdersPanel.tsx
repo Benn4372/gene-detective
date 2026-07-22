@@ -1,74 +1,48 @@
 import { motion } from 'framer-motion'
-import { useGameStore, useVillageCreatures } from '../../state/gameStore'
-import {
-  lessons,
-  orderTemplates,
-  characterById,
-  blobSpecies,
-} from '../../content'
-import { computePhenotype } from '../../engine/phenotype'
-import { CreatureCard } from '../shared/CreatureCard'
+import { useGameStore } from '../../state/gameStore'
+import { lessons, orderTemplates, characterById } from '../../content'
 import { LessonRunner } from '../lessons/LessonRunner'
-import { useState } from 'react'
 
 export function OrdersPanel() {
   const currentLessonId = useGameStore(s => s.currentLessonId)
   const startLesson = useGameStore(s => s.startLesson)
-  const setCurrentLesson = useGameStore(s => s.setCurrentLesson)
   const unlockedLessons = useGameStore(s => s.unlockedLessons)
   const completedLessons = useGameStore(s => s.completedLessons)
   const unlockedChars = useGameStore(s => s.unlockedCharacters)
   const completedOrders = useGameStore(s => s.completedOrders)
-  const villageCreatures = useVillageCreatures()
-  const fulfillOrder = useGameStore(s => s.fulfillOrder)
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
+  const openLab = useGameStore(s => s.openLab)
 
   // If a lesson is in progress, the runner takes over the whole panel.
   if (currentLessonId && !completedLessons.includes(currentLessonId)) {
-    return (
-      <div>
-        <button
-          onClick={() => setCurrentLesson(null)}
-          className="text-sm text-purple-600 hover:underline mb-4"
-        >
-          ← Back to orders
-        </button>
-        <LessonRunner onClose={() => setCurrentLesson(null)} />
-      </div>
-    )
+    return <LessonRunner />
   }
 
-  // Lessons the player can start (unlocked & not completed).
   const availableLessons = lessons.filter(
     l => unlockedLessons.includes(l.id) && !completedLessons.includes(l.id),
   )
   const doneLessons = lessons.filter(l => completedLessons.includes(l.id))
 
-  // Orders whose owning character is unlocked and which aren't done yet.
   const availableOrders = orderTemplates.filter(
     o => unlockedChars.includes(o.characterId) && !completedOrders.includes(o.id),
   )
-  const selectedOrder = selectedOrderId
-    ? orderTemplates.find(o => o.id === selectedOrderId)
-    : null
-  const selectedChar = selectedOrder ? characterById[selectedOrder.characterId] : null
 
-  const matchingCreatures = selectedOrder
-    ? villageCreatures.filter(c => {
-        const phen = computePhenotype(c, blobSpecies)
-        return Object.entries(selectedOrder.requiredPhenotype).every(
-          ([t, v]) => phen[t] === v,
-        )
-      })
-    : []
+  // A lesson is "gated" when it isn't yet unlocked but the previous lesson is
+  // complete — pending some orders. Surface that in the UI.
+  const gatedLessons = lessons.filter(l => {
+    if (unlockedLessons.includes(l.id) || completedLessons.includes(l.id)) return false
+    // Find the previous lesson
+    const sorted = [...lessons].sort((a, b) => a.order - b.order)
+    const idx = sorted.findIndex(x => x.id === l.id)
+    const prev = idx > 0 ? sorted[idx - 1] : null
+    return !!prev && completedLessons.includes(prev.id)
+  })
 
   return (
     <div className="space-y-8">
-      {/* Lessons block */}
       {availableLessons.length > 0 && (
         <section>
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
-            🎓 New lessons
+            🎓 New lesson
           </h3>
           <div className="space-y-3">
             {availableLessons.map(l => (
@@ -93,7 +67,6 @@ export function OrdersPanel() {
         </section>
       )}
 
-      {/* Orders block */}
       {unlockedChars.length > 0 && (
         <section>
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
@@ -101,7 +74,7 @@ export function OrdersPanel() {
           </h3>
           {availableOrders.length === 0 ? (
             <div className="text-slate-500 italic text-sm">
-              No new orders right now. Complete more lessons to unlock characters.
+              No new orders right now. Complete more lessons to unlock new characters.
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -115,13 +88,8 @@ export function OrdersPanel() {
                     key={o.id}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setSelectedOrderId(o.id)}
-                    className={
-                      'text-left p-4 bg-white rounded-lg border transition-all ' +
-                      (selectedOrderId === o.id
-                        ? 'border-purple-500 ring-2 ring-purple-200'
-                        : 'border-slate-200 hover:shadow-md')
-                    }
+                    onClick={() => openLab(o.id)}
+                    className="text-left p-4 bg-white rounded-lg border border-slate-200 hover:border-purple-400 hover:shadow-md transition-all"
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-2xl">{char.emoji}</span>
@@ -136,7 +104,14 @@ export function OrdersPanel() {
                       "{char.voice.orderIntro}"
                     </div>
                     <div className="text-sm text-slate-700 mb-2">{o.flavorText}</div>
-                    <div className="text-xs font-mono text-slate-500">Needs: {traits}</div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-mono text-slate-500">
+                        target: {traits}
+                      </div>
+                      <div className="text-xs text-purple-700 font-medium">
+                        Enter the lab →
+                      </div>
+                    </div>
                   </motion.button>
                 )
               })}
@@ -145,39 +120,41 @@ export function OrdersPanel() {
         </section>
       )}
 
-      {/* Selected order → delivery panel */}
-      {selectedOrder && selectedChar && (
-        <section className="p-4 bg-white rounded-lg border border-slate-200">
-          <h3 className="font-semibold mb-3">Deliver a matching blob</h3>
-          {matchingCreatures.length === 0 ? (
-            <div className="text-slate-500 text-sm">
-              No village blobs match this order yet. Breed one — check the ❤️ Breed
-              button.
-            </div>
-          ) : (
-            <div className="grid grid-cols-4 gap-3">
-              {matchingCreatures.map(c => (
-                <div key={c.id}>
-                  <CreatureCard creature={c} compact hideDetails />
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      const ok = fulfillOrder(selectedOrder.id, c.id)
-                      if (ok) setSelectedOrderId(null)
-                    }}
-                    className="mt-2 w-full px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-                  >
-                    Deliver
-                  </motion.button>
+      {gatedLessons.length > 0 && (
+        <section>
+          <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
+            🔒 Locked lessons
+          </h3>
+          <div className="space-y-3">
+            {gatedLessons.map(l => {
+              const sorted = [...lessons].sort((a, b) => a.order - b.order)
+              const idx = sorted.findIndex(x => x.id === l.id)
+              const prev = idx > 0 ? sorted[idx - 1] : null
+              const pending = prev
+                ? prev.gateOrderIds.filter(id => !completedOrders.includes(id))
+                : []
+              return (
+                <div
+                  key={l.id}
+                  className="rounded-xl border-2 border-slate-200 bg-slate-50 p-4"
+                >
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Lesson {l.order}
+                  </div>
+                  <div className="text-lg font-bold text-slate-800">{l.title}</div>
+                  <div className="text-sm text-slate-600 mt-1">{l.concept}</div>
+                  <div className="text-xs text-slate-500 mt-2">
+                    {pending.length > 0
+                      ? `Complete ${pending.length} more order${pending.length === 1 ? '' : 's'} to unlock.`
+                      : 'Ready to unlock.'}
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
+              )
+            })}
+          </div>
         </section>
       )}
 
-      {/* Completed lessons — collapsed footer for revisit */}
       {doneLessons.length > 0 && (
         <section className="pt-4 border-t border-slate-200">
           <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">

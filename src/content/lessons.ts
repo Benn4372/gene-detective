@@ -61,6 +61,7 @@ Your job: figure out what the invisible alleles are inside these two blobs. You 
       orderTypes: ['tier-1'],
       characters: ['dr-mendel'],
     },
+    gateOrderIds: ['order-mendel-1', 'order-mendel-2'],
   },
   {
     id: 'lesson-2',
@@ -115,6 +116,7 @@ The trick is a **test cross** — breed the mystery blob with one that has no an
       },
     ],
     unlocks: {},
+    gateOrderIds: [],
   },
   {
     id: 'lesson-3',
@@ -171,6 +173,7 @@ Breed the pair and see what happens. In a two-trait cross like this, the classic
       },
     ],
     unlocks: {},
+    gateOrderIds: [],
   },
 ]
 

@@ -44,6 +44,9 @@ export interface Lesson {
     orderTypes?: string[]
     characters?: string[]
   }
+  // Orders that must be completed after this lesson before the NEXT lesson
+  // unlocks. Empty array means the next lesson unlocks immediately.
+  gateOrderIds: string[]
 }
 
 export interface Character {
@@ -59,6 +62,12 @@ export interface Character {
   unlockedFrom?: string
 }
 
+export interface LabStarterCreature {
+  sex: Sex
+  genotype: Genotype
+  defaultName: string
+}
+
 export interface OrderTemplate {
   id: string
   characterId: string
@@ -66,4 +75,10 @@ export interface OrderTemplate {
   requiredPhenotype: Record<string, string>
   coinReward: number
   flavorText: string
+  // The two "unknown" blobs the player starts the lab with when they take this
+  // order. Genotypes chosen so the target phenotype is actually reachable.
+  labStarters: [LabStarterCreature, LabStarterCreature]
+  // Which genes are in play for this puzzle (i.e. show up in each notecard as
+  // guess inputs and appear on the offspring's phenotype).
+  visibleGeneIds: string[]
 }
