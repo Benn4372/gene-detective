@@ -100,6 +100,7 @@ The trick is a **test cross** — breed the mystery blob with one that has no an
     litterSize: 6,
     correctAssertions: [
       { creatureRole: 'mother', geneId: 'antennae', correctGenotype: 'Aa' },
+      { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'aa' },
     ],
     validationTier: 'medium',
     hints: [

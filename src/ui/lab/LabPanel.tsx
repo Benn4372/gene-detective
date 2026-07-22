@@ -93,7 +93,7 @@ export function LabPanel() {
           {females.length === 0 ? (
             <div className="text-slate-500 italic text-sm">None yet.</div>
           ) : (
-            <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
               {females.map(c => (
                 <Notecard
                   key={c.id}
@@ -113,7 +113,7 @@ export function LabPanel() {
           {males.length === 0 ? (
             <div className="text-slate-500 italic text-sm">None yet.</div>
           ) : (
-            <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
               {males.map(c => (
                 <Notecard
                   key={c.id}

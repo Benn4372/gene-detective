@@ -8,31 +8,32 @@ interface Props {
   icon?: string
   children: ReactNode
   wide?: boolean
+  z?: number
 }
 
-// Plain conditional render — no AnimatePresence. In earlier iterations the
-// exit animation would leave a fully-transparent backdrop in the DOM that still
-// captured clicks, which meant the village was visible but unusable. Cutting
-// the exit animation entirely fixes that; the enter animation is still smooth.
-export function Modal({ open, onClose, title, icon, children, wide }: Props) {
+// Centered modal that stays in the viewport regardless of scroll. Content
+// scrolls inside the panel (max-h-[90vh] + inner overflow-y-auto) so tall
+// pages don't push the panel off-screen.
+export function Modal({ open, onClose, title, icon, children, wide, z = 50 }: Props) {
   if (!open) return null
   return (
     <div
-      className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4"
+      style={{ zIndex: z }}
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        initial={{ scale: 0.95, opacity: 0, y: 10 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 260, damping: 24 }}
         onClick={e => e.stopPropagation()}
         className={
-          'bg-slate-50 rounded-2xl shadow-2xl my-8 flex flex-col ' +
+          'bg-slate-50 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden ' +
           (wide ? 'max-w-6xl w-full' : 'max-w-3xl w-full')
         }
       >
         {(title || icon) && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 flex-shrink-0">
             <div className="flex items-center gap-3">
               {icon && <span className="text-3xl">{icon}</span>}
               {title && (
@@ -50,7 +51,7 @@ export function Modal({ open, onClose, title, icon, children, wide }: Props) {
             </motion.button>
           </div>
         )}
-        <div className="p-6 overflow-y-auto">{children}</div>
+        <div className="p-6 overflow-y-auto flex-1">{children}</div>
       </motion.div>
     </div>
   )

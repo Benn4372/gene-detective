@@ -45,6 +45,7 @@ function initialState(): GameState {
     justCompletedLessonId: null,
     activeModal: null,
     hasAutoOpened: false,
+    keptIds: [],
   }
 }
 
@@ -68,6 +69,7 @@ interface GameActions {
   setDifficultyTier(tier: DifficultyTier): void
   setActiveModal(modal: 'orders' | 'breed' | 'shop' | null): void
   markAutoOpened(): void
+  toggleKept(creatureId: string): void
   reset(): void
 }
 
@@ -441,6 +443,14 @@ export const useGameStore = create<GameState & GameActions>()(
 
       markAutoOpened() {
         set({ hasAutoOpened: true })
+      },
+
+      toggleKept(creatureId) {
+        set(s => ({
+          keptIds: s.keptIds.includes(creatureId)
+            ? s.keptIds.filter(id => id !== creatureId)
+            : [...s.keptIds, creatureId],
+        }))
       },
 
       reset() {

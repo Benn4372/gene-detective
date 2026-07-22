@@ -56,4 +56,9 @@ export interface GameState {
   // Set true after the auto-open effect fires so subsequent App mounts don't
   // re-open the modal against the player's wishes.
   hasAutoOpened: boolean
+
+  // Creature ids the player has explicitly "kept" — pinned so they remain in
+  // the breeding picker after future litters are bred. Used only inside
+  // lessons; the village never trims and the lab uses starters + all bred.
+  keptIds: string[]
 }
