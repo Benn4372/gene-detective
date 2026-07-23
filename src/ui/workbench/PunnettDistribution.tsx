@@ -18,7 +18,9 @@ interface Props {
 // combination frequencies, computed from the notebook hypotheses (falling
 // back to the parents' true genotypes when the notebook is empty).
 export function PunnettDistribution({ motherId, fatherId, geneIds }: Props) {
-  const hypotheses = useGameStore(s => s.hypotheses)
+  // Notebook guesses feed the distribution (not the Final Answer's hypotheses),
+  // matching every other passive Punnett component.
+  const notebookGuess = useGameStore(s => s.notebookGuess)
   const creatures = useGameStore(s => s.creatures)
 
   const mother = creatures[motherId]
@@ -26,8 +28,8 @@ export function PunnettDistribution({ motherId, fatherId, geneIds }: Props) {
 
   const [motherPreview, fatherPreview, usingNotebook] = useMemo(() => {
     if (!mother || !father) return [null, null, false]
-    return buildPreviews(mother, father, hypotheses, geneIds)
-  }, [mother, father, hypotheses, geneIds])
+    return buildPreviews(mother, father, notebookGuess, geneIds)
+  }, [mother, father, notebookGuess, geneIds])
 
   const rows = useMemo(() => {
     if (!motherPreview || !fatherPreview) return []
@@ -108,7 +110,7 @@ export function PunnettDistribution({ motherId, fatherId, geneIds }: Props) {
 function buildPreviews(
   mother: Creature,
   father: Creature,
-  hypotheses: Record<string, Record<string, string>>,
+  notebookGuess: Record<string, Record<string, string>>,
   geneIds: string[],
 ): [Creature, Creature, boolean] {
   let usingNotebook = true
@@ -117,7 +119,7 @@ function buildPreviews(
     for (const geneId of geneIds) {
       const gene = blobSpecies.genes.find(g => g.id === geneId)
       if (!gene) continue
-      const raw = hypotheses[parent.id]?.[geneId] ?? ''
+      const raw = notebookGuess[parent.id]?.[geneId] ?? ''
       if (raw.length < 2) {
         usingNotebook = false
         continue
