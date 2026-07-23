@@ -8,6 +8,7 @@ import { PunnettGridMitochondrial } from '../workbench/PunnettGridMitochondrial'
 import { PunnettDistribution } from '../workbench/PunnettDistribution'
 import { LinkageNotice } from '../workbench/LinkageNotice'
 import { ImprintingNotice } from '../workbench/ImprintingNotice'
+import { InheritanceQuirkNotice } from '../workbench/InheritanceQuirkNotice'
 
 interface Props {
   motherId: string
@@ -82,6 +83,9 @@ export function NotebookPanel({
               <div className="mb-3">
                 <ImprintingNotice geneId={geneId} />
               </div>
+            )}
+            {showPunnett && geneIds.length === 1 && (
+              <InheritanceQuirkNotice geneId={geneId} />
             )}
             {showPunnett && geneIds.length === 1 && (
               <div className="flex justify-center">
