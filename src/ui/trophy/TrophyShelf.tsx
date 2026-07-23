@@ -70,8 +70,11 @@ export function TrophyShelf() {
                     <div className="text-xs uppercase tracking-widest text-stone-500 mb-1">
                       Chapter {ch.order}
                     </div>
-                    <div className="text-sm font-semibold text-stone-800 font-serif mb-2 text-center">
+                    <div className="text-sm font-semibold text-stone-800 font-serif mb-1 text-center">
                       {ch.title}
+                    </div>
+                    <div className="text-[10px] italic text-stone-600 mb-2 text-center max-w-[180px] leading-tight">
+                      {ch.concept}
                     </div>
                     <motion.div
                       animate={{ y: [0, -4, 0, -2, 0] }}
