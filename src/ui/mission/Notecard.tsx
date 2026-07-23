@@ -135,7 +135,12 @@ function NotecardEditor({
           return (
             <div key={gId} className="flex items-center gap-3">
               <span className="text-sm text-stone-600 w-20">{gene.name}:</span>
-              <GenotypeInput creatureId={creature.id} geneId={gId} noValidation />
+              <GenotypeInput
+                creatureId={creature.id}
+                geneId={gId}
+                noValidation
+                useNotebookGuess
+              />
             </div>
           )
         })}

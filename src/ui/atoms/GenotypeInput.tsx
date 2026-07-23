@@ -9,6 +9,10 @@ interface Props {
   // Missions where the game deliberately does not tell the player whether
   // they're right — the target phenotype is the only feedback.
   noValidation?: boolean
+  // If true, read/write the freeform notebookGuess store instead of the
+  // validated hypotheses store. Missions use this so their multiple entry
+  // points (Notecard modal + MissionNotebook) stay in sync.
+  useNotebookGuess?: boolean
   // Canonical correct genotype for this creature × gene at the current stage.
   // When provided, a completed-but-not-validated input can distinguish two
   // failure modes: "the letters don't match the answer" vs "you're right but
@@ -26,11 +30,20 @@ export function GenotypeInput({
   creatureId,
   geneId,
   noValidation,
+  useNotebookGuess,
   correctGenotype,
 }: Props) {
-  const value = useGameStore(s => s.hypotheses[creatureId]?.[geneId] ?? '')
+  const hypothesisValue = useGameStore(
+    s => s.hypotheses[creatureId]?.[geneId] ?? '',
+  )
+  const notebookValue = useGameStore(
+    s => s.notebookGuess[creatureId]?.[geneId] ?? '',
+  )
+  const value = useNotebookGuess ? notebookValue : hypothesisValue
   const valid = useGameStore(s => s.validated[creatureId]?.[geneId] ?? false)
   const setHypothesis = useGameStore(s => s.setHypothesis)
+  const setNotebookGuess = useGameStore(s => s.setNotebookGuess)
+  const commit = useNotebookGuess ? setNotebookGuess : setHypothesis
 
   const gene = blobSpecies.genes.find(g => g.id === geneId)
   if (!gene) return null
@@ -67,7 +80,7 @@ export function GenotypeInput({
       <input
         type="text"
         value={value}
-        onChange={e => setHypothesis(creatureId, geneId, e.target.value)}
+        onChange={e => commit(creatureId, geneId, e.target.value)}
         placeholder={example}
         maxLength={4}
         className={'w-36 px-2 py-1 border-2 rounded text-center font-mono text-sm ' + borderCls}
