@@ -19,6 +19,7 @@ import { PopulationSandbox } from '../population/PopulationSandbox'
 import { KaryotypeViewer } from '../karyotype/KaryotypeViewer'
 import { DNASequenceViewer } from '../dna/DNASequenceViewer'
 import { MethylationExplorer } from '../methylation/MethylationExplorer'
+import { SolveCelebration } from './SolveCelebration'
 import {
   HeritabilityWidget,
   QTLScanWidget,
@@ -416,18 +417,21 @@ function StageWithWorkbench({
     })
   }, [stage, validated, chapterCreatures])
 
-  // Pin callback + guard in refs so the effect isn't at the mercy of dep
-  // churn. cleanup would cancel the setTimeout during the very re-render that
-  // schedules it, so we skip cleanup and rely on the ref to prevent double-fire.
+  // Pin callback in a ref so the effect doesn't tear down / rebuild.
   const onSolvedRef = useRef(onSolved)
   onSolvedRef.current = onSolved
-  const advancedRef = useRef(false)
+  const [celebrationOpen, setCelebrationOpen] = useState(false)
+  const openedRef = useRef(false)
   useEffect(() => {
-    if (allSolved && !advancedRef.current) {
-      advancedRef.current = true
-      setTimeout(() => onSolvedRef.current(), 900)
+    if (allSolved && !openedRef.current) {
+      openedRef.current = true
+      setCelebrationOpen(true)
     }
   }, [allSolved])
+
+  const punnettUnlocked = useGameStore(s =>
+    s.unlockedTools.includes('punnett-2x2'),
+  )
 
   const litter = 'litterSize' in stage ? stage.litterSize : 6
   const breedBudgetHint =
@@ -463,6 +467,20 @@ function StageWithWorkbench({
         </div>
       </div>
 
+      {/* Workbench comes BEFORE the notebook so the reasoning tools (breeding
+          + Punnett once unlocked) precede recording the answer. */}
+      <Workbench
+        pool={pool}
+        motherId={motherPick}
+        fatherId={fatherPick}
+        onSelectMother={setMotherPick}
+        onSelectFather={setFatherPick}
+        visibleGeneIds={geneIds}
+        litterSize={litter}
+        breedBudgetHint={breedBudgetHint}
+        showPunnett={punnettUnlocked}
+      />
+
       <NotebookPanel
         motherId={chapterCreatures.motherId}
         fatherId={chapterCreatures.fatherId}
@@ -474,22 +492,14 @@ function StageWithWorkbench({
         }
       />
 
-      <Workbench
-        pool={pool}
-        motherId={motherPick}
-        fatherId={fatherPick}
-        onSelectMother={setMotherPick}
-        onSelectFather={setFatherPick}
-        visibleGeneIds={geneIds}
-        litterSize={litter}
-        breedBudgetHint={breedBudgetHint}
+      <SolveCelebration
+        open={celebrationOpen}
+        assertions={stage.correctAssertions}
+        onNext={() => {
+          setCelebrationOpen(false)
+          onSolvedRef.current()
+        }}
       />
-
-      {allSolved && (
-        <div className="rounded-lg p-4 bg-emerald-50 border border-emerald-300 text-emerald-800">
-          ✓ Solved! Advancing to the next stage…
-        </div>
-      )}
     </div>
   )
 }

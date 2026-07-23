@@ -55,7 +55,8 @@ function initialState(): GameState {
     breedsSinceLastNotebookProgress: 0,
     unlockedTraits: [],
     unlockedAlleles: [],
-    unlockedTools: ['punnett-2x2'],
+    // Punnett square is unlocked at Ch 1 completion — Ch 2 teaches it.
+    unlockedTools: [],
     unlockedMentors: ['dr-mendel'],
     activeMissionId: null,
     completedMissions: [],

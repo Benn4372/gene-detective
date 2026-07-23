@@ -23,6 +23,9 @@ interface Props {
   onCrossComplete?(record: CrossRecord): void
   // Extra label to hint the player about scarcity — e.g. "3 crosses left"
   breedBudgetHint?: string
+  // Set false to hide the Punnett grid entirely — used by Ch 1 before
+  // Ch 2 teaches the Punnett square as a tool.
+  showPunnett?: boolean
 }
 
 // The primary breeding interaction. Wraps parent picker + Punnett grid(s) +
@@ -38,6 +41,7 @@ export function Workbench({
   litterSize,
   onCrossComplete,
   breedBudgetHint,
+  showPunnett = true,
 }: Props) {
   const breed = useGameStore(s => s.breed)
   const crossHistory = useGameStore(s => s.crossHistory)
@@ -145,8 +149,9 @@ export function Workbench({
       )}
 
       {/* Punnett — variant chosen by number of tracked genes.
-          1 gene → 2×2, 2 genes → 4×4 dihybrid, 3+ → distribution chart. */}
-      {motherId && fatherId && visibleGeneIds.length > 0 && (
+          1 gene → 2×2, 2 genes → 4×4 dihybrid, 3+ → distribution chart.
+          Hidden entirely until Ch 2 unlocks the tool. */}
+      {showPunnett && motherId && fatherId && visibleGeneIds.length > 0 && (
         <div className="rounded-lg bg-stone-50 border border-stone-300 p-3">
           {visibleGeneIds.length === 1 && (
             <PunnettGrid

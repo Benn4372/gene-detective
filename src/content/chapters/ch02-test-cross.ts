@@ -150,7 +150,7 @@ The absence or presence of even a single recessive-phenotype offspring is your a
   },
 
   unlocks: {
-    tools: ['punnett-2x2'],
+    tools: ['test-cross'],
     nextChapterId: 'ch03',
   },
 }

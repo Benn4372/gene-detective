@@ -38,9 +38,15 @@ export const ch01: Chapter = {
 
 Some alleles are **dominant** — if a blob has even one copy, the trait shows up. Others are **recessive** — they only show up when the blob has two copies of them.
 
-We write dominant alleles as capital letters (A) and recessive as lowercase (a). A blob's **genotype** is what it carries (AA, Aa, or aa). Its **phenotype** is what you see.
+We write dominant alleles as capital letters (A) and recessive as lowercase (a). A blob's **genotype** is what it carries. Three combinations are possible:
 
-Below, watch a cross between AA × aa. Every offspring inherits one allele from each parent — so every child ends up **Aa**. They all show the dominant trait, but every single one is secretly carrying a recessive.`,
+- **AA** — two copies of the dominant allele. Called **homozygous dominant**.
+- **aa** — two copies of the recessive allele. Called **homozygous recessive**.
+- **Aa** — one of each. Called **heterozygous**.
+
+("Homo" means same, "hetero" means different.) A blob's **phenotype** is what you see. AA and Aa both look the same because A is dominant — but they're not the same underneath.
+
+Below, watch a cross between AA × aa. Every offspring inherits one allele from each parent — so every child ends up **Aa** (heterozygous). They all show the dominant trait, but every single one is secretly carrying a recessive.`,
       workedExample: {
         parents: [
           { antennae: ['A', 'A'], spots: ['s', 's'] },
@@ -134,7 +140,9 @@ Below, watch a cross between AA × aa. Every offspring inherits one allele from 
 
   unlocks: {
     traits: ['antennae'],
-    tools: ['test-cross'],
+    // The Punnett square is taught in Ch 2 but has to be USABLE in Ch 2's
+    // guided/solo stages, so unlock it on Ch 1 completion.
+    tools: ['punnett-2x2'],
     nextChapterId: 'ch02',
   },
 }
