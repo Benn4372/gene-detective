@@ -46,14 +46,21 @@ export function PunnettDistribution({ motherId, fatherId, geneIds }: Props) {
         scope: 'trophy',
       }
       const phen = computePhenotype(child, blobSpecies)
-      const label = geneIds
-        .map(id => {
-          const gene = blobSpecies.genes.find(g => g.id === id)
-          const traitId = gene?.expressesTraits[0]
-          const value = traitId ? (phen[traitId] ?? '?') : '?'
-          return `${gene?.name ?? id}: ${value}`
-        })
-        .join(' · ')
+      // Dedupe by trait id — polygenic Size (Ⅰ/Ⅱ/Ⅲ) all express the same
+      // 'size' trait, so they'd otherwise emit three copies of the same
+      // aggregated phenotype value.
+      const seenTraits = new Set<string>()
+      const traitLabels: string[] = []
+      for (const id of geneIds) {
+        const gene = blobSpecies.genes.find(g => g.id === id)
+        const traitId = gene?.expressesTraits[0]
+        if (!traitId || seenTraits.has(traitId)) continue
+        seenTraits.add(traitId)
+        const trait = blobSpecies.traits.find(t => t.id === traitId)
+        const value = phen[traitId] ?? '?'
+        traitLabels.push(`${trait?.name ?? gene?.name ?? id}: ${value}`)
+      }
+      const label = traitLabels.join(' · ')
       const existing = buckets.get(label)
       if (existing) existing.probability += outcome.probability
       else buckets.set(label, { label, probability: outcome.probability })
