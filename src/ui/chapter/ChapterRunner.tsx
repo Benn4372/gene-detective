@@ -692,6 +692,7 @@ function StageWithWorkbench({
         motherId={chapterCreatures.motherId}
         fatherId={chapterCreatures.fatherId}
         geneIds={geneIds}
+        answerGeneIds={answerGeneIds}
         showPunnett={punnettUnlocked}
       />
 

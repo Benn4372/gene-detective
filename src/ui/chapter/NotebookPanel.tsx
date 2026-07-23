@@ -13,7 +13,13 @@ import { InheritanceQuirkNotice } from '../workbench/InheritanceQuirkNotice'
 interface Props {
   motherId: string
   fatherId: string
+  // All genes displayed in the notebook (guesses + notes + tally). Includes
+  // supporting genes the player observes but doesn't answer for.
   geneIds: string[]
+  // The subset the player must actually solve for — drives the Punnett so
+  // supporting genes don't inflate a monohybrid into a dihybrid grid.
+  // Defaults to geneIds when omitted (missions, chapters with no supporting).
+  answerGeneIds?: string[]
   // Whether the Punnett tool has been unlocked yet — hidden in Ch 1 until
   // Ch 2 formally introduces it.
   showPunnett?: boolean
@@ -30,6 +36,7 @@ export function NotebookPanel({
   motherId,
   fatherId,
   geneIds,
+  answerGeneIds,
   showPunnett = true,
 }: Props) {
   const mother = useGameStore(s => s.creatures[motherId])
@@ -38,6 +45,7 @@ export function NotebookPanel({
 
   const motherName = mother.ownerName ?? 'Mother'
   const fatherName = father.ownerName ?? 'Father'
+  const punnettGeneIds = answerGeneIds ?? geneIds
 
   return (
     <div className="rounded-xl bg-[color:var(--paper)] border border-stone-300 p-4">
@@ -79,15 +87,15 @@ export function NotebookPanel({
                 model. Sex-linked genes get X^A / Y notation; everything else
                 falls through to the standard 2×2 grid. Dihybrid + polygenic
                 use the combined Punnett rendered below the gene list. */}
-            {showPunnett && geneIds.length === 1 && gene.imprintOrigin && (
+            {showPunnett && punnettGeneIds.length === 1 && punnettGeneIds[0] === geneId && gene.imprintOrigin && (
               <div className="mb-3">
                 <ImprintingNotice geneId={geneId} />
               </div>
             )}
-            {showPunnett && geneIds.length === 1 && (
+            {showPunnett && punnettGeneIds.length === 1 && punnettGeneIds[0] === geneId && (
               <InheritanceQuirkNotice geneId={geneId} />
             )}
-            {showPunnett && geneIds.length === 1 && (
+            {showPunnett && punnettGeneIds.length === 1 && punnettGeneIds[0] === geneId && (
               <div className="flex justify-center">
                 {gene.inheritanceModel === 'sexLinked' ? (
                   <PunnettGridSexLinked
@@ -115,28 +123,29 @@ export function NotebookPanel({
       })}
 
       {/* Multi-gene Punnett display sits ONCE at the bottom of the notebook
-          when the notebook tracks more than one gene. If the two tracked
-          genes share a chromosome (linked traits), a linkage-info banner
-          rides above the grid to reset the player's independent-assortment
-          expectation from Ch 3. */}
-      {showPunnett && geneIds.length === 2 && (
+          when the notebook tracks more than one ANSWER gene. Supporting
+          genes appear in the notebook for context but don't inflate the
+          Punnett shape. If the two answer genes share a chromosome (linked
+          traits), a linkage-info banner rides above the grid to reset the
+          player's independent-assortment expectation from Ch 3. */}
+      {showPunnett && punnettGeneIds.length === 2 && (
         <div className="border-t border-stone-200 pt-3 mt-3 space-y-3">
-          <LinkageNotice geneIds={geneIds} />
+          <LinkageNotice geneIds={punnettGeneIds} />
           <div className="flex justify-center">
             <PunnettGridDihybrid
               motherId={mother.id}
               fatherId={father.id}
-              geneIds={[geneIds[0]!, geneIds[1]!]}
+              geneIds={[punnettGeneIds[0]!, punnettGeneIds[1]!]}
             />
           </div>
         </div>
       )}
-      {showPunnett && geneIds.length >= 3 && (
+      {showPunnett && punnettGeneIds.length >= 3 && (
         <div className="border-t border-stone-200 pt-3 mt-3">
           <PunnettDistribution
             motherId={mother.id}
             fatherId={father.id}
-            geneIds={geneIds}
+            geneIds={punnettGeneIds}
           />
         </div>
       )}
