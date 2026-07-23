@@ -14,12 +14,12 @@ export function genotypePlaceholder(gene: Gene): string {
     return alleles.map(a => a.symbol).join(' / ')
   }
   if (gene.inheritanceModel === 'sexLinked') {
-    // Male hemizygous: single letter. Female: two letters.
+    // Female (XX) needs 2 letters; male (XY) is hemizygous — 1 letter.
     const twoAllele = alleles.length === 2
     if (twoAllele) {
       const dom = [...alleles].sort((a, b) => b.dominanceRank - a.dominanceRank)[0]!.symbol
       const rec = [...alleles].sort((a, b) => a.dominanceRank - b.dominanceRank)[0]!.symbol
-      return `${dom}${dom} / ${dom}${rec} / ${rec}${rec}  |  ${dom} / ${rec}`
+      return `♀ ${dom}${dom} / ${dom}${rec} / ${rec}${rec} · ♂ ${dom} / ${rec}`
     }
   }
 
