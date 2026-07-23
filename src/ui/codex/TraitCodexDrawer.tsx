@@ -285,6 +285,19 @@ function ConceptsTab({
     return s
   }, [completedChapters, currentChapterId])
 
+  // First-teach-map: term id → { order, title } of the earliest chapter
+  // whose pinnedGlossaryTerms mentions it.
+  const firstTaught = useMemo(() => {
+    const map: Record<string, { order: number; title: string }> = {}
+    const ordered = [...chapters].sort((a, b) => a.order - b.order)
+    for (const ch of ordered) {
+      for (const term of ch.pinnedGlossaryTerms) {
+        if (!map[term]) map[term] = { order: ch.order, title: ch.title }
+      }
+    }
+    return map
+  }, [])
+
   const visible = glossaryTerms.filter(t => unlockedTermIds.has(t.id))
   const filtered = query
     ? visible.filter(t =>
@@ -302,19 +315,32 @@ function ConceptsTab({
   }
   return (
     <div className="space-y-4">
-      {filtered.map(t => (
-        <details
-          key={t.id}
-          className="border border-stone-300 rounded-lg bg-white p-3"
-        >
-          <summary className="cursor-pointer font-semibold text-stone-800 font-serif">
-            {t.name}
-          </summary>
-          <div className="mt-2 text-sm text-stone-700 whitespace-pre-line">
-            {t.overview}
-          </div>
-        </details>
-      ))}
+      {filtered.map(t => {
+        const origin = firstTaught[t.id]
+        return (
+          <details
+            key={t.id}
+            className="border border-stone-300 rounded-lg bg-white p-3"
+          >
+            <summary className="cursor-pointer font-semibold text-stone-800 font-serif flex items-center justify-between">
+              <span>{t.name}</span>
+              {origin && (
+                <span className="text-[10px] uppercase tracking-widest text-stone-500 font-sans font-normal">
+                  Ch {origin.order}
+                </span>
+              )}
+            </summary>
+            <div className="mt-2 text-sm text-stone-700 whitespace-pre-line">
+              {t.overview}
+            </div>
+            {origin && (
+              <div className="text-[10px] italic text-stone-500 mt-2">
+                First introduced in Ch {origin.order} · {origin.title}
+              </div>
+            )}
+          </details>
+        )
+      })}
     </div>
   )
 }
