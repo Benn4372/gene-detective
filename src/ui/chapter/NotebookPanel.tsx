@@ -1,6 +1,8 @@
 import { useGameStore } from '../../state/gameStore'
 import { blobSpecies } from '../../content'
+import { computePhenotype } from '../../engine/phenotype'
 import { genotypePlaceholder } from '../../renderer/genotypePlaceholder'
+import { phenotypeLabel } from '../../renderer/phenotypeLabels'
 import { PunnettGrid } from '../workbench/PunnettGrid'
 import { PunnettGridDihybrid } from '../workbench/PunnettGridDihybrid'
 import { PunnettGridSexLinked } from '../workbench/PunnettGridSexLinked'
@@ -162,7 +164,9 @@ export function NotebookPanel({
   )
 }
 
-// One parent's row for one gene: guess input on top, notes underneath.
+// One parent's row for one gene: observed phenotype up top, then guess
+// input, then notes textarea. The phenotype line gives the player a
+// concrete anchor next to their reasoning space.
 function NotebookCell({
   creatureId,
   geneId,
@@ -178,9 +182,13 @@ function NotebookCell({
   const notes = useGameStore(s => s.notebookNotes[creatureId]?.[geneId] ?? '')
   const setGuess = useGameStore(s => s.setNotebookGuess)
   const setNotes = useGameStore(s => s.setNotebookNote)
+  const creature = useGameStore(s => s.creatures[creatureId])
 
   const gene = blobSpecies.genes.find(g => g.id === geneId)
   if (!gene) return null
+  const traitId = gene.expressesTraits[0]
+  const phen = creature ? computePhenotype(creature, blobSpecies) : {}
+  const observedValue = traitId ? phen[traitId] : undefined
 
   const validSymbols = new Set(gene.alleles.map(a => a.symbol))
   const placeholder = genotypePlaceholder(gene)
@@ -199,6 +207,14 @@ function NotebookCell({
       <div className="text-xs text-stone-500 mb-1">
         {name} {sexGlyph}
       </div>
+      {observedValue && observedValue !== 'absent' && traitId && (
+        <div className="text-[10px] text-stone-500 mb-1">
+          observed:{' '}
+          <span className="font-mono text-stone-700">
+            {phenotypeLabel(traitId, observedValue)}
+          </span>
+        </div>
+      )}
       <div className="text-[10px] uppercase tracking-wide text-stone-500 mb-1">
         Genotype guess
       </div>
