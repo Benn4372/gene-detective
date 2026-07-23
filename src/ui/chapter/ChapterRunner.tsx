@@ -677,7 +677,10 @@ function StageWithWorkbench({
         </div>
       )}
       {soloHints.length > 0 && (
-        <SoloHintsPanel hints={soloHints} />
+        <SoloHintsPanel
+          hints={soloHints}
+          chapterId={currentChapterId ?? ''}
+        />
       )}
 
       {/* Mystery pair — small cards */}
@@ -754,8 +757,17 @@ function StageWithWorkbench({
 // a "Need a hint?" button; each click reveals the next escalating hint
 // (reframe → point → suggest). No penalty — the game just doesn't offer
 // hints unless the player asks.
-function SoloHintsPanel({ hints }: { hints: import('../../content/types').Hint[] }) {
-  const [shown, setShown] = useState(0)
+function SoloHintsPanel({
+  hints,
+  chapterId,
+}: {
+  hints: import('../../content/types').Hint[]
+  chapterId: string
+}) {
+  // Persist "how many hints have I unlocked?" per chapter — reopening the
+  // solo stage keeps whatever the player has already seen.
+  const shown = useGameStore(s => s.hintsShownForChapter[chapterId] ?? 0)
+  const showNextHint = useGameStore(s => s.showNextHint)
   const canReveal = shown < hints.length
   return (
     <div className="rounded-lg bg-amber-50/40 border border-amber-200 p-3">
@@ -765,7 +777,7 @@ function SoloHintsPanel({ hints }: { hints: import('../../content/types').Hint[]
         </div>
         {canReveal ? (
           <button
-            onClick={() => setShown(shown + 1)}
+            onClick={() => showNextHint(chapterId)}
             className="text-xs px-3 py-1 rounded bg-amber-500 text-white hover:bg-amber-600"
           >
             {shown === 0 ? '💡 Need a hint?' : '💡 Next hint'}
