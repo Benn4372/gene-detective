@@ -107,6 +107,18 @@ function ChromosomeBand({
             (no genes assigned)
           </div>
         ) : (
+          buildDistanceLabels(genes, unlockedTraits, chromosome).map((label, i) => (
+            <div
+              key={`dist-${i}`}
+              className="absolute top-1/2 -translate-y-[calc(50%+16px)] -translate-x-1/2 text-[9px] font-mono text-indigo-700"
+              style={{ left: `${label.leftPct}%` }}
+              title={`${label.distanceCM} cM between ${label.g1Name} and ${label.g2Name}`}
+            >
+              {label.distanceCM} cM
+            </div>
+          ))
+        )}
+        {genes.length > 0 && (
           genes.map(g => {
             const isUnlocked = g.expressesTraits.some(t =>
               unlockedTraits.includes(t),
@@ -181,6 +193,45 @@ function formatChromosomeType(t: Chromosome['type']): string {
     case 'sex-W': return 'sex W'
     case 'mitochondrial': return 'mitochondrial'
   }
+}
+
+// Compute the midpoint-x + cM distance labels between consecutive UNLOCKED
+// gene pairs on a chromosome. Only show a label when both endpoints are
+// unlocked — locked genes stay '???' anyway so their distances would be
+// meaningless.
+function buildDistanceLabels(
+  genes: Gene[],
+  unlockedTraits: string[],
+  chromosome: Chromosome,
+): Array<{
+  leftPct: number
+  distanceCM: number
+  g1Name: string
+  g2Name: string
+}> {
+  const out: Array<{
+    leftPct: number
+    distanceCM: number
+    g1Name: string
+    g2Name: string
+  }> = []
+  const isUnlocked = (g: Gene) =>
+    g.expressesTraits.some(t => unlockedTraits.includes(t))
+  const unlocked = genes.filter(isUnlocked).sort((a, b) => a.locusCM - b.locusCM)
+  for (let i = 0; i < unlocked.length - 1; i++) {
+    const g1 = unlocked[i]!
+    const g2 = unlocked[i + 1]!
+    const distanceCM = Math.abs(g2.locusCM - g1.locusCM)
+    if (distanceCM === 0) continue
+    const midCM = (g1.locusCM + g2.locusCM) / 2
+    out.push({
+      leftPct: (midCM / chromosome.lengthCM) * 100,
+      distanceCM,
+      g1Name: g1.name,
+      g2Name: g2.name,
+    })
+  }
+  return out
 }
 
 function formatModel(m: Gene['inheritanceModel']): string {
