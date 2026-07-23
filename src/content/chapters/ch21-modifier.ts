@@ -78,7 +78,7 @@ Today's puzzle: the father is a known **Gg** carrier. The mother is a mystery â€
             tail: ['T', 'T'],
             tailGrowth: ['G', 'g'],
           },
-          defaultName: 'Known Gg father',
+          defaultName: 'Known-carrier father',
         },
       ],
       correctAssertions: [
