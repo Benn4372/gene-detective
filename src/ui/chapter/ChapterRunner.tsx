@@ -281,15 +281,16 @@ function WorkedExample({
     scope: 'trophy',
   }
 
-  // Compute one representative offspring genotype (one allele from each
-  // parent, per gene). No forced defaulting to a single focus gene — the
-  // offspring inherits from whatever the parents declared, so every trait
-  // the chapter wants to teach shows up correctly.
+  // Compute one representative offspring genotype. Pick mother's FIRST
+  // allele and father's SECOND allele per gene: for two-allele hetero pairs
+  // (Rw × Rw, Aa × aa, etc.) this yields the modal outcome — the
+  // heterozygote — which matches what the show-stage narration typically
+  // walks the player through.
   const previewOffspring: Creature | null = useMemo(() => {
     const genotype: Record<string, string[]> = {}
     for (const gene of blobSpecies.genes) {
       const mA = pMother[gene.id]?.[0]
-      const fA = pFather[gene.id]?.[0]
+      const fA = pFather[gene.id]?.[1] ?? pFather[gene.id]?.[0]
       if (mA && fA) genotype[gene.id] = [mA, fA]
     }
     return {
