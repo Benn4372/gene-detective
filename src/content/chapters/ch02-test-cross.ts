@@ -86,49 +86,15 @@ The absence or presence of even a single recessive-phenotype offspring is your a
       },
     },
 
+    // Solo re-tests test-cross reasoning with a mystery blob whose test cross
+    // reveals HOMOZYGOSITY instead: every offspring gets antennae, so the
+    // mystery mother must be AA (not Aa).
     solo: {
       starterCreatures: [
         {
           role: 'mother',
           sex: 'F',
-          genotype: { antennae: ['A', 'a'], spots: ['s', 's'] },
-          defaultName: 'Mystery Blob',
-        },
-        {
-          role: 'father',
-          sex: 'M',
-          genotype: { antennae: ['a', 'a'], spots: ['s', 's'] },
-          defaultName: 'Test Partner',
-        },
-      ],
-      correctAssertions: [
-        { creatureRole: 'mother', geneId: 'antennae', correctGenotype: 'Aa' },
-        { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'aa' },
-      ],
-      litterSize: 6,
-      validationTier: 'medium',
-      hints: [
-        {
-          stage: 'reframe',
-          text: 'The mystery blob shows antennae. Only two options: AA or Aa. Which offspring pattern would each predict?',
-        },
-        {
-          stage: 'point',
-          text: "If the mystery blob is AA, every offspring gets antennae. If it's Aa, about half will lack antennae. Count carefully.",
-        },
-        {
-          stage: 'suggest',
-          text: 'Cross them several more times. If any offspring lack antennae, the mystery blob is Aa. Enter that in the notebook.',
-        },
-      ],
-    },
-
-    master: {
-      starterCreatures: [
-        {
-          role: 'mother',
-          sex: 'F',
-          genotype: { antennae: ['A', 'a'], spots: ['s', 's'] },
+          genotype: { antennae: ['A', 'A'], spots: ['s', 's'] },
           defaultName: 'Second Mystery',
         },
         {
@@ -139,15 +105,25 @@ The absence or presence of even a single recessive-phenotype offspring is your a
         },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'antennae', correctGenotype: 'Aa' },
+        { creatureRole: 'mother', geneId: 'antennae', correctGenotype: 'AA' },
         { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'aa' },
       ],
-      litterSize: 4,
-      // 5 × 4 = 20 offspring. For Aa × aa, P(no recessive offspring across
-      // 20) = (1/2)^20 ≈ 1e-6 — RNG can't sabotage the player anymore.
-      breedBudget: 5,
-      rewardMentorDialogue:
-        "Efficient. That's the way real fieldwork is done — no wasted breedings.",
+      litterSize: 6,
+      validationTier: 'medium',
+      hints: [
+        {
+          stage: 'reframe',
+          text: "This mystery mother shows antennae — same as before, could be AA or Aa. Run the same test cross and see what the offspring say.",
+        },
+        {
+          stage: 'point',
+          text: "Under Aa × aa you'd expect roughly half the offspring to lack antennae. But if EVERY offspring has antennae across a big litter, that argues she can't have any 'a' at all.",
+        },
+        {
+          stage: 'suggest',
+          text: "Every child has antennae over many crosses → mother must be AA. Enter AA for the mother, aa for the known test partner.",
+        },
+      ],
     },
   },
 

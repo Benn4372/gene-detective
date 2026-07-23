@@ -90,73 +90,48 @@ You won't see that exactly in any single litter — but over 30+ offspring, the 
       },
     },
 
+    // Solo swaps to a DIHYBRID TEST CROSS: the mystery mother has both
+    // traits, the father is pure double-recessive. Instead of the 9:3:3:1
+    // pattern, expect a clean 1:1:1:1 ratio of the four phenotype classes
+    // when the mother is truly AaSs. Every offspring class directly reveals
+    // one of her gametes.
     solo: {
       starterCreatures: [
         {
           role: 'mother',
           sex: 'F',
           genotype: { antennae: ['A', 'a'], spots: ['S', 's'] },
-          defaultName: 'Blob 3-A',
+          defaultName: 'Dihybrid Mystery',
         },
         {
           role: 'father',
           sex: 'M',
-          genotype: { antennae: ['A', 'a'], spots: ['S', 's'] },
-          defaultName: 'Blob 3-B',
+          genotype: { antennae: ['a', 'a'], spots: ['s', 's'] },
+          defaultName: 'Double Recessive',
         },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'antennae', correctGenotype: 'Aa' },
-        { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'Aa' },
+        { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'aa' },
         { creatureRole: 'mother', geneId: 'spots', correctGenotype: 'Ss' },
-        { creatureRole: 'father', geneId: 'spots', correctGenotype: 'Ss' },
+        { creatureRole: 'father', geneId: 'spots', correctGenotype: 'ss' },
       ],
       litterSize: 8,
       validationTier: 'medium',
       hints: [
         {
           stage: 'reframe',
-          text: 'Both parents show antennae and spots. But among offspring, four combinations are possible. Which combinations tell you the parents hide recessive alleles?',
+          text: 'The father is fixed at double-recessive (his phenotype gives it away). His gametes are always "as". So every offspring directly reveals ONE of the mother\'s gametes.',
         },
         {
           stage: 'point',
-          text: 'Watch for offspring lacking antennae, or lacking spots, or lacking both. Those "missing" traits mean each parent is heterozygous for that gene.',
+          text: 'Four phenotype classes should appear in offspring: antennae+spots, antennae-only, spots-only, and neither. Under AaSs × aass they arrive in roughly equal 1:1:1:1 proportions.',
         },
         {
           stage: 'suggest',
-          text: 'Cross them many times — 30+ offspring gives a clearer picture. Around 3/16 should lack antennae, 3/16 should lack spots, and 1/16 should lack both.',
+          text: 'Enter AaSs for the mother (heterozygous on both), and aass for the pure-recessive father.',
         },
       ],
-    },
-
-    master: {
-      starterCreatures: [
-        {
-          role: 'mother',
-          sex: 'F',
-          genotype: { antennae: ['A', 'a'], spots: ['S', 's'] },
-          defaultName: 'Advanced Blob',
-        },
-        {
-          role: 'father',
-          sex: 'M',
-          genotype: { antennae: ['A', 'a'], spots: ['S', 's'] },
-          defaultName: 'Advanced Partner',
-        },
-      ],
-      correctAssertions: [
-        { creatureRole: 'mother', geneId: 'antennae', correctGenotype: 'Aa' },
-        { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'Aa' },
-        { creatureRole: 'mother', geneId: 'spots', correctGenotype: 'Ss' },
-        { creatureRole: 'father', geneId: 'spots', correctGenotype: 'Ss' },
-      ],
-      litterSize: 8,
-      // 5 × 8 = 40 offspring. For Aa × Aa with 1/4 recessive per gene,
-      // P(no recessive in 40) = (3/4)^40 ≈ 1e-5 per gene. Needing both aa
-      // AND ss to appear at least once is now essentially guaranteed.
-      breedBudget: 5,
-      rewardMentorDialogue:
-        "That's efficient dihybrid work. Prof. Weaver will be impressed.",
     },
   },
 

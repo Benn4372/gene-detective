@@ -72,7 +72,7 @@ So a tail-less blob could secretly be TT, Tt, or tt — you can't tell without b
             tail: ['T', 'T'],
             tailGrowth: ['G', 'g'],
           },
-          defaultName: 'Long-tail Gg α',
+          defaultName: 'Long-tail α',
         },
         {
           role: 'father',
@@ -82,7 +82,7 @@ So a tail-less blob could secretly be TT, Tt, or tt — you can't tell without b
             tail: ['T', 'T'],
             tailGrowth: ['G', 'g'],
           },
-          defaultName: 'Long-tail Gg β',
+          defaultName: 'Long-tail β',
         },
       ],
       correctAssertions: [
@@ -116,7 +116,7 @@ So a tail-less blob could secretly be TT, Tt, or tt — you can't tell without b
             tail: ['T', 'T'],
             tailGrowth: ['G', 'g'],
           },
-          defaultName: 'Long-tail Gg α',
+          defaultName: 'Long-tail α',
         },
         {
           role: 'father',
@@ -126,7 +126,7 @@ So a tail-less blob could secretly be TT, Tt, or tt — you can't tell without b
             tail: ['T', 'T'],
             tailGrowth: ['G', 'g'],
           },
-          defaultName: 'Long-tail Gg β',
+          defaultName: 'Long-tail β',
         },
       ],
       correctAssertions: [

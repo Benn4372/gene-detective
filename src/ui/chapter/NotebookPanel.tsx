@@ -1,21 +1,31 @@
 import { useGameStore } from '../../state/gameStore'
 import { blobSpecies } from '../../content'
+import { PunnettGrid } from '../workbench/PunnettGrid'
+import { PunnettGridDihybrid } from '../workbench/PunnettGridDihybrid'
+import { PunnettDistribution } from '../workbench/PunnettDistribution'
 
 interface Props {
   motherId: string
   fatherId: string
   geneIds: string[]
+  // Whether the Punnett tool has been unlocked yet — hidden in Ch 1 until
+  // Ch 2 formally introduces it.
+  showPunnett?: boolean
 }
 
-// The Notebook is a freeform scratchpad — no validation. Every gene row for
-// each parent has two inputs:
-//   • Genotype guess (allele letters). Populates the Punnett square's
-//     "Fill from notebook" button.
-//   • Notes (free text). Where the player writes things like "AA or Aa" or
-//     "father must be homozygous because…".
-// The validated Final Answer surface lives in a separate AnswerPanel that
-// only appears once the player has bred at least one litter.
-export function NotebookPanel({ motherId, fatherId, geneIds }: Props) {
+// The Notebook is the player's single reasoning surface. It contains:
+//   • Per gene, per parent: a genotype guess input + notes textarea
+//   • A live Punnett square derived from the guesses (auto-updates as they
+//     change; no manual header entry, no fill button, no clear button)
+// The Punnett stays wired into the notebook for the whole stage — it does
+// NOT get replaced or hidden after a breed. The validated Final Answer lives
+// in a separate AnswerPanel once the player has bred at least one litter.
+export function NotebookPanel({
+  motherId,
+  fatherId,
+  geneIds,
+  showPunnett = true,
+}: Props) {
   const mother = useGameStore(s => s.creatures[motherId])
   const father = useGameStore(s => s.creatures[fatherId])
   if (!mother || !father) return null
@@ -30,7 +40,7 @@ export function NotebookPanel({ motherId, fatherId, geneIds }: Props) {
           📓 Field Notebook
         </h3>
         <div className="text-xs text-stone-500 italic">
-          Scratch space. No answer-checking here — your guess feeds the Punnett square.
+          Scratch space. Your guesses drive the Punnett square below.
         </div>
       </div>
 
@@ -45,7 +55,7 @@ export function NotebookPanel({ motherId, fatherId, geneIds }: Props) {
             <div className="text-xs font-semibold text-stone-700 mb-2">
               Gene: {gene.name}
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 mb-3">
               <NotebookCell
                 creatureId={mother.id}
                 geneId={geneId}
@@ -59,9 +69,42 @@ export function NotebookPanel({ motherId, fatherId, geneIds }: Props) {
                 sexGlyph="♂"
               />
             </div>
+            {/* Live Punnett for THIS gene — only shown for a monohybrid
+                view. Dihybrid + polygenic use the combined Punnett rendered
+                below the gene list. */}
+            {showPunnett && geneIds.length === 1 && (
+              <div className="flex justify-center">
+                <PunnettGrid
+                  motherId={mother.id}
+                  fatherId={father.id}
+                  geneId={geneId}
+                />
+              </div>
+            )}
           </div>
         )
       })}
+
+      {/* Multi-gene Punnett display sits ONCE at the bottom of the notebook
+          when the notebook tracks more than one gene. */}
+      {showPunnett && geneIds.length === 2 && (
+        <div className="border-t border-stone-200 pt-3 mt-3 flex justify-center">
+          <PunnettGridDihybrid
+            motherId={mother.id}
+            fatherId={father.id}
+            geneIds={[geneIds[0]!, geneIds[1]!]}
+          />
+        </div>
+      )}
+      {showPunnett && geneIds.length >= 3 && (
+        <div className="border-t border-stone-200 pt-3 mt-3">
+          <PunnettDistribution
+            motherId={mother.id}
+            fatherId={father.id}
+            geneIds={geneIds}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -99,8 +142,6 @@ function NotebookCell({
       : gene.alleles.map(a => a.symbol).join('')
 
   const onGuessChange = (raw: string) => {
-    // Keep only recognised allele symbols. Free-typing letters that aren't
-    // alleles just gets stripped — the field is purely for feeding the Punnett.
     const filtered = raw
       .split('')
       .filter(ch => validSymbols.has(ch))

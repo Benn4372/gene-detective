@@ -124,7 +124,7 @@ export interface Creature {
 
 export type CreatureScope =
   | 'trophy'
-  | { kind: 'chapter'; chapterId: string; stage: 'guided' | 'solo' | 'master' }
+  | { kind: 'chapter'; chapterId: string; stage: 'guided' | 'solo' }
   | { kind: 'mission'; missionId: string }
 
 export interface Gamete {

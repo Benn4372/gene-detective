@@ -1,6 +1,7 @@
 import type { Creature } from '../../engine/types'
 import { computePhenotype } from '../../engine/phenotype'
 import { blobSpecies } from '../../content'
+import { phenotypeLabel } from '../../renderer/phenotypeLabels'
 
 interface Props {
   offspring: Creature[]
@@ -44,7 +45,7 @@ export function PhenotypeTally({ offspring, visibleTraitIds, label }: Props) {
               ) : (
                 entries.map(([val, n]) => (
                   <span key={val} className="font-mono ml-2">
-                    {val}×{n}{' '}
+                    {phenotypeLabel(traitId, val)}×{n}{' '}
                     <span className="text-stone-500">
                       ({Math.round((n / total) * 100)}%)
                     </span>

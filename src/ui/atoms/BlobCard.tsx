@@ -2,6 +2,7 @@ import type { Creature } from '../../engine/types'
 import { BlobRenderer } from '../../renderer/BlobRenderer'
 import { blobSpecies } from '../../content'
 import { computePhenotype } from '../../engine/phenotype'
+import { phenotypeLabel } from '../../renderer/phenotypeLabels'
 import { SexBadge } from './SexBadge'
 
 interface Props {
@@ -58,7 +59,10 @@ export function BlobCard({
               if (!val || val === 'absent') return null
               return (
                 <div key={t.id}>
-                  {t.name}: <span className="font-mono text-stone-800">{val}</span>
+                  {t.name}:{' '}
+                  <span className="font-mono text-stone-800">
+                    {phenotypeLabel(t.id, val)}
+                  </span>
                 </div>
               )
             })}

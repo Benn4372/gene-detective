@@ -89,44 +89,10 @@ Cross a medium-tail Tt with another medium-tail Tt, and you get a clean **1 : 2 
       },
     },
 
+    // Solo picks up the storyIntro's teaser — a long-tail parent × short-tail
+    // parent. Under incomplete dominance every offspring should come out
+    // medium (Tt), showing the F1 blend.
     solo: {
-      starterCreatures: [
-        {
-          role: 'mother',
-          sex: 'F',
-          genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
-          defaultName: 'Medium-tail α',
-        },
-        {
-          role: 'father',
-          sex: 'M',
-          genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
-          defaultName: 'Medium-tail β',
-        },
-      ],
-      correctAssertions: [
-        { creatureRole: 'mother', geneId: 'tail', correctGenotype: 'Tt' },
-        { creatureRole: 'father', geneId: 'tail', correctGenotype: 'Tt' },
-      ],
-      litterSize: 6,
-      validationTier: 'medium',
-      hints: [
-        {
-          stage: 'reframe',
-          text: "Three possible genotypes — TT, Tt, tt — each with its own tail length. Two of them are ruled out immediately by the parents' medium tails. Which one remains?",
-        },
-        {
-          stage: 'point',
-          text: 'You should see long, medium, AND short tails in the litter. If any category is completely missing, the parents can\'t both be Tt.',
-        },
-        {
-          stage: 'suggest',
-          text: 'Look for the 1:2:1 pattern in the phenotype tally. When you see roughly a quarter long, half medium, and a quarter short — record both parents as Tt.',
-        },
-      ],
-    },
-
-    master: {
       starterCreatures: [
         {
           role: 'mother',
@@ -146,9 +112,21 @@ Cross a medium-tail Tt with another medium-tail Tt, and you get a clean **1 : 2 
         { creatureRole: 'father', geneId: 'tail', correctGenotype: 'tt' },
       ],
       litterSize: 4,
-      breedBudget: 2,
-      rewardMentorDialogue:
-        'A single cross tells the whole story here — every child medium, no hidden alleles.',
+      validationTier: 'medium',
+      hints: [
+        {
+          stage: 'reframe',
+          text: 'This time the parents are visually different — one long tail, one short. Under incomplete dominance, each visible extreme corresponds to just one genotype.',
+        },
+        {
+          stage: 'point',
+          text: 'Long tail can only be TT (Tt would be medium). Short tail can only be tt. Now what does that predict for every offspring?',
+        },
+        {
+          stage: 'suggest',
+          text: 'Every offspring inherits T from the mother and t from the father → every child is Tt (medium). Enter TT for the long-tail mother, tt for the short-tail father.',
+        },
+      ],
     },
   },
 

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { blobSpecies } from '../../content'
 import type { Creature } from '../../engine/types'
+import { useGameStore } from '../../state/gameStore'
 import { BlobRenderer } from '../../renderer/BlobRenderer'
-import { GenotypeInput } from '../atoms/GenotypeInput'
+import { phenotypeLabel } from '../../renderer/phenotypeLabels'
 import { SexBadge } from '../atoms/SexBadge'
 import { computePhenotype } from '../../engine/phenotype'
 
@@ -11,11 +12,13 @@ interface Props {
   visibleGeneIds: string[]
 }
 
-// Mission notebook. Unlike the chapter one, this NEVER validates — missions
-// hide the answer entirely, so we don't want a green checkmark telling the
-// player they're right. Player clicks any blob to focus its note row; a
-// dropdown of every blob in the mission's pool (starters + bred offspring)
-// keeps the panel size sane even when the pool grows.
+// Mission notebook. Never validates — missions hide the answer entirely, so
+// there is deliberately no green checkmark. Player clicks any blob thumbnail
+// to focus its row. For each tracked gene the row shows:
+//   • Genotype guess (allele letters) — feeds the Punnett's Fill button
+//   • Notes textarea (free text scratchpad)
+//   • Observed phenotype label so the player can cross-check against reality
+// Same shape as the chapter NotebookPanel so the two screens read consistently.
 export function MissionNotebook({ blobs, visibleGeneIds }: Props) {
   const [focusId, setFocusId] = useState<string>(blobs[0]?.id ?? '')
   const focused = blobs.find(b => b.id === focusId) ?? blobs[0]
@@ -28,7 +31,7 @@ export function MissionNotebook({ blobs, visibleGeneIds }: Props) {
           📓 Field Notebook
         </h3>
         <div className="text-xs text-stone-500 italic">
-          Notes only — no answer-checking in missions.
+          Notes only — no answer-checking in missions. Guess feeds the Punnett.
         </div>
       </div>
 
@@ -73,26 +76,90 @@ export function MissionNotebook({ blobs, visibleGeneIds }: Props) {
             const trait = gene.expressesTraits[0]
             const observedPhen = trait ? phen[trait] : undefined
             return (
-              <div key={geneId}>
-                <div className="text-xs font-semibold text-stone-700 mb-1">
-                  {gene.name}
-                </div>
-                <GenotypeInput
-                  creatureId={focused.id}
-                  geneId={geneId}
-                  noValidation
-                />
-                {observedPhen && observedPhen !== 'absent' && (
-                  <div className="text-[10px] text-stone-500 mt-1">
-                    observed phenotype:{' '}
-                    <span className="font-mono">{observedPhen}</span>
-                  </div>
-                )}
-              </div>
+              <MissionNotebookCell
+                key={geneId}
+                gene={gene}
+                creatureId={focused.id}
+                geneId={geneId}
+                observedPhen={observedPhen}
+                traitId={trait}
+              />
             )
           })}
         </div>
       </div>
+    </div>
+  )
+}
+
+// One (creature × gene) row: guess input + notes textarea + observed phen line.
+function MissionNotebookCell({
+  gene,
+  creatureId,
+  geneId,
+  observedPhen,
+  traitId,
+}: {
+  gene: (typeof blobSpecies.genes)[number]
+  creatureId: string
+  geneId: string
+  observedPhen?: string
+  traitId?: string
+}) {
+  const guess = useGameStore(s => s.notebookGuess[creatureId]?.[geneId] ?? '')
+  const notes = useGameStore(s => s.notebookNotes[creatureId]?.[geneId] ?? '')
+  const setGuess = useGameStore(s => s.setNotebookGuess)
+  const setNotes = useGameStore(s => s.setNotebookNote)
+
+  const validSymbols = new Set(gene.alleles.map(a => a.symbol))
+  const dominant = [...gene.alleles].sort(
+    (a, b) => b.dominanceRank - a.dominanceRank,
+  )[0]!.symbol
+  const recessive = [...gene.alleles].sort(
+    (a, b) => a.dominanceRank - b.dominanceRank,
+  )[0]!.symbol
+  const placeholder =
+    gene.alleles.length === 2
+      ? `${dominant}${dominant} / ${dominant}${recessive} / ${recessive}${recessive}`
+      : gene.alleles.map(a => a.symbol).join('')
+
+  const onGuessChange = (raw: string) => {
+    const filtered = raw
+      .split('')
+      .filter(ch => validSymbols.has(ch))
+      .slice(0, 4)
+      .join('')
+    setGuess(creatureId, geneId, filtered)
+  }
+
+  return (
+    <div>
+      <div className="text-xs font-semibold text-stone-700 mb-1">
+        {gene.name}
+      </div>
+      <input
+        type="text"
+        value={guess}
+        onChange={e => onGuessChange(e.target.value)}
+        placeholder={placeholder}
+        maxLength={4}
+        className="w-36 px-2 py-1 border-2 border-stone-300 rounded text-center font-mono text-sm bg-white text-stone-800"
+      />
+      <textarea
+        value={notes}
+        onChange={e => setNotes(creatureId, geneId, e.target.value)}
+        placeholder='e.g. "AA or Aa"'
+        rows={2}
+        className="mt-2 w-full px-2 py-1 border border-stone-300 rounded text-xs bg-white text-stone-700 resize-none leading-snug"
+      />
+      {observedPhen && observedPhen !== 'absent' && traitId && (
+        <div className="text-[10px] text-stone-500 mt-1">
+          observed phenotype:{' '}
+          <span className="font-mono">
+            {phenotypeLabel(traitId, observedPhen)}
+          </span>
+        </div>
+      )}
     </div>
   )
 }

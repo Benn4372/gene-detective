@@ -1,5 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { useGameStore } from '../../state/gameStore'
 import { blobSpecies } from '../../content'
 import { BlobRenderer } from '../../renderer/BlobRenderer'
@@ -11,76 +10,29 @@ interface Props {
   geneId: string
 }
 
-// Interactive Punnett square for a single gene. Player fills header cells
-// with allele letters; each body cell auto-renders a semi-transparent mini
-// blob showing that predicted offspring's phenotype for this gene.
-//
-// The "Fill from notebook" button populates all four headers from the two
-// parents' hypothesized genotypes stored in the notebook. This is the game's
-// main punnett shortcut — no free info, but no tedious data entry either.
+// Single-gene Punnett square. Passive by design — the headers derive directly
+// from the two parents' notebook guesses (notebookGuess store), and every cell
+// updates the instant a guess changes. There is no manual header editing and
+// no Fill/Clear buttons: the Punnett IS the notebook's visual reasoning aid.
 export function PunnettGrid({ motherId, fatherId, geneId }: Props) {
-  // Read from the freeform notebook GUESS, not the validated Final Answer.
-  // The Notebook is where the player writes what they THINK is going on;
-  // the Punnett square is a tool for testing that thought.
-  const motherHyp = useGameStore(s => s.notebookGuess[motherId]?.[geneId] ?? '')
-  const fatherHyp = useGameStore(s => s.notebookGuess[fatherId]?.[geneId] ?? '')
+  const motherGuess = useGameStore(s => s.notebookGuess[motherId]?.[geneId] ?? '')
+  const fatherGuess = useGameStore(s => s.notebookGuess[fatherId]?.[geneId] ?? '')
 
   const gene = useMemo(
     () => blobSpecies.genes.find(g => g.id === geneId) ?? null,
     [geneId],
   )
-
-  const [topA, setTopA] = useState('')
-  const [topB, setTopB] = useState('')
-  const [sideA, setSideA] = useState('')
-  const [sideB, setSideB] = useState('')
-
-  const validSymbols = useMemo(
-    () => (gene ? gene.alleles.map(a => a.symbol) : []),
-    [gene],
-  )
-
-  // If either parent's hypothesis changes to something the player COULD fill
-  // in, do not auto-fill — leave the choice to click "Fill from notebook".
-  // But if the field is empty, offer to fill on first mount.
-  useEffect(() => {
-    // do nothing — see fillFromNotebook below
-  }, [motherHyp, fatherHyp])
-
   if (!gene) return null
 
-  const sanitize = (raw: string): string => {
-    const ch = raw.trim().slice(-1)
-    return validSymbols.includes(ch) ? ch : ''
-  }
-
-  // Any hint of a notebook entry is enough to offer the fill — one letter
-  // fills one column, two letters fill both. Partial info from either parent
-  // is used; the other side stays blank so the player can hand-fill it.
-  const canFill = motherHyp.length >= 1 || fatherHyp.length >= 1
-  const fillFromNotebook = () => {
-    if (!canFill) return
-    // Mother's alleles go down the side; father's along the top.
-    if (motherHyp.length >= 1) setSideA(motherHyp[0]!)
-    if (motherHyp.length >= 2) setSideB(motherHyp[1]!)
-    if (fatherHyp.length >= 1) setTopA(fatherHyp[0]!)
-    if (fatherHyp.length >= 2) setTopB(fatherHyp[1]!)
-  }
-
-  const clear = () => {
-    setTopA('')
-    setTopB('')
-    setSideA('')
-    setSideB('')
-  }
-
-  const inputCls =
-    'w-8 h-8 text-center font-mono border-2 border-stone-300 rounded bg-white text-stone-800'
+  const sideA = motherGuess[0] ?? ''
+  const sideB = motherGuess[1] ?? ''
+  const topA = fatherGuess[0] ?? ''
+  const topB = fatherGuess[1] ?? ''
 
   const renderCell = (row: string, col: string) => {
     if (!row || !col) {
       return (
-        <div className="w-20 h-20 border border-stone-200 bg-stone-50/50 rounded" />
+        <div className="w-16 h-16 border border-stone-200 bg-stone-50/50 rounded" />
       )
     }
     const pair = orderedPair(gene, row, col)
@@ -89,7 +41,7 @@ export function PunnettGrid({ motherId, fatherId, geneId }: Props) {
       .filter((x): x is string => !!x)
     if (alleleIds.length !== 2) {
       return (
-        <div className="w-20 h-20 border border-stone-200 bg-stone-50/50 rounded" />
+        <div className="w-16 h-16 border border-stone-200 bg-stone-50/50 rounded" />
       )
     }
     const preview = makePreviewCreature(
@@ -99,106 +51,63 @@ export function PunnettGrid({ motherId, fatherId, geneId }: Props) {
     )
     const label = pair.join('')
     return (
-      <div className="w-20 h-20 border-2 border-stone-300 bg-white rounded flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="w-16 h-16 border-2 border-stone-300 bg-white rounded flex flex-col items-center justify-center relative overflow-hidden">
         <div style={{ opacity: 0.55 }}>
-          <BlobRenderer creature={preview} species={blobSpecies} size={54} />
+          <BlobRenderer creature={preview} species={blobSpecies} size={42} />
         </div>
-        <div className="text-xs font-mono font-semibold text-stone-700 absolute bottom-1">
+        <div className="text-[10px] font-mono font-semibold text-stone-700 absolute bottom-0.5">
           {label}
         </div>
       </div>
     )
   }
 
+  const headerCls =
+    'w-16 h-8 rounded font-mono text-center flex items-center justify-center text-sm'
+
   return (
     <div className="inline-block">
-      <div className="flex items-center justify-between gap-4 mb-2">
-        <div className="text-xs uppercase tracking-wide text-stone-500">
-          Punnett · {gene.name}
-        </div>
-        <div className="flex items-center gap-2">
-          <motion.button
-            whileHover={{ scale: canFill ? 1.03 : 1 }}
-            whileTap={{ scale: canFill ? 0.97 : 1 }}
-            onClick={fillFromNotebook}
-            disabled={!canFill}
-            className={
-              'px-3 py-1 rounded text-xs font-medium ' +
-              (canFill
-                ? 'bg-amber-500 text-white hover:bg-amber-600'
-                : 'bg-stone-200 text-stone-400 cursor-not-allowed')
-            }
-            title="Fill headers from your notebook hypotheses"
-          >
-            📖 Fill from notebook
-          </motion.button>
-          <button
-            onClick={clear}
-            className="px-2 py-1 rounded text-xs text-stone-500 hover:text-stone-800"
-          >
-            clear
-          </button>
-        </div>
+      <div className="text-[10px] uppercase tracking-wide text-stone-500 mb-1">
+        Punnett · {gene.name}
       </div>
-
       <table className="border-separate border-spacing-1">
         <thead>
           <tr>
-            <th className="w-10 h-10"></th>
-            <th className="w-20 pb-1 text-center">
-              <input
-                type="text"
-                value={topA}
-                onChange={e => setTopA(sanitize(e.target.value))}
-                placeholder="?"
-                className={inputCls + ' bg-sky-50'}
-                maxLength={1}
-              />
+            <th className="w-8 h-8"></th>
+            <th className="pb-0.5 text-center">
+              <div className={headerCls + ' bg-sky-50 border border-sky-200 text-sky-900'}>
+                {topA || '·'}
+              </div>
             </th>
-            <th className="w-20 pb-1 text-center">
-              <input
-                type="text"
-                value={topB}
-                onChange={e => setTopB(sanitize(e.target.value))}
-                placeholder="?"
-                className={inputCls + ' bg-sky-50'}
-                maxLength={1}
-              />
+            <th className="pb-0.5 text-center">
+              <div className={headerCls + ' bg-sky-50 border border-sky-200 text-sky-900'}>
+                {topB || '·'}
+              </div>
             </th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <th className="w-10 pr-1 text-center">
-              <input
-                type="text"
-                value={sideA}
-                onChange={e => setSideA(sanitize(e.target.value))}
-                placeholder="?"
-                className={inputCls + ' bg-rose-50'}
-                maxLength={1}
-              />
+            <th className="w-8 pr-0.5 text-center">
+              <div className={headerCls + ' bg-rose-50 border border-rose-200 text-rose-900'}>
+                {sideA || '·'}
+              </div>
             </th>
             <td>{renderCell(sideA, topA)}</td>
             <td>{renderCell(sideA, topB)}</td>
           </tr>
           <tr>
-            <th className="w-10 pr-1 text-center">
-              <input
-                type="text"
-                value={sideB}
-                onChange={e => setSideB(sanitize(e.target.value))}
-                placeholder="?"
-                className={inputCls + ' bg-rose-50'}
-                maxLength={1}
-              />
+            <th className="w-8 pr-0.5 text-center">
+              <div className={headerCls + ' bg-rose-50 border border-rose-200 text-rose-900'}>
+                {sideB || '·'}
+              </div>
             </th>
             <td>{renderCell(sideB, topA)}</td>
             <td>{renderCell(sideB, topB)}</td>
           </tr>
         </tbody>
       </table>
-      <p className="text-xs text-stone-500 mt-1">
+      <p className="text-[10px] text-stone-500 mt-1">
         Top = father's gametes ♂ · Left = mother's gametes ♀
       </p>
     </div>

@@ -1,4 +1,8 @@
 import { useMemo } from 'react'
+import { blobSpecies } from '../../content'
+import type { Creature } from '../../engine/types'
+import { BlobRenderer } from '../../renderer/BlobRenderer'
+import { SexBadge } from '../atoms/SexBadge'
 
 export interface PedigreeNode {
   id: string
@@ -10,29 +14,60 @@ export interface PedigreeNode {
 
 interface Props {
   nodes: PedigreeNode[]
+  // Gene the pedigree is about — used to render each node as a proper blob
+  // showing the phenotype for that gene.
+  focusGeneId: string
   // Player-typed genotypes per node.
   hypotheses?: Record<string, string>
   onHypothesisChange?(nodeId: string, next: string): void
-  // Correct genotypes (used to color-mark confirmed nodes).
+  // Correct genotypes (used to render each node's actual phenotype and to
+  // color-mark confirmed nodes).
   correctGenotypes?: Record<string, string>
 }
 
-// A very compact pedigree renderer. Nodes are laid out by "generation" —
-// derived from parent chains — with couples grouped horizontally.
+// A compact pedigree renderer. Each node draws an actual blob SVG for the
+// tracked gene so the player can SEE the phenotype (spots, tail, whatever)
+// instead of reading "affected / unaffected" bureaucrat-speak. Nodes stack
+// by generation, derived from the parent chains.
 export function PedigreeViewer({
   nodes,
+  focusGeneId,
   hypotheses,
   onHypothesisChange,
   correctGenotypes,
 }: Props) {
   const generations = useMemo(() => layoutByGeneration(nodes), [nodes])
+  const focusGene = useMemo(
+    () => blobSpecies.genes.find(g => g.id === focusGeneId),
+    [focusGeneId],
+  )
+
+  const buildCreature = (n: PedigreeNode): Creature | null => {
+    if (!focusGene) return null
+    const genotypeStr = correctGenotypes?.[n.id]
+    if (!genotypeStr) return null
+    const alleleIds: string[] = []
+    for (const sym of genotypeStr) {
+      const allele = focusGene.alleles.find(a => a.symbol === sym)
+      if (allele) alleleIds.push(allele.id)
+    }
+    if (alleleIds.length === 0) return null
+    return {
+      id: `pedigree-${n.id}`,
+      speciesId: blobSpecies.id,
+      sex: n.sex,
+      genotype: { [focusGeneId]: alleleIds },
+      age: 1,
+      scope: 'trophy',
+    }
+  }
 
   return (
     <div className="rounded-lg bg-white border border-stone-300 p-4">
       <div className="text-xs uppercase tracking-wide text-stone-500 mb-3">
         Family pedigree
       </div>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {generations.map((generation, gi) => (
           <div key={gi} className="flex gap-4 justify-center flex-wrap">
             {generation.map(n => {
@@ -42,23 +77,42 @@ export function PedigreeViewer({
                 correct !== undefined &&
                 normalize(val) === normalize(correct) &&
                 val.length > 0
+              const creature = buildCreature(n)
               return (
                 <div
                   key={n.id}
                   className={
-                    'flex flex-col items-center rounded-lg border-2 p-2 ' +
-                    (n.affected
-                      ? 'bg-stone-800 text-white border-stone-900'
-                      : 'bg-white text-stone-800 border-stone-400')
+                    'flex flex-col items-center rounded-lg border-2 p-3 min-w-[110px] ' +
+                    (isCorrect
+                      ? 'bg-emerald-50 border-emerald-400'
+                      : n.affected
+                        ? 'bg-amber-50 border-amber-300'
+                        : 'bg-white border-stone-300')
                   }
                 >
-                  <div className="w-10 h-10 flex items-center justify-center text-xl">
-                    {n.sex === 'F' ? '⚪' : '⬛'}
+                  {creature ? (
+                    <BlobRenderer
+                      creature={creature}
+                      species={blobSpecies}
+                      size={56}
+                    />
+                  ) : (
+                    <div className="w-14 h-14 flex items-center justify-center text-3xl text-stone-400">
+                      {n.sex === 'F' ? '⚪' : '⬛'}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1 mt-1 text-[10px] text-stone-700">
+                    <SexBadge sex={n.sex} />
+                    <span className="font-mono">{n.id}</span>
                   </div>
-                  <div className="text-[10px] font-mono">{n.id}</div>
                   {n.note && (
-                    <div className="text-[9px] italic opacity-80 max-w-[120px] text-center">
+                    <div className="text-[9px] italic text-stone-600 max-w-[110px] text-center mt-0.5">
                       {n.note}
+                    </div>
+                  )}
+                  {n.affected && (
+                    <div className="text-[9px] font-semibold text-amber-800 mt-1">
+                      shows recessive
                     </div>
                   )}
                   {onHypothesisChange && (
@@ -66,10 +120,10 @@ export function PedigreeViewer({
                       type="text"
                       value={val}
                       onChange={e => onHypothesisChange(n.id, e.target.value)}
-                      placeholder="?"
+                      placeholder="genotype?"
                       maxLength={4}
                       className={
-                        'mt-1 w-16 text-center font-mono text-xs border rounded ' +
+                        'mt-2 w-20 text-center font-mono text-xs border-2 rounded px-1 py-0.5 ' +
                         (isCorrect
                           ? 'border-emerald-400 bg-emerald-50 text-emerald-800'
                           : 'border-stone-300 bg-white text-stone-800')
@@ -83,7 +137,7 @@ export function PedigreeViewer({
         ))}
       </div>
       <div className="text-[10px] italic text-stone-500 mt-3">
-        ⬛ affected males · ⬜ unaffected males · ⚫ affected females · ⚪ unaffected females
+        Amber = shows the recessive phenotype · Green = your genotype matches
       </div>
     </div>
   )

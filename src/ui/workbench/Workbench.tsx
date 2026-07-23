@@ -1,14 +1,12 @@
 import { useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import type { Creature } from '../../engine/types'
 import { useGameStore } from '../../state/gameStore'
 import { blobSpecies } from '../../content'
 import { computePhenotype } from '../../engine/phenotype'
 import { BlobRenderer } from '../../renderer/BlobRenderer'
+import { phenotypeLabel } from '../../renderer/phenotypeLabels'
 import { SexBadge } from '../atoms/SexBadge'
-import { PunnettGrid } from './PunnettGrid'
-import { PunnettGridDihybrid } from './PunnettGridDihybrid'
-import { PunnettDistribution } from './PunnettDistribution'
 import { PhenotypeTally } from '../atoms/PhenotypeTally'
 import type { CrossRecord } from '../../state/types'
 
@@ -23,9 +21,6 @@ interface Props {
   onCrossComplete?(record: CrossRecord): void
   // Extra label to hint the player about scarcity — e.g. "3 crosses left"
   breedBudgetHint?: string
-  // Set false to hide the Punnett grid entirely — used by Ch 1 before
-  // Ch 2 teaches the Punnett square as a tool.
-  showPunnett?: boolean
 }
 
 // The primary breeding interaction. Wraps parent picker + Punnett grid(s) +
@@ -41,7 +36,6 @@ export function Workbench({
   litterSize,
   onCrossComplete,
   breedBudgetHint,
-  showPunnett = true,
 }: Props) {
   const breed = useGameStore(s => s.breed)
   const crossHistory = useGameStore(s => s.crossHistory)
@@ -100,43 +94,46 @@ export function Workbench({
       {/* Latest litter reveal — pinned near the top so it stays visible as
           the primary result of the last cross. Ordered above the pickers +
           Punnett + Execute so the player sees "what happened" first, then
-          scrolls into "what to try next" below. */}
+          scrolls into "what to try next" below.
+          Keyed on the cross id so a new cross unmounts the previous card
+          block atomically (no framer-motion "ghost cards" lingering when
+          crosses fire faster than an exit animation). */}
       {latestCross && (
-        <div className="rounded-lg bg-white border border-stone-300 p-3">
+        <div
+          key={latestCross.id}
+          className="rounded-lg bg-white border border-stone-300 p-3"
+        >
           <div className="text-xs uppercase tracking-wide text-stone-500 mb-2">
             Latest litter · {latestCross.offspringIds.length} offspring
           </div>
           <div className="flex flex-wrap gap-3">
-            <AnimatePresence mode="popLayout">
-              {latestCross.offspringIds.map((id, idx) => {
-                const child = creatures[id]
-                if (!child) return null
-                const phen = computePhenotype(child, blobSpecies)
-                return (
-                  <motion.div
-                    key={id}
-                    initial={{ opacity: 0, scale: 0.5, y: -8 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.5 }}
-                    transition={{
-                      delay: idx * 0.05,
-                      type: 'spring',
-                      stiffness: 260,
-                      damping: 20,
-                    }}
-                    className="flex flex-col items-center"
-                  >
-                    <BlobRenderer creature={child} species={blobSpecies} size={64} />
-                    <div className="flex items-center gap-1 text-xs mt-1">
-                      <SexBadge sex={child.sex} />
-                      <span className="font-mono text-stone-600">
-                        {visibleGeneIds.map(t => phen[t]).join(' · ')}
-                      </span>
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </AnimatePresence>
+            {latestCross.offspringIds.map((id, idx) => {
+              const child = creatures[id]
+              if (!child) return null
+              const phen = computePhenotype(child, blobSpecies)
+              return (
+                <motion.div
+                  key={id}
+                  initial={{ opacity: 0, scale: 0.5, y: -8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{
+                    delay: idx * 0.05,
+                    type: 'spring',
+                    stiffness: 260,
+                    damping: 20,
+                  }}
+                  className="flex flex-col items-center"
+                >
+                  <BlobRenderer creature={child} species={blobSpecies} size={64} />
+                  <div className="flex items-center gap-1 text-xs mt-1">
+                    <SexBadge sex={child.sex} />
+                    <span className="font-mono text-stone-600">
+                      {visibleGeneIds.map(t => phenotypeLabel(t, phen[t])).join(' · ')}
+                    </span>
+                  </div>
+                </motion.div>
+              )
+            })}
           </div>
         </div>
       )}
@@ -201,36 +198,9 @@ export function Workbench({
         </div>
       )}
 
-      {/* Punnett — variant chosen by number of tracked genes.
-          1 gene → 2×2, 2 genes → 4×4 dihybrid, 3+ → distribution chart.
-          Hidden entirely until Ch 2 unlocks the tool. */}
-      {showPunnett && motherId && fatherId && visibleGeneIds.length > 0 && (
-        <div className="rounded-lg bg-stone-50 border border-stone-300 p-3">
-          {visibleGeneIds.length === 1 && (
-            <PunnettGrid
-              motherId={motherId}
-              fatherId={fatherId}
-              geneId={visibleGeneIds[0]!}
-            />
-          )}
-          {visibleGeneIds.length === 2 && (
-            <PunnettGridDihybrid
-              motherId={motherId}
-              fatherId={fatherId}
-              geneIds={[visibleGeneIds[0]!, visibleGeneIds[1]!]}
-            />
-          )}
-          {visibleGeneIds.length >= 3 && (
-            <PunnettDistribution
-              motherId={motherId}
-              fatherId={fatherId}
-              geneIds={visibleGeneIds}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Execute + budget hint */}
+      {/* Execute + budget hint. The Punnett square no longer lives here —
+          it's part of the Notebook now, so it stays visible alongside the
+          player's guesses instead of getting separated after each breed. */}
       <div className="flex items-center justify-between">
         <motion.button
           whileHover={{ scale: canCross ? 1.03 : 1 }}
@@ -302,7 +272,7 @@ function PickerColumn({
                   {name}
                 </div>
                 <div className="font-mono text-[10px] text-stone-700 mt-0.5">
-                  {visibleGeneIds.map(t => phen[t]).join(' · ')}
+                  {visibleGeneIds.map(t => phenotypeLabel(t, phen[t])).join(' · ')}
                 </div>
               </button>
             )

@@ -20,7 +20,7 @@ function nextId(prefix: string): string {
 
 // -- scope helpers ---------------------------------------------------------
 
-function chapterScope(chapterId: string, stage: 'guided' | 'solo' | 'master'): CreatureScope {
+function chapterScope(chapterId: string, stage: 'guided' | 'solo'): CreatureScope {
   return { kind: 'chapter', chapterId, stage }
 }
 function missionScope(missionId: string): CreatureScope {
@@ -376,9 +376,7 @@ export const useGameStore = create<GameState & GameActions>()(
             ? chapter.stages.guided
             : next === 'solo'
               ? chapter.stages.solo
-              : next === 'master'
-                ? chapter.stages.master
-                : null
+              : null
         let nextChapterCreatures = { ...state.chapterCreatures }
         if (nextStageDef && 'starterCreatures' in nextStageDef) {
           let motherId = ''
@@ -392,7 +390,7 @@ export const useGameStore = create<GameState & GameActions>()(
               sex: starter.sex,
               genotype: starter.genotype,
               age: 1,
-              scope: chapterScope(chapterId, next as 'guided' | 'solo' | 'master'),
+              scope: chapterScope(chapterId, next as 'guided' | 'solo'),
             }
             if (starter.role === 'mother') motherId = id
             if (starter.role === 'father') fatherId = id
@@ -712,11 +710,9 @@ function defaultLitterSize(state: GameState): number {
     : null
   if (activeChapter) {
     const stageDef =
-      state.currentChapterStage === 'master'
-        ? activeChapter.stages.master
-        : state.currentChapterStage === 'solo'
-          ? activeChapter.stages.solo
-          : activeChapter.stages.guided
+      state.currentChapterStage === 'solo'
+        ? activeChapter.stages.solo
+        : activeChapter.stages.guided
     return stageDef?.litterSize ?? 6
   }
   // Mission and everything else: one at a time.
@@ -744,9 +740,7 @@ function findCorrectGenotype(
     const stageDef =
       state.currentChapterStage === 'guided'
         ? chapter.stages.guided
-        : state.currentChapterStage === 'master' && chapter.stages.master
-          ? chapter.stages.master
-          : chapter.stages.solo
+        : chapter.stages.solo
     const a = stageDef.correctAssertions.find(
       x => x.creatureRole === role && x.geneId === geneId,
     )

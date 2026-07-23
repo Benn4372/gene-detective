@@ -5,6 +5,7 @@ import { useGameStore } from '../../state/gameStore'
 import { missionById, characterById, blobSpecies } from '../../content'
 import { computePhenotype } from '../../engine/phenotype'
 import { BlobRenderer } from '../../renderer/BlobRenderer'
+import { phenotypeLabel } from '../../renderer/phenotypeLabels'
 import { SexBadge } from '../atoms/SexBadge'
 import { Modal } from '../atoms/Modal'
 import { Workbench } from '../workbench/Workbench'
@@ -155,6 +156,14 @@ export function MissionRunner() {
         {/* Interaction area — depends on mission mode. */}
         {mission.mode === 'breed' && (
           <>
+            {/* Notebook first (guesses + notes + live Punnett), Workbench
+                (bench + latest litter + execute) below. Matches chapter flow. */}
+            <div className="mb-4">
+              <MissionNotebook
+                blobs={pool}
+                visibleGeneIds={mission.visibleGeneIds}
+              />
+            </div>
             <Workbench
               pool={pool}
               motherId={motherId}
@@ -163,19 +172,12 @@ export function MissionRunner() {
               onSelectFather={setFatherId}
               visibleGeneIds={mission.visibleGeneIds}
               litterSize={1}
-              showPunnett
               breedBudgetHint={
                 mission.breedBudget
                   ? `Target ≤${mission.breedBudget} crosses for full mastery`
                   : undefined
               }
             />
-            <div className="mt-4">
-              <MissionNotebook
-                blobs={pool}
-                visibleGeneIds={mission.visibleGeneIds}
-              />
-            </div>
             <div className="mt-6 flex justify-end">
               <motion.button
                 whileHover={{ scale: 1.03 }}
@@ -223,6 +225,7 @@ function DeduceOnlyPanel({
   pedigree: NonNullable<import('../../content/types').Mission['deducePedigree']>
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [scratchpad, setScratchpad] = useState('')
   const solvedRef = useRef(false)
   const completeMissionByPuzzle = useGameStore(s => s.completeMissionByPuzzle)
   const activeMissionId = useGameStore(s => s.activeMissionId)
@@ -244,16 +247,36 @@ function DeduceOnlyPanel({
   return (
     <div className="space-y-3">
       <div className="rounded-lg p-3 bg-amber-50 border border-amber-200 text-sm text-amber-900">
-        Type each node's genotype. When every one matches, the case closes.
+        Each blob's phenotype is drawn from what's actually there. Amber-bordered
+        nodes show the recessive phenotype for the tracked gene. Fill in every
+        node's genotype; when they all match the family record, the case closes.
       </div>
       <PedigreeViewer
         nodes={pedigree.nodes}
+        focusGeneId={pedigree.focusGeneId}
         hypotheses={answers}
         onHypothesisChange={(id, v) =>
           setAnswers(prev => ({ ...prev, [id]: v }))
         }
         correctGenotypes={pedigree.correctGenotypes}
       />
+      <div className="rounded-lg bg-[color:var(--paper)] border border-stone-300 p-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold text-stone-700 font-serif">
+            📓 Scratchpad
+          </h3>
+          <div className="text-xs text-stone-500 italic">
+            Free notes. No answer-checking.
+          </div>
+        </div>
+        <textarea
+          value={scratchpad}
+          onChange={e => setScratchpad(e.target.value)}
+          placeholder='e.g. "III-1 shows recessive → parents must both carry ‘a’"'
+          rows={4}
+          className="w-full px-2 py-1 border border-stone-300 rounded text-xs bg-white text-stone-700 resize-none leading-snug"
+        />
+      </div>
       {allCorrect && (
         <div className="rounded p-3 bg-emerald-50 border border-emerald-300 text-sm text-emerald-800">
           ✓ Every genotype matches. Filing the report…
@@ -413,7 +436,7 @@ function DeliverPicker({
                   <div className="flex items-center gap-1 text-xs mt-2 text-stone-700">
                     <SexBadge sex={c.sex} />
                     <span className="font-mono">
-                      {visibleGeneIds.map(t => phen[t]).join(' · ')}
+                      {visibleGeneIds.map(t => phenotypeLabel(t, phen[t])).join(' · ')}
                     </span>
                   </div>
                   <motion.button

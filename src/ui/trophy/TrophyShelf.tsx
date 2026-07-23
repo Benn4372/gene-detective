@@ -3,6 +3,7 @@ import { useGameStore, useTrophyBlobs } from '../../state/gameStore'
 import { chapters, blobSpecies } from '../../content'
 import { BlobRenderer } from '../../renderer/BlobRenderer'
 import { computePhenotype } from '../../engine/phenotype'
+import { phenotypeLabel } from '../../renderer/phenotypeLabels'
 import { SexBadge } from '../atoms/SexBadge'
 
 // Deterministic-per-blob idle jiggle offsets so each trophy has its own
@@ -18,6 +19,7 @@ export function TrophyShelf() {
   const trophyBlobs = useTrophyBlobs()
   const trophyMap = useGameStore(s => s.trophyBlobs)
   const completedChapters = useGameStore(s => s.completedChapters)
+  const unlockedTraits = useGameStore(s => s.unlockedTraits)
 
   const trophyByChapter = new Map<string, string>(
     Object.entries(trophyMap),
@@ -90,9 +92,16 @@ export function TrophyShelf() {
                     </div>
                     <div className="mt-1 font-mono text-[10px] text-stone-500">
                       {blobSpecies.traits
-                        .filter(t => t.category === 'visible')
-                        .map(t => phen[t.id])
-                        .filter(v => v && v !== 'absent')
+                        // Only show traits the player has been taught. Ch 1
+                        // trophies were listing "s" for spots before Ch 3
+                        // introduced the concept.
+                        .filter(t =>
+                          t.category === 'visible' &&
+                          unlockedTraits.includes(t.id),
+                        )
+                        .map(t => ({ id: t.id, val: phen[t.id] }))
+                        .filter(({ val }) => val && val !== 'absent')
+                        .map(({ id, val }) => phenotypeLabel(id, val))
                         .join(' · ') || '—'}
                     </div>
                   </motion.div>

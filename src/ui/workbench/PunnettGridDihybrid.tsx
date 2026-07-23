@@ -1,5 +1,4 @@
-import { useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { useGameStore } from '../../state/gameStore'
 import { blobSpecies } from '../../content'
 import type { Creature } from '../../engine/types'
@@ -11,53 +10,22 @@ interface Props {
   geneIds: [string, string]
 }
 
-// A real 4×4 dihybrid Punnett grid.
-//
-// Each parent contributes one allele per tracked gene into every gamete, so
-// each parent has up to 4 gamete signatures. Headers hold gamete strings
-// (one letter per gene, in the geneIds order), body cells render an offspring
-// combining the row and column gametes.
+// Two-gene dihybrid Punnett (4×4). Passive by design — headers derive from
+// the two parents' notebook guesses for each gene. If both notebook guesses
+// are complete (Aa, Ss) for one parent, four gametes are shown; otherwise
+// the header cell stays empty and dependent body cells stay blank.
 export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
   const [g1, g2] = geneIds
   const gene1 = blobSpecies.genes.find(g => g.id === g1)
   const gene2 = blobSpecies.genes.find(g => g.id === g2)
 
-  // Read from the freeform notebook GUESS, not the validated Final Answer.
   const motherHyp1 = useGameStore(s => s.notebookGuess[motherId]?.[g1] ?? '')
   const motherHyp2 = useGameStore(s => s.notebookGuess[motherId]?.[g2] ?? '')
   const fatherHyp1 = useGameStore(s => s.notebookGuess[fatherId]?.[g1] ?? '')
   const fatherHyp2 = useGameStore(s => s.notebookGuess[fatherId]?.[g2] ?? '')
 
-  const [topRow, setTopRow] = useState<string[]>(['', '', '', ''])
-  const [sideCol, setSideCol] = useState<string[]>(['', '', '', ''])
-
-  const validSymbolsG1 = useMemo(
-    () => (gene1 ? gene1.alleles.map(a => a.symbol) : []),
-    [gene1],
-  )
-  const validSymbolsG2 = useMemo(
-    () => (gene2 ? gene2.alleles.map(a => a.symbol) : []),
-    [gene2],
-  )
-
   if (!gene1 || !gene2) return null
 
-  // Sanitize a two-char gamete: first char must be a valid g1 allele, second a g2 allele.
-  const sanitize = (raw: string): string => {
-    const chars = raw
-      .split('')
-      .filter(
-        (c, i) =>
-          (i === 0 && validSymbolsG1.includes(c)) ||
-          (i === 1 && validSymbolsG2.includes(c)),
-      )
-    return chars.slice(0, 2).join('')
-  }
-
-  // From a parent's two per-gene diploid strings, produce the 4 gamete
-  // combinations (allele-from-g1, allele-from-g2). Homozygotes collapse the
-  // repeated gametes but we still display 4 slots — the player learns
-  // gamete enumeration by seeing "AS AS as as" rather than "AS as".
   const gametesOf = (h1: string, h2: string): string[] => {
     if (h1.length < 2 || h2.length < 2) return ['', '', '', '']
     const [a1a, a1b] = [h1[0]!, h1[1]!]
@@ -65,41 +33,15 @@ export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
     return [a1a + a2a, a1a + a2b, a1b + a2a, a1b + a2b]
   }
 
-  // Fill whatever the notebook has now — one gene alone, one parent alone,
-  // whatever. Missing pieces stay blank for hand-fill.
-  const canFillFather =
-    fatherHyp1.length >= 2 && fatherHyp2.length >= 2
-  const canFillMother =
-    motherHyp1.length >= 2 && motherHyp2.length >= 2
-  const canFill =
-    fatherHyp1.length >= 1 ||
-    fatherHyp2.length >= 1 ||
-    motherHyp1.length >= 1 ||
-    motherHyp2.length >= 1
+  const topRow = useMemo(
+    () => gametesOf(fatherHyp1, fatherHyp2),
+    [fatherHyp1, fatherHyp2],
+  )
+  const sideCol = useMemo(
+    () => gametesOf(motherHyp1, motherHyp2),
+    [motherHyp1, motherHyp2],
+  )
 
-  const fillFromNotebook = () => {
-    if (!canFill) return
-    if (canFillFather) setTopRow(gametesOf(fatherHyp1, fatherHyp2))
-    if (canFillMother) setSideCol(gametesOf(motherHyp1, motherHyp2))
-    // Partial: only one parent complete — still fill that side.
-    if (!canFillFather && canFillMother) {
-      // leave top row blank for hand-fill
-    }
-    if (canFillFather && !canFillMother) {
-      // leave side col blank for hand-fill
-    }
-  }
-
-  const clear = () => {
-    setTopRow(['', '', '', ''])
-    setSideCol(['', '', '', ''])
-  }
-
-  const inputCls =
-    'w-14 h-8 text-center font-mono text-sm border-2 border-stone-300 rounded bg-white text-stone-800'
-
-  // Sample gamete for placeholder + inline hint: dominant allele of each gene
-  // concatenated, e.g. "AS". Gives the player a concrete pattern to copy.
   const dominantG1 = [...gene1.alleles].sort(
     (a, b) => b.dominanceRank - a.dominanceRank,
   )[0]?.symbol ?? '?'
@@ -111,12 +53,11 @@ export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
   const renderCell = (row: string, col: string) => {
     if (row.length < 2 || col.length < 2) {
       return (
-        <div className="w-24 h-24 border border-stone-200 bg-stone-50/50 rounded" />
+        <div className="w-16 h-16 border border-stone-200 bg-stone-50/50 rounded" />
       )
     }
     const g1Alleles = [row[0]!, col[0]!]
     const g2Alleles = [row[1]!, col[1]!]
-    // Sort each gene's pair by dominance for a canonical label.
     const [r1, r2] = [
       gene1.alleles.find(a => a.symbol === g1Alleles[0]),
       gene1.alleles.find(a => a.symbol === g1Alleles[1]),
@@ -127,7 +68,7 @@ export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
     ]
     if (!r1 || !r2 || !s1 || !s2) {
       return (
-        <div className="w-24 h-24 border border-stone-200 bg-stone-50/50 rounded" />
+        <div className="w-16 h-16 border border-stone-200 bg-stone-50/50 rounded" />
       )
     }
     const gene1Pair =
@@ -139,16 +80,12 @@ export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
         ? [s1.symbol, s2.symbol]
         : [s2.symbol, s1.symbol]
 
-    // Build the preview creature: only the two tracked genes get alleles.
-    // Every other gene is left ABSENT (no entry in genotype) so its layer's
-    // guard hides it — no spurious horns, pattern, tail, or size scaling
-    // showing up in a Ch 3 dihybrid Punnett cell.
     const genotype: Record<string, string[]> = {
-      [g1]: [
+      [g1!]: [
         r1.dominanceRank >= r2.dominanceRank ? r1.id : r2.id,
         r1.dominanceRank >= r2.dominanceRank ? r2.id : r1.id,
       ],
-      [g2]: [
+      [g2!]: [
         s1.dominanceRank >= s2.dominanceRank ? s1.id : s2.id,
         s1.dominanceRank >= s2.dominanceRank ? s2.id : s1.id,
       ],
@@ -161,74 +98,27 @@ export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
       age: 0,
       scope: 'trophy',
     }
-
     const label = gene1Pair.join('') + gene2Pair.join('')
-
     return (
-      <div className="w-24 h-24 border-2 border-stone-300 bg-white rounded flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="w-16 h-16 border-2 border-stone-300 bg-white rounded flex flex-col items-center justify-center relative overflow-hidden">
         <div style={{ opacity: 0.55 }}>
-          <BlobRenderer creature={preview} species={blobSpecies} size={60} />
+          <BlobRenderer creature={preview} species={blobSpecies} size={44} />
         </div>
-        <div className="text-[10px] font-mono font-semibold text-stone-700 absolute bottom-1">
+        <div className="text-[9px] font-mono font-semibold text-stone-700 absolute bottom-0.5">
           {label}
         </div>
       </div>
     )
   }
 
-  const HeaderInput = ({
-    value,
-    onChange,
-    hue,
-  }: {
-    value: string
-    onChange(v: string): void
-    hue: 'sky' | 'rose'
-  }) => (
-    <input
-      type="text"
-      value={value}
-      onChange={e => onChange(sanitize(e.target.value))}
-      placeholder={gameteExample}
-      maxLength={2}
-      className={
-        inputCls +
-        (hue === 'sky' ? ' bg-sky-50' : ' bg-rose-50')
-      }
-    />
-  )
+  const headerCls =
+    'w-16 h-8 rounded font-mono text-center flex items-center justify-center text-sm'
 
   return (
     <div className="inline-block">
-      <div className="flex items-center justify-between gap-4 mb-2">
-        <div className="text-xs uppercase tracking-wide text-stone-500">
-          Punnett · dihybrid {gene1.name} × {gene2.name}
-        </div>
-        <div className="flex items-center gap-2">
-          <motion.button
-            whileHover={{ scale: canFill ? 1.03 : 1 }}
-            whileTap={{ scale: canFill ? 0.97 : 1 }}
-            onClick={fillFromNotebook}
-            disabled={!canFill}
-            className={
-              'px-3 py-1 rounded text-xs font-medium ' +
-              (canFill
-                ? 'bg-amber-500 text-white hover:bg-amber-600'
-                : 'bg-stone-200 text-stone-400 cursor-not-allowed')
-            }
-            title="Fill both axes from your notebook hypotheses"
-          >
-            📖 Fill from notebook
-          </motion.button>
-          <button
-            onClick={clear}
-            className="px-2 py-1 rounded text-xs text-stone-500 hover:text-stone-800"
-          >
-            clear
-          </button>
-        </div>
+      <div className="text-[10px] uppercase tracking-wide text-stone-500 mb-1">
+        Punnett · dihybrid {gene1.name} × {gene2.name}
       </div>
-
       <div className="text-xs text-stone-600 italic mb-2 leading-snug">
         Each gamete carries <span className="font-semibold">two letters</span>:
         one {gene1.name.toLowerCase()} allele + one {gene2.name.toLowerCase()} allele
@@ -239,20 +129,12 @@ export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
       <table className="border-separate border-spacing-1">
         <thead>
           <tr>
-            <th className="w-14 h-10"></th>
+            <th className="w-10 h-8"></th>
             {topRow.map((v, i) => (
-              <th key={i} className="w-24 pb-1 text-center">
-                <HeaderInput
-                  value={v}
-                  onChange={next =>
-                    setTopRow(prev => {
-                      const copy = [...prev]
-                      copy[i] = next
-                      return copy
-                    })
-                  }
-                  hue="sky"
-                />
+              <th key={i} className="pb-0.5 text-center">
+                <div className={headerCls + ' bg-sky-50 border border-sky-200 text-sky-900'}>
+                  {v || '·'}
+                </div>
               </th>
             ))}
           </tr>
@@ -260,18 +142,10 @@ export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
         <tbody>
           {sideCol.map((rowVal, rowIx) => (
             <tr key={rowIx}>
-              <th className="w-14 pr-1 text-center">
-                <HeaderInput
-                  value={rowVal}
-                  onChange={next =>
-                    setSideCol(prev => {
-                      const copy = [...prev]
-                      copy[rowIx] = next
-                      return copy
-                    })
-                  }
-                  hue="rose"
-                />
+              <th className="w-10 pr-0.5 text-center">
+                <div className={headerCls + ' bg-rose-50 border border-rose-200 text-rose-900'}>
+                  {rowVal || '·'}
+                </div>
               </th>
               {topRow.map((colVal, colIx) => (
                 <td key={colIx}>{renderCell(rowVal, colVal)}</td>
@@ -280,8 +154,8 @@ export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
           ))}
         </tbody>
       </table>
-      <p className="text-xs text-stone-500 mt-1">
-        Each gamete carries one allele per gene ({gene1.name[0]}
+      <p className="text-[10px] text-stone-500 mt-1">
+        Each gamete is one allele per gene ({gene1.name[0]}
         {gene2.name[0]}). Top = father's gametes ♂ · Left = mother's gametes ♀
       </p>
     </div>

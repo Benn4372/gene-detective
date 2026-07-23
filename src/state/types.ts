@@ -2,7 +2,7 @@ import type { Creature } from '../engine/types'
 
 export type DifficultyTier = 'curious' | 'student' | 'researcher'
 
-export type ChapterStage = 'show' | 'guided' | 'solo' | 'master' | 'outro'
+export type ChapterStage = 'show' | 'guided' | 'solo' | 'outro'
 
 export interface CrossRecord {
   id: string

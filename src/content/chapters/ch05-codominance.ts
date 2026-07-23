@@ -145,41 +145,6 @@ Cross two heterozygous TB parents and you'll still get 1:2:1 genotypes — but n
         },
       ],
     },
-
-    master: {
-      starterCreatures: [
-        {
-          role: 'mother',
-          sex: 'F',
-          genotype: {
-            pattern: ['T', 'T'],
-            antennae: ['a', 'a'],
-            spots: ['s', 's'],
-            tail: ['t', 't'],
-          },
-          defaultName: 'Striped Blob',
-        },
-        {
-          role: 'father',
-          sex: 'M',
-          genotype: {
-            pattern: ['B', 'B'],
-            antennae: ['a', 'a'],
-            spots: ['s', 's'],
-            tail: ['t', 't'],
-          },
-          defaultName: 'Blotched Blob',
-        },
-      ],
-      correctAssertions: [
-        { creatureRole: 'mother', geneId: 'pattern', correctGenotype: 'TT' },
-        { creatureRole: 'father', geneId: 'pattern', correctGenotype: 'BB' },
-      ],
-      litterSize: 4,
-      breedBudget: 2,
-      rewardMentorDialogue:
-        "A pure striped × pure blotched — every child TB, no exceptions.",
-    },
   },
 
   unlocks: {

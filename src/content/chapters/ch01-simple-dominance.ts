@@ -97,39 +97,42 @@ Below, watch a cross between AA × aa. Every offspring inherits one allele from 
       },
     },
 
+    // Solo re-tests the same concept with DIFFERENT starters — both parents
+    // now visibly have antennae, but some offspring don't. Player has to
+    // conclude both parents are hidden Aa carriers.
     solo: {
       starterCreatures: [
         {
           role: 'mother',
           sex: 'F',
           genotype: { antennae: ['A', 'a'], spots: ['s', 's'] },
-          defaultName: 'Blob A',
+          defaultName: 'Blob C',
         },
         {
           role: 'father',
           sex: 'M',
-          genotype: { antennae: ['a', 'a'], spots: ['s', 's'] },
-          defaultName: 'Blob B',
+          genotype: { antennae: ['A', 'a'], spots: ['s', 's'] },
+          defaultName: 'Blob D',
         },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'antennae', correctGenotype: 'Aa' },
-        { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'aa' },
+        { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'Aa' },
       ],
       litterSize: 6,
       validationTier: 'medium',
       hints: [
         {
           stage: 'reframe',
-          text: "Two things are true at once: the mother shows the antennae trait, and the father doesn't. What must each of those tell you about which alleles they carry?",
+          text: "This pair is different from before — BOTH parents show antennae. Yet some offspring don't. What does that tell you about each parent's hidden allele?",
         },
         {
           stage: 'point',
-          text: "Focus on which parent could possibly be hiding a recessive allele. A parent who shows a recessive trait is easy — but a parent showing a dominant trait might be homozygous, or might be hiding one recessive copy.",
+          text: "An offspring with no antennae must have inherited a recessive 'a' from BOTH parents. So both parents must be carrying at least one 'a'.",
         },
         {
           stage: 'suggest',
-          text: "Count offspring across every litter you've bred. Group them by whether they show the trait or not. What ratio would you expect if the mother were fully homozygous? Does the actual ratio match that, or something else?",
+          text: "If about 1 in 4 offspring show no antennae, that's the fingerprint of Aa × Aa. Enter Aa for both.",
         },
       ],
     },

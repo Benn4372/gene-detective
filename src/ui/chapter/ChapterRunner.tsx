@@ -6,7 +6,6 @@ import { blobSpecies, chapterById, mentorById } from '../../content'
 import type {
   Chapter,
   GuidedStage,
-  MasterStage,
   ShowStage,
   SoloStage,
 } from '../../content/types'
@@ -58,9 +57,7 @@ export function ChapterRunner() {
 
   if (!chapter) return null
 
-  const stages: ChapterStage[] = ['show', 'guided', 'solo']
-  if (chapter.stages.master) stages.push('master')
-  stages.push('outro')
+  const stages: ChapterStage[] = ['show', 'guided', 'solo', 'outro']
   const stageIndex = stages.indexOf(currentChapterStage)
 
   return (
@@ -142,22 +139,9 @@ export function ChapterRunner() {
               chapter.interactionMode?.kind === 'population-sandbox'
                 ? "Now try a different starting frequency. Same rules — new starting point."
                 : undefined,
-            onSolved: () => advance(chapter.stages.master ? 'master' : 'outro'),
+            onSolved: () => advance('outro'),
           })
         )}
-
-        {currentChapterStage === 'master' &&
-          chapter.stages.master &&
-          chapterCreatures && (
-            <StageWithWorkbench
-              chapter={chapter}
-              stage={chapter.stages.master}
-              chapterCreatures={chapterCreatures}
-              stageKey="master"
-              onSolved={() => advance('outro')}
-              hintText={`Efficiency challenge — try to solve in ${chapter.stages.master.breedBudget} crosses or fewer.`}
-            />
-          )}
 
         {currentChapterStage === 'outro' && chapterCreatures && (
           <OutroView
@@ -305,6 +289,23 @@ function WorkedExample({
     }
   }, [pMother, pFather])
 
+  // Detect the focus gene(s) — those where the parents' alleles actually
+  // differ (or one is heterozygous). Everything else is scaffolding and
+  // doesn't need to appear in the Punnett.
+  const focusGeneIds = useMemo(() => {
+    const ids: string[] = []
+    for (const gene of blobSpecies.genes) {
+      const mA = pMother[gene.id]
+      const fA = pFather[gene.id]
+      if (!mA || !fA) continue
+      const motherHet = mA.length >= 2 && mA[0] !== mA[1]
+      const fatherHet = fA.length >= 2 && fA[0] !== fA[1]
+      const different = mA.join('') !== fA.join('')
+      if (motherHet || fatherHet || different) ids.push(gene.id)
+    }
+    return ids
+  }, [pMother, pFather])
+
   return (
     <div className="mt-6 rounded-lg bg-stone-50 border border-stone-300 p-4">
       <div className="text-xs uppercase tracking-widest text-stone-500 mb-3">
@@ -332,7 +333,20 @@ function WorkedExample({
           </div>
         )}
       </div>
-      <div className="text-sm text-stone-800 italic text-center min-h-[3em]">
+
+      {/* Progressive Punnett + notebook demo. Fills piece-by-piece as the
+          player clicks Next → so the reader sees exactly what step of the
+          reasoning each narration line corresponds to. */}
+      {focusGeneIds.length > 0 && (
+        <ShowStagePunnett
+          focusGeneIds={focusGeneIds}
+          motherGenotype={pMother}
+          fatherGenotype={pFather}
+          step={step}
+        />
+      )}
+
+      <div className="text-sm text-stone-800 italic text-center min-h-[3em] mt-3">
         {worked.narration[step]}
       </div>
       <div className="flex items-center justify-between mt-3">
@@ -360,13 +374,193 @@ function WorkedExample({
   )
 }
 
+// Demonstration Punnett grid + notebook line that fills progressively as the
+// player advances through the Show stage's worked-example narration.
+//
+// Step 0: empty grid + empty notebook lines
+// Step 1: notebook + Punnett side headers fill with the mother's alleles
+// Step 2: notebook + Punnett top headers fill with the father's alleles
+// Step 3+: body cells fill with the combined genotypes
+//
+// Handles monohybrid (1 focus gene → 2×2 grid) and dihybrid (2 focus genes
+// → 4×4 grid with two-letter gametes). Non-interactive by design — this is
+// the tutorial demonstration, not a puzzle.
+function ShowStagePunnett({
+  focusGeneIds,
+  motherGenotype,
+  fatherGenotype,
+  step,
+}: {
+  focusGeneIds: string[]
+  motherGenotype: Record<string, string[]>
+  fatherGenotype: Record<string, string[]>
+  step: number
+}) {
+  const showMotherHeaders = step >= 1
+  const showFatherHeaders = step >= 2
+  const showBodyCells = step >= 3
+
+  // Only monohybrid + dihybrid supported for now. Everything else falls back
+  // to just showing the notebook line without a grid.
+  const isDihybrid = focusGeneIds.length >= 2
+
+  if (isDihybrid) {
+    const [g1, g2] = focusGeneIds
+    const mA = motherGenotype[g1!] ?? []
+    const mB = motherGenotype[g2!] ?? []
+    const fA = fatherGenotype[g1!] ?? []
+    const fB = fatherGenotype[g2!] ?? []
+    const motherGametes: string[] = []
+    for (const a of mA) for (const b of mB) motherGametes.push(a + b)
+    const fatherGametes: string[] = []
+    for (const a of fA) for (const b of fB) fatherGametes.push(a + b)
+    return (
+      <div className="rounded-lg border border-stone-200 bg-white p-3">
+        <NotebookLine
+          label="Mother"
+          filled={showMotherHeaders}
+          text={`gametes: ${motherGametes.join(', ')}`}
+        />
+        <NotebookLine
+          label="Father"
+          filled={showFatherHeaders}
+          text={`gametes: ${fatherGametes.join(', ')}`}
+        />
+        <div className="mt-3 flex justify-center">
+          <table className="border-separate border-spacing-1 text-center">
+            <thead>
+              <tr>
+                <th className="w-10 h-8"></th>
+                {fatherGametes.map((g, i) => (
+                  <th
+                    key={i}
+                    className="w-12 h-8 rounded bg-sky-50 border border-sky-200 text-sm font-mono"
+                  >
+                    {showFatherHeaders ? g : ''}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {motherGametes.map((mg, ri) => (
+                <tr key={ri}>
+                  <th className="w-10 h-12 rounded bg-rose-50 border border-rose-200 text-sm font-mono">
+                    {showMotherHeaders ? mg : ''}
+                  </th>
+                  {fatherGametes.map((fg, ci) => (
+                    <td
+                      key={ci}
+                      className="w-12 h-12 rounded bg-stone-50 border border-stone-200 text-[10px] font-mono"
+                    >
+                      {showBodyCells ? combineGametes(mg, fg) : ''}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
+  // Monohybrid.
+  const g = focusGeneIds[0]!
+  const mA = motherGenotype[g] ?? []
+  const fA = fatherGenotype[g] ?? []
+  return (
+    <div className="rounded-lg border border-stone-200 bg-white p-3">
+      <NotebookLine
+        label="Mother"
+        filled={showMotherHeaders}
+        text={`alleles: ${mA.join(', ')}`}
+      />
+      <NotebookLine
+        label="Father"
+        filled={showFatherHeaders}
+        text={`alleles: ${fA.join(', ')}`}
+      />
+      <div className="mt-3 flex justify-center">
+        <table className="border-separate border-spacing-1 text-center">
+          <thead>
+            <tr>
+              <th className="w-10 h-10"></th>
+              {(fA.length >= 2 ? [fA[0]!, fA[1]!] : [fA[0]!, fA[0]!]).map((a, i) => (
+                <th
+                  key={i}
+                  className="w-14 h-10 rounded bg-sky-50 border border-sky-200 text-lg font-mono"
+                >
+                  {showFatherHeaders ? a : ''}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {(mA.length >= 2 ? [mA[0]!, mA[1]!] : [mA[0]!, mA[0]!]).map((a, ri) => (
+              <tr key={ri}>
+                <th className="w-10 h-14 rounded bg-rose-50 border border-rose-200 text-lg font-mono">
+                  {showMotherHeaders ? a : ''}
+                </th>
+                {(fA.length >= 2 ? [fA[0]!, fA[1]!] : [fA[0]!, fA[0]!]).map((f, ci) => (
+                  <td
+                    key={ci}
+                    className="w-14 h-14 rounded bg-stone-50 border border-stone-200 text-sm font-mono"
+                  >
+                    {showBodyCells ? sortByDominance(a, f) : ''}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function NotebookLine({
+  label,
+  filled,
+  text,
+}: {
+  label: string
+  filled: boolean
+  text: string
+}) {
+  return (
+    <div className="flex items-baseline gap-2 border-b border-dashed border-stone-200 py-1">
+      <span className="text-xs text-stone-500 w-14">{label}</span>
+      <span className="text-sm font-mono text-stone-800 flex-1">
+        {filled ? text : ''}
+      </span>
+    </div>
+  )
+}
+
+function sortByDominance(a: string, b: string): string {
+  // Uppercase (dominant) first, lowercase last, alphabetic tiebreak.
+  const rank = (c: string) => (c === c.toUpperCase() ? 0 : 1)
+  const [x, y] = [a, b].sort((p, q) => rank(p) - rank(q) || p.localeCompare(q))
+  return x! + y!
+}
+
+function combineGametes(g1: string, g2: string): string {
+  // Zip the two gametes gene-by-gene and sort each pair by dominance.
+  const out: string[] = []
+  const n = Math.min(g1.length, g2.length)
+  for (let i = 0; i < n; i++) {
+    out.push(sortByDominance(g1[i]!, g2[i]!))
+  }
+  return out.join('')
+}
+
 // -- Guided / Solo / Master stages (all Workbench + Notebook) --------------
 
 interface StageWithWorkbenchProps {
   chapter: Chapter
-  stage: GuidedStage | SoloStage | MasterStage
+  stage: GuidedStage | SoloStage
   chapterCreatures: { motherId: string; fatherId: string }
-  stageKey: 'guided' | 'solo' | 'master'
+  stageKey: 'guided' | 'solo'
   onSolved(): void
   hintText?: string
 }
@@ -447,10 +641,6 @@ function StageWithWorkbench({
   )
 
   const litter = 'litterSize' in stage ? stage.litterSize : 6
-  const breedBudgetHint =
-    stageKey === 'master' && 'breedBudget' in stage
-      ? `Master target: ≤${stage.breedBudget} crosses`
-      : undefined
 
   return (
     <div className="space-y-4">
@@ -480,13 +670,15 @@ function StageWithWorkbench({
         </div>
       </div>
 
-      {/* Freeform notebook comes FIRST — the guess feeds the Punnett square
-          inside the Workbench below, and the Notes field is the player's
-          thinking space. No answer-checking here. */}
+      {/* Notebook (freeform guess + notes + live Punnett) comes FIRST — it's
+          the reasoning surface, and the Punnett square rides inside it so it
+          stays visible alongside the guesses instead of splitting after each
+          breed. Workbench sits below: bench, latest litter, execute. */}
       <NotebookPanel
         motherId={chapterCreatures.motherId}
         fatherId={chapterCreatures.fatherId}
         geneIds={geneIds}
+        showPunnett={punnettUnlocked}
       />
 
       <Workbench
@@ -497,8 +689,6 @@ function StageWithWorkbench({
         onSelectFather={setFatherPick}
         visibleGeneIds={geneIds}
         litterSize={litter}
-        breedBudgetHint={breedBudgetHint}
-        showPunnett={punnettUnlocked}
       />
 
       {/* Final Answer only appears once a litter is on the bench — nothing
@@ -533,9 +723,9 @@ function StageWithWorkbench({
 
 function renderInteractiveStage(args: {
   chapter: Chapter
-  stage: GuidedStage | SoloStage | MasterStage
+  stage: GuidedStage | SoloStage
   chapterCreatures: { motherId: string; fatherId: string }
-  stageKey: 'guided' | 'solo' | 'master'
+  stageKey: 'guided' | 'solo'
   hintText?: string
   onSolved(): void
 }) {

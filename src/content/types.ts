@@ -70,16 +70,6 @@ export interface SoloStage {
   hints: Hint[]
 }
 
-// Stage 4 (optional): harder variant with a breed budget.
-export interface MasterStage {
-  starterCreatures: LessonStarterCreature[]
-  correctAssertions: NotebookAssertion[]
-  litterSize: number
-  breedBudget: number
-  rewardAlleleId?: string
-  rewardMentorDialogue?: string
-}
-
 export interface Chapter {
   id: string
   order: number
@@ -94,7 +84,6 @@ export interface Chapter {
     show: ShowStage
     guided: GuidedStage
     solo: SoloStage
-    master?: MasterStage
   }
   unlocks: {
     traits?: string[]
