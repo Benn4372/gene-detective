@@ -59,8 +59,11 @@ export function MissionRunner() {
   }
 
   const targetText = Object.entries(mission.targetPhenotype)
-    .map(([t, v]) => `${t}=${v}`)
-    .join(', ')
+    .map(([t, v]) => {
+      const trait = blobSpecies.traits.find(x => x.id === t)
+      return `${trait?.name ?? t}: ${phenotypeLabel(t, v)}`
+    })
+    .join(' · ')
 
   const isDeliverable = (c: Creature) => {
     if (!c.parentIds) return false
