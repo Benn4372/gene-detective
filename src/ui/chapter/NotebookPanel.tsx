@@ -61,13 +61,22 @@ export function NotebookPanel({
       {geneIds.map(geneId => {
         const gene = blobSpecies.genes.find(g => g.id === geneId)
         if (!gene) return null
+        const isAnswerGene = punnettGeneIds.includes(geneId)
         return (
           <div
             key={geneId}
             className="border-t border-stone-200 pt-3 mt-3 first:border-0 first:pt-0 first:mt-0"
           >
-            <div className="text-xs font-semibold text-stone-700 mb-2">
-              Gene: {gene.name}
+            <div className="text-xs font-semibold text-stone-700 mb-2 flex items-center gap-2">
+              <span>Gene: {gene.name}</span>
+              {!isAnswerGene && (
+                <span
+                  className="rounded-full bg-stone-100 border border-stone-300 text-stone-500 px-1.5 py-0 text-[9px] font-mono uppercase tracking-wider italic"
+                  title="Displayed for context — you don't need to solve for this one"
+                >
+                  context
+                </span>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4 mb-3">
               <NotebookCell
