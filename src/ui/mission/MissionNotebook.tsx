@@ -10,6 +10,7 @@ import { computePhenotype } from '../../engine/phenotype'
 import { PunnettGrid } from '../workbench/PunnettGrid'
 import { PunnettGridDihybrid } from '../workbench/PunnettGridDihybrid'
 import { PunnettGridSexLinked } from '../workbench/PunnettGridSexLinked'
+import { PunnettGridMitochondrial } from '../workbench/PunnettGridMitochondrial'
 import { LinkageNotice } from '../workbench/LinkageNotice'
 
 interface Props {
@@ -43,6 +44,8 @@ export function MissionNotebook({ blobs, visibleGeneIds }: Props) {
     : null
   const isMonohybridSexLinked =
     visibleGeneIds.length === 1 && firstGene?.inheritanceModel === 'sexLinked'
+  const isMonohybridMito =
+    visibleGeneIds.length === 1 && firstGene?.inheritanceModel === 'mitochondrial'
   return (
     <div className="rounded-xl bg-[color:var(--paper)] border border-stone-300 p-4">
       <div className="flex items-center justify-between mb-3">
@@ -126,7 +129,14 @@ export function MissionNotebook({ blobs, visibleGeneIds }: Props) {
                 geneId={visibleGeneIds[0]}
               />
             )}
-            {!isMonohybridSexLinked && visibleGeneIds.length === 1 && visibleGeneIds[0] && (
+            {isMonohybridMito && visibleGeneIds[0] && (
+              <PunnettGridMitochondrial
+                motherId={motherStarter!.id}
+                fatherId={fatherStarter!.id}
+                geneId={visibleGeneIds[0]}
+              />
+            )}
+            {!isMonohybridSexLinked && !isMonohybridMito && visibleGeneIds.length === 1 && visibleGeneIds[0] && (
               <PunnettGrid
                 motherId={motherStarter!.id}
                 fatherId={fatherStarter!.id}

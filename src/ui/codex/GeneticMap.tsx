@@ -1,11 +1,26 @@
 import { useMemo } from 'react'
-import { blobSpecies } from '../../content'
+import { blobSpecies, chapters } from '../../content'
 import type { Chromosome, Gene } from '../../engine/types'
 
 interface Props {
   unlockedTraits: string[]
   onGeneClick?(geneId: string): void
   focusGeneId?: string
+}
+
+// Build a trait-id → "unlocked by Ch N" hint so the player has something to
+// look forward to on locked markers. Uses chapter order for the hint.
+function useChapterHintByTrait(): Record<string, string> {
+  return useMemo(() => {
+    const hint: Record<string, string> = {}
+    const ordered = [...chapters].sort((a, b) => a.order - b.order)
+    for (const ch of ordered) {
+      for (const t of ch.unlocks.traits ?? []) {
+        if (!hint[t]) hint[t] = `Unlocks after Ch ${ch.order}`
+      }
+    }
+    return hint
+  }, [])
 }
 
 // The Genetic Map view of the Codex. Chromosomes are drawn as horizontal
@@ -17,6 +32,7 @@ interface Props {
 // what the trait is.
 export function GeneticMap({ unlockedTraits, onGeneClick, focusGeneId }: Props) {
   const groups = useMemo(() => groupByChromosome(blobSpecies.chromosomes, blobSpecies.genes), [])
+  const chapterHintByTrait = useChapterHintByTrait()
   return (
     <div className="space-y-5">
       <div className="text-xs text-stone-600 italic leading-snug">
@@ -32,8 +48,15 @@ export function GeneticMap({ unlockedTraits, onGeneClick, focusGeneId }: Props) 
           unlockedTraits={unlockedTraits}
           onGeneClick={onGeneClick}
           focusGeneId={focusGeneId}
+          chapterHintByTrait={chapterHintByTrait}
         />
       ))}
+      <div className="text-[10px] text-stone-500 italic border-t border-stone-200 pt-3">
+        <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 border border-emerald-700 mr-1 align-middle" />
+        Unlocked  ·
+        <span className="inline-block w-2 h-2 rounded-full bg-stone-300 border border-stone-400 ml-2 mr-1 align-middle" />
+        Locked (hover for the chapter that unlocks it)
+      </div>
     </div>
   )
 }
@@ -46,12 +69,14 @@ function ChromosomeBand({
   unlockedTraits,
   onGeneClick,
   focusGeneId,
+  chapterHintByTrait,
 }: {
   chromosome: Chromosome
   genes: Gene[]
   unlockedTraits: string[]
   onGeneClick?(geneId: string): void
   focusGeneId?: string
+  chapterHintByTrait: Record<string, string>
 }) {
   const trackHeightPct = (chromosome.lengthCM / 100) * 100
   // Sex chromosomes get a compact horizontal band regardless of true cM
@@ -88,6 +113,11 @@ function ChromosomeBand({
             )
             const isFocus = focusGeneId === g.id
             const leftPct = (g.locusCM / chromosome.lengthCM) * 100
+            const lockedHint = !isUnlocked
+              ? g.expressesTraits
+                  .map(t => chapterHintByTrait[t])
+                  .find(Boolean) ?? 'Locked'
+              : ''
             return (
               <button
                 key={g.id}
@@ -96,7 +126,7 @@ function ChromosomeBand({
                 title={
                   isUnlocked
                     ? `${g.name} · ${formatModel(g.inheritanceModel)} · locus ${g.locusCM} cM`
-                    : `Locked gene at locus ${g.locusCM} cM`
+                    : `Locked gene at locus ${g.locusCM} cM · ${lockedHint}`
                 }
                 className={
                   'absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center transition-transform ' +

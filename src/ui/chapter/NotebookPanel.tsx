@@ -4,6 +4,7 @@ import { genotypePlaceholder } from '../../renderer/genotypePlaceholder'
 import { PunnettGrid } from '../workbench/PunnettGrid'
 import { PunnettGridDihybrid } from '../workbench/PunnettGridDihybrid'
 import { PunnettGridSexLinked } from '../workbench/PunnettGridSexLinked'
+import { PunnettGridMitochondrial } from '../workbench/PunnettGridMitochondrial'
 import { PunnettDistribution } from '../workbench/PunnettDistribution'
 import { LinkageNotice } from '../workbench/LinkageNotice'
 
@@ -80,6 +81,12 @@ export function NotebookPanel({
               <div className="flex justify-center">
                 {gene.inheritanceModel === 'sexLinked' ? (
                   <PunnettGridSexLinked
+                    motherId={mother.id}
+                    fatherId={father.id}
+                    geneId={geneId}
+                  />
+                ) : gene.inheritanceModel === 'mitochondrial' ? (
+                  <PunnettGridMitochondrial
                     motherId={mother.id}
                     fatherId={father.id}
                     geneId={geneId}
