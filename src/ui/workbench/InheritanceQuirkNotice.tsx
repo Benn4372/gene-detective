@@ -64,6 +64,19 @@ export function InheritanceQuirkNotice({ geneId }: Props) {
     )
   }
 
+  if (gene.mutationRate && gene.mutationRate > 0) {
+    const pct = (gene.mutationRate * 100).toFixed(1)
+    return (
+      <NoticeShell tone="teal" label="Unstable allele">
+        <span className="font-semibold">{gene.name}</span> alleles flip at a
+        rate of about <span className="font-mono">{pct}%</span> per gamete —
+        the Punnett prediction is right on AVERAGE, but you'll see occasional
+        offspring that don't match either parent's alleles. Those "rogue"
+        offspring are spontaneous mutations, not hidden carriers.
+      </NoticeShell>
+    )
+  }
+
   return null
 }
 
