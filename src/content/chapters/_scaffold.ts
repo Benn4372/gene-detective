@@ -1,12 +1,14 @@
-// Shared scaffolding used by later chapters. Every gene set to a neutral
-// homozygous-recessive baseline, so chapter starters can spread this and
-// only override the focus gene.
+// Shared scaffolding used by later chapters. Only genes whose recessive form
+// hides visually (or whose absence would trigger a downstream side effect)
+// are included. Pattern (codominant — BB shows blotches, TT shows stripes),
+// horns (multipleAllele — every state including 'n' short still draws),
+// and other "always-something" traits are left OUT so a spread of this
+// scaffold produces a clean-looking blob when the chapter isn't teaching
+// those traits.
 export const NEUTRAL_FEMALE: Record<string, string[]> = {
   antennae: ['a', 'a'],
   spots: ['s', 's'],
   color: ['w', 'w'],
-  pattern: ['B', 'B'],
-  horns: ['n', 'n'],
   fins: ['f', 'f'],
   eyeGlow: ['g', 'g'],
   coatPigment: ['C', 'C'],
