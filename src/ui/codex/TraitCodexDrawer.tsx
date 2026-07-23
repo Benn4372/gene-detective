@@ -234,14 +234,31 @@ function TraitsTab({
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              {rows.map(row => {
-                const preview = makePreviewCreature(gene, row.alleles, blobSpecies)
+              {rows.map((row, i) => {
+                const preview = makePreviewCreature(
+                  gene,
+                  row.alleles,
+                  blobSpecies,
+                  row.sexLabel ?? 'F',
+                )
                 const traitId = gene.expressesTraits[0]
                 return (
                   <div
-                    key={row.genotype}
-                    className="rounded-lg border border-stone-300 bg-white p-2 flex flex-col items-center"
+                    key={`${row.genotype}-${row.sexLabel ?? ''}-${i}`}
+                    className="rounded-lg border border-stone-300 bg-white p-2 flex flex-col items-center relative"
                   >
+                    {row.sexLabel && (
+                      <div
+                        className={
+                          'absolute top-1 right-1 text-[10px] font-semibold px-1 rounded ' +
+                          (row.sexLabel === 'F'
+                            ? 'bg-pink-100 text-pink-700'
+                            : 'bg-blue-100 text-blue-700')
+                        }
+                      >
+                        {row.sexLabel === 'F' ? '♀' : '♂'}
+                      </div>
+                    )}
                     <BlobRenderer
                       creature={preview}
                       species={blobSpecies}
