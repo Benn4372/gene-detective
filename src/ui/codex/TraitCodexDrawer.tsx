@@ -364,6 +364,26 @@ const TOOL_DEFS: Record<string, { name: string; body: string }> = {
     name: 'Chi-square test',
     body: 'A statistical test that decides whether observed offspring ratios differ significantly from expected. Used at higher tiers to formally accept or reject a genotype hypothesis.',
   },
+  'linkage-map': {
+    name: 'Linkage map',
+    body: 'A chromosome map plotting genes by their locus (in cM). Adjacent genes on the same chromosome tend to travel together in gametes; the recombinant fraction between them equals their cM distance divided by 100.',
+  },
+  'population-sandbox': {
+    name: 'Population sandbox',
+    body: 'A simulator for tracking allele frequencies across generations. Baseline is Hardy-Weinberg equilibrium (frequencies constant); toggling forces such as drift, selection, migration, or assortative mating shows how allele frequencies drift over time.',
+  },
+  'environment-slider': {
+    name: 'Environment slider',
+    body: 'Adjusts the ambient temperature the blob population lives at. Environment-gated genes only express above their threshold, so cold-side sliders can hide phenotypes that appear at the warm-side.',
+  },
+  'karyotype-viewer': {
+    name: 'Karyotype viewer',
+    body: 'Displays chromosome pairs as bands. Highlights aberrations — trisomy (extra copy), monosomy (missing copy), deletions, duplications, translocations, and inversions.',
+  },
+  'mutation-tracker': {
+    name: 'Mutation tracker',
+    body: 'Highlights offspring whose phenotype does not match either parent — the tell-tale signature of a spontaneous mutation. Useful for unstable alleles like sparkle.',
+  },
 }
 
 function ToolsTab({
