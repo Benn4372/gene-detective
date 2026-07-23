@@ -7,6 +7,7 @@ import { PunnettGridSexLinked } from '../workbench/PunnettGridSexLinked'
 import { PunnettGridMitochondrial } from '../workbench/PunnettGridMitochondrial'
 import { PunnettDistribution } from '../workbench/PunnettDistribution'
 import { LinkageNotice } from '../workbench/LinkageNotice'
+import { ImprintingNotice } from '../workbench/ImprintingNotice'
 
 interface Props {
   motherId: string
@@ -77,6 +78,11 @@ export function NotebookPanel({
                 model. Sex-linked genes get X^A / Y notation; everything else
                 falls through to the standard 2×2 grid. Dihybrid + polygenic
                 use the combined Punnett rendered below the gene list. */}
+            {showPunnett && geneIds.length === 1 && gene.imprintOrigin && (
+              <div className="mb-3">
+                <ImprintingNotice geneId={geneId} />
+              </div>
+            )}
             {showPunnett && geneIds.length === 1 && (
               <div className="flex justify-center">
                 {gene.inheritanceModel === 'sexLinked' ? (
