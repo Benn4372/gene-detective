@@ -78,7 +78,7 @@ That asymmetry — recessive phenotype surfacing mostly in sons — is the finge
             spots: ['s', 's'],
             tail: ['t', 't'],
           },
-          defaultName: 'Carrier α',
+          defaultName: 'Glowing mother',
         },
         {
           role: 'father',
@@ -89,7 +89,7 @@ That asymmetry — recessive phenotype surfacing mostly in sons — is the finge
             spots: ['s', 's'],
             tail: ['t', 't'],
           },
-          defaultName: 'Glow β',
+          defaultName: 'Glowing father',
         },
       ],
       correctAssertions: [
