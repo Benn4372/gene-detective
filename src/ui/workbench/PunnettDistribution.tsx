@@ -4,6 +4,7 @@ import { blobSpecies } from '../../content'
 import type { Creature } from '../../engine/types'
 import { computePhenotype } from '../../engine/phenotype'
 import { computePunnett } from '../../engine/punnett'
+import { phenotypeLabel } from '../../renderer/phenotypeLabels'
 
 interface Props {
   motherId: string
@@ -58,7 +59,9 @@ export function PunnettDistribution({ motherId, fatherId, geneIds }: Props) {
         seenTraits.add(traitId)
         const trait = blobSpecies.traits.find(t => t.id === traitId)
         const value = phen[traitId] ?? '?'
-        traitLabels.push(`${trait?.name ?? gene?.name ?? id}: ${value}`)
+        traitLabels.push(
+          `${trait?.name ?? gene?.name ?? id}: ${phenotypeLabel(traitId, value)}`,
+        )
       }
       const label = traitLabels.join(' · ')
       const existing = buckets.get(label)
