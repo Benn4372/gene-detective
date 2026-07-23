@@ -44,14 +44,14 @@ Crossing AaSs × AaSs gives a **4×4 Punnett square** with sixteen cells. When y
 You won't see that exactly in any single litter — but over 30+ offspring, the pattern becomes clear.`,
       workedExample: {
         parents: [
-          { antennae: ['A', 'a'], spots: ['S', 's'] },
-          { antennae: ['A', 'a'], spots: ['S', 's'] },
+          { antennae: ['A', 'A'], spots: ['S', 'S'] },
+          { antennae: ['a', 'a'], spots: ['s', 's'] },
         ],
         narration: [
-          'Each parent can produce AS, As, aS, or as gametes — each 25%.',
-          'Sixteen cell combinations in the Punnett square.',
-          'Group by phenotype: 9 have both traits, 3 have only antennae, 3 have only spots, 1 has neither.',
-          'The ratio 9:3:3:1 is the signature of two unlinked heterozygous traits.',
+          'Show walkthrough: pure double-dominant × pure double-recessive (the P generation).',
+          'Mother AASS makes only AS gametes. Father aass makes only as gametes.',
+          'Every F1 offspring is AaSs — a heterozygote on BOTH genes.',
+          'Guided then crosses two AaSs F1s and you watch the classic 9:3:3:1 F2 ratio emerge.',
         ],
       },
     },

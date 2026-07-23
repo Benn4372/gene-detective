@@ -41,7 +41,7 @@ Try dragging the temperature slider on the workbench. Genotypes stay the same; p
       workedExample: {
         parents: [
           {
-            heatSpot: ['H', 'h'],
+            heatSpot: ['H', 'H'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             tail: ['t', 't'],
@@ -50,7 +50,7 @@ Try dragging the temperature slider on the workbench. Genotypes stay the same; p
             tailGrowth: ['P', 'P'],
           },
           {
-            heatSpot: ['H', 'h'],
+            heatSpot: ['h', 'h'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             tail: ['t', 't'],
@@ -60,10 +60,10 @@ Try dragging the temperature slider on the workbench. Genotypes stay the same; p
           },
         ],
         narration: [
-          'Both parents are Hh — hetero for heatSpot.',
-          'At room temperature, both LOOK plain — the H allele is silent.',
-          'Turn up the heat past 70° and the H reveals itself in the parents.',
-          'Offspring: 25% HH, 50% Hh, 25% hh — but only 75% show the spot when warm.',
+          'Show walkthrough: pure HH × pure hh (F1 setup).',
+          'At room temperature, both parents look plain — the H allele is silent below 70°.',
+          'Warm the workbench above 70° and only the HH mother lights up.',
+          'Every F1 offspring is Hh — genotype fixed, but the phenotype flips on and off with temperature.',
         ],
       },
     },

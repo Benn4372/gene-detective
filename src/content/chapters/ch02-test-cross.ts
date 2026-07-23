@@ -42,14 +42,14 @@ A **test cross** uses this on purpose. If you have a mystery dominant-looking bl
 The absence or presence of even a single recessive-phenotype offspring is your answer.`,
       workedExample: {
         parents: [
-          { antennae: ['A', 'a'], spots: ['s', 's'] },
+          { antennae: ['A', 'A'], spots: ['s', 's'] },
           { antennae: ['a', 'a'], spots: ['s', 's'] },
         ],
         narration: [
-          'Mystery mother is Aa — she passes A or a with 50/50 odds.',
-          'Test father is aa — he can only pass a.',
-          'About half of offspring are Aa (show antennae). The other half are aa (no antennae).',
-          "If ANY offspring lacks antennae, the mystery blob is definitively Aa.",
+          'Show walkthrough: mystery mother turns out to be AA.',
+          'Every gamete she produces is A. Test father is aa — every gamete is a.',
+          'Every single offspring is Aa. All show antennae. Zero recessive kids.',
+          'That "clean sweep" is Case A — mother is homozygous. Guided runs the same test cross but with a Case B mother.',
         ],
       },
     },

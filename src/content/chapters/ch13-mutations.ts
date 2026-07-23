@@ -41,7 +41,7 @@ Cross these two kk parents. Most offspring will be kk (as expected). But among m
       workedExample: {
         parents: [
           {
-            sparkle: ['k', 'k'],
+            sparkle: ['K', 'K'],
             tail: ['t', 't'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
@@ -62,10 +62,10 @@ Cross these two kk parents. Most offspring will be kk (as expected). But among m
           },
         ],
         narration: [
-          'Both parents are kk — no sparkle allele between them.',
-          'Under classical rules, zero sparkling offspring should ever appear.',
-          "But mutation flips k→K in ~3% of gametes. Over enough crosses, sparkling offspring show up.",
-          'Every dominant allele in every species started as a mutation once.',
+          'Show walkthrough: pure sparkling KK × pure plain kk (F1 baseline).',
+          'Every offspring inherits K from mother, k from father → every child is Kk, all sparkle.',
+          'That is the mutation-free baseline. Now compare to guided.',
+          "Guided crosses two PLAIN kk parents — under classical rules zero sparkles should ever appear, but the k→K mutation rate leaks a few sparklers into the litter anyway.",
         ],
       },
     },

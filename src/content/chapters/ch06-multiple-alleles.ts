@@ -47,14 +47,14 @@ Genotypes and their phenotypes:
 Six genotypes, only three phenotypes. A long-horned blob might be LL, LM, or Ln — you can't tell from looking. It takes a testcross to unmask.`,
       workedExample: {
         parents: [
-          { horns: ['L', 'n'], antennae: ['a', 'a'], spots: ['s', 's'], tail: ['t', 't'] },
-          { horns: ['M', 'n'], antennae: ['a', 'a'], spots: ['s', 's'], tail: ['t', 't'] },
+          { horns: ['L', 'L'], antennae: ['a', 'a'], spots: ['s', 's'], tail: ['t', 't'] },
+          { horns: ['n', 'n'], antennae: ['a', 'a'], spots: ['s', 's'], tail: ['t', 't'] },
         ],
         narration: [
-          'Mother is Ln — long horns, hiding an n.',
-          'Father is Mn — medium horns, hiding an n.',
-          'Possible offspring: LM, Ln, Mn, nn — four genotypes, three phenotypes.',
-          'The nn short-horn offspring is the smoking gun that both parents were heterozygous.',
+          'Show walkthrough: pure long-horn × pure short-horn (test cross baseline).',
+          'Mother LL only passes L. Father nn only passes n.',
+          'Every offspring is Ln — long horns (L dominates n) but secretly heterozygous.',
+          "Guided then hands you two long-horned parents whose litters include SHORT-horned kids — figure out what each parent must actually be carrying.",
         ],
       },
     },

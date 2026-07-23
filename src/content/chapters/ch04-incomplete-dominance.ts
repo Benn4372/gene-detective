@@ -41,14 +41,14 @@ Our tail-length gene has two alleles: **T** (long, dominant partial) and **t** (
 Cross a medium-tail Tt with another medium-tail Tt, and you get a clean **1 : 2 : 1** ratio of long : medium : short. Every offspring's genotype is visible from its tail alone — no hidden carriers.`,
       workedExample: {
         parents: [
-          { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
-          { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
+          { tail: ['T', 'T'], antennae: ['a', 'a'], spots: ['s', 's'] },
+          { tail: ['t', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
         ],
         narration: [
-          'Both parents are Tt — visibly medium tails.',
-          'Each parent contributes T or t with 50/50 odds.',
-          'Offspring: 25% TT (long), 50% Tt (medium), 25% tt (short).',
-          "The heterozygote has its own distinct phenotype — no hidden carriers here.",
+          'Show walkthrough: long × short (the parent generation).',
+          'Mother TT can only pass T. Father tt can only pass t.',
+          'Every F1 offspring is Tt — the blended MEDIUM phenotype.',
+          'Guided then crosses two Tt mediums together and you watch the 1:2:1 F2 ratio come out — long, medium, short.',
         ],
       },
     },

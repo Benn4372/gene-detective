@@ -41,8 +41,8 @@ Our antennae gene is at locus 50 on chromosome 1. Our new fins gene is at locus 
       workedExample: {
         parents: [
           {
-            antennae: ['A', 'a'],
-            fins: ['F', 'f'],
+            antennae: ['A', 'A'],
+            fins: ['F', 'F'],
             spots: ['s', 's'],
             tail: ['t', 't'],
             eyeGlow: ['g', 'g'],
@@ -56,10 +56,10 @@ Our antennae gene is at locus 50 on chromosome 1. Our new fins gene is at locus 
           },
         ],
         narration: [
-          "Mother's chromosome 1: AF on one homolog, af on the other.",
-          'Father is aa ff — pure recessive for both traits.',
-          "This is a **testcross**: father's contribution is fixed, so offspring phenotypes directly reveal the mother's gametes.",
-          'Expect ~47.5% AF, ~47.5% af — mostly parental. ~2.5% Af, ~2.5% aF — rare recombinants.',
+          'Show walkthrough: pure AF/AF × pure af/af — the parent generation that sets up coupling phase.',
+          'Every mother-gamete is AF (both dominants on the same homolog). Every father-gamete is af.',
+          "Every F1 offspring is AF/af — dominant on both, alleles physically linked in coupling.",
+          "Guided then crosses that F1 back to a recessive tester and you watch how tightly the alleles stay together (~95% parental, ~5% recombinant).",
         ],
       },
     },

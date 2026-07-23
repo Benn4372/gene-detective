@@ -46,23 +46,24 @@ That asymmetry — recessive phenotype surfacing mostly in sons — is the finge
       workedExample: {
         parents: [
           {
-            eyeGlow: ['G', 'g'],
+            eyeGlow: ['G', 'G'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             tail: ['t', 't'],
           },
           {
-            eyeGlow: ['G'],
+            eyeGlow: ['g'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             tail: ['t', 't'],
           },
         ],
         narration: [
-          'Mother is Gg on her two Xs — glows, but carries g.',
-          'Father is G (hemizygous, single X) — glows.',
-          'Sons: mom gives G or g → 50/50 glow vs no glow.',
-          'Daughters: dad gives G, mom gives G or g → all glow.',
+          'Show walkthrough: pure glow mother × no-glow father (reciprocal to guided).',
+          'Mother is GG — every X she passes carries G.',
+          'Sons get their only X from mom → every son inherits G → every son glows.',
+          'Daughters get G from mom AND g from dad → every daughter is Gg → every daughter glows too.',
+          'Guided flips this to a carrier-mother × glow-father cross where the sons are the diagnostic clue.',
         ],
       },
     },
