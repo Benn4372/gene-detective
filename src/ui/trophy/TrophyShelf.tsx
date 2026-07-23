@@ -89,9 +89,11 @@ export function TrophyShelf() {
                       </span>
                     </div>
                     <div className="mt-1 font-mono text-[10px] text-stone-500">
-                      {Object.entries(phen)
-                        .map(([_t, v]) => v)
-                        .join(' · ')}
+                      {blobSpecies.traits
+                        .filter(t => t.category === 'visible')
+                        .map(t => phen[t.id])
+                        .filter(v => v && v !== 'absent')
+                        .join(' · ') || '—'}
                     </div>
                   </motion.div>
                 )

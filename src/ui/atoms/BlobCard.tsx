@@ -53,9 +53,12 @@ export function BlobCard({
           <div className="text-xs text-stone-600 text-center">
             {traits.map(t => {
               const val = phenotype[t.id]
+              // Hide traits that don't apply to this creature — otherwise
+              // an antennae-only Ch 1 blob lists 15 traits at "absent".
+              if (!val || val === 'absent') return null
               return (
                 <div key={t.id}>
-                  {t.name}: <span className="font-mono text-stone-800">{val ?? '—'}</span>
+                  {t.name}: <span className="font-mono text-stone-800">{val}</span>
                 </div>
               )
             })}

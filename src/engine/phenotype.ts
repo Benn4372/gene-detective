@@ -55,8 +55,12 @@ export function computePhenotype(creature: Creature, species: Species): Phenotyp
     }
     let value = expressTrait(gene, effectiveAlleles, trait, creature)
     // Environmental gating: temperature below the gene's threshold forces
-    // the recessive phenotype even if dominants are present.
+    // the recessive phenotype even if dominants are present. Only applies
+    // when the creature actually carries this gene — an absent gene stays
+    // absent, otherwise cold-default forces every blob to look like it
+    // carries the recessive of every environmental gene.
     if (
+      value !== 'absent' &&
       gene.environmentalThreshold !== undefined &&
       getEnvironmentTemperature() < gene.environmentalThreshold
     ) {
