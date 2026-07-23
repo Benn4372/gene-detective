@@ -1,4 +1,3 @@
-import { useMemo, useState } from 'react'
 import { useGameStore } from '../../state/gameStore'
 import { blobSpecies } from '../../content'
 import { computePhenotype } from '../../engine/phenotype'
@@ -139,11 +138,7 @@ export function NotebookPanel({
           genes appear in the notebook for context but don't inflate the
           Punnett shape. If the two answer genes share a chromosome (linked
           traits), a linkage-info banner rides above the grid to reset the
-          player's independent-assortment expectation from Ch 3.
-
-          When the chapter has 3+ answer genes, we render a gene picker
-          so the player can drill into any two-gene Punnett, plus the
-          full N-gene distribution below. */}
+          player's independent-assortment expectation from Ch 3. */}
       {showPunnett && punnettGeneIds.length === 2 && (
         <div className="border-t border-stone-200 pt-3 mt-3 space-y-3">
           <LinkageNotice geneIds={punnettGeneIds} />
@@ -157,100 +152,12 @@ export function NotebookPanel({
         </div>
       )}
       {showPunnett && punnettGeneIds.length >= 3 && (
-        <div className="border-t border-stone-200 pt-3 mt-3 space-y-4">
-          <MultiGenePunnettPicker
-            motherId={mother.id}
-            fatherId={father.id}
-            answerGeneIds={punnettGeneIds}
-          />
+        <div className="border-t border-stone-200 pt-3 mt-3">
           <PunnettDistribution
             motherId={mother.id}
             fatherId={father.id}
             geneIds={punnettGeneIds}
           />
-        </div>
-      )}
-    </div>
-  )
-}
-
-// Renders a "focus on two genes" picker + a live dihybrid Punnett for the
-// chosen pair. Used by chapters with 3+ answer genes (polygenic Ch 10, any
-// future multi-gene puzzle) so the player can still see the full 4×4 grid
-// for any two of the tracked genes.
-function MultiGenePunnettPicker({
-  motherId,
-  fatherId,
-  answerGeneIds,
-}: {
-  motherId: string
-  fatherId: string
-  answerGeneIds: string[]
-}) {
-  const options = useMemo(
-    () =>
-      answerGeneIds
-        .map(id => blobSpecies.genes.find(g => g.id === id))
-        .filter((g): g is NonNullable<typeof g> => !!g),
-    [answerGeneIds],
-  )
-  const [geneAId, setGeneAId] = useState<string>(options[0]?.id ?? '')
-  const [geneBId, setGeneBId] = useState<string>(options[1]?.id ?? '')
-
-  if (options.length < 2) return null
-
-  const bothSelected =
-    geneAId && geneBId && geneAId !== geneBId &&
-    options.some(o => o.id === geneAId) &&
-    options.some(o => o.id === geneBId)
-
-  return (
-    <div className="rounded-lg border border-stone-300 bg-white p-3">
-      <div className="text-xs font-semibold text-stone-700 mb-2">
-        Focused Punnett · pick two genes
-      </div>
-      <div className="flex flex-wrap gap-2 items-center text-xs">
-        <label className="flex items-center gap-1">
-          <span className="text-stone-500">Gene A</span>
-          <select
-            value={geneAId}
-            onChange={e => setGeneAId(e.target.value)}
-            className="border border-stone-300 rounded px-1 py-0.5 bg-white text-stone-800"
-          >
-            {options.map(g => (
-              <option key={g.id} value={g.id}>{g.name}</option>
-            ))}
-          </select>
-        </label>
-        <span className="text-stone-400">×</span>
-        <label className="flex items-center gap-1">
-          <span className="text-stone-500">Gene B</span>
-          <select
-            value={geneBId}
-            onChange={e => setGeneBId(e.target.value)}
-            className="border border-stone-300 rounded px-1 py-0.5 bg-white text-stone-800"
-          >
-            {options.map(g => (
-              <option key={g.id} value={g.id}>{g.name}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-      {geneAId === geneBId && (
-        <div className="text-[11px] text-rose-700 mt-2">
-          Pick two different genes.
-        </div>
-      )}
-      {bothSelected && (
-        <div className="mt-3 space-y-2">
-          <LinkageNotice geneIds={[geneAId, geneBId]} />
-          <div className="flex justify-center">
-            <PunnettGridDihybrid
-              motherId={motherId}
-              fatherId={fatherId}
-              geneIds={[geneAId, geneBId]}
-            />
-          </div>
         </div>
       )}
     </div>

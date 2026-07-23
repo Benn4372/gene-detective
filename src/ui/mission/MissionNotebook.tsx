@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { blobSpecies } from '../../content'
 import type { Creature } from '../../engine/types'
 import { useGameStore } from '../../state/gameStore'
@@ -26,20 +26,39 @@ interface Props {
 //   • Genotype guess (allele letters) — feeds the Punnett's Fill button
 //   • Notes textarea (free text scratchpad)
 //   • Observed phenotype label so the player can cross-check against reality
-// Same shape as the chapter NotebookPanel so the two screens read consistently.
+// The Punnett below the notes has its own PAIR-PICKER: the player picks any
+// two blobs (samples or bred offspring, any sex combination) and the Punnett
+// updates. Old behaviour auto-picked "first female + first male starter" —
+// useless when the bench has 3-4 samples and the player needs to compare
+// hypothetical pairings before committing to a real cross.
 export function MissionNotebook({ blobs, visibleGeneIds }: Props) {
   const [focusId, setFocusId] = useState<string>(blobs[0]?.id ?? '')
   const focused = blobs.find(b => b.id === focusId) ?? blobs[0]
+
+  const females = useMemo(() => blobs.filter(b => b.sex === 'F'), [blobs])
+  const males = useMemo(() => blobs.filter(b => b.sex === 'M'), [blobs])
+
+  // Punnett-preview pair. Defaults to first female + first male when the
+  // component mounts. Player can pick any blob of either sex — the mother
+  // slot needs a female, father slot needs a male, otherwise the Punnett
+  // sits idle until both are chosen.
+  const [motherId, setMotherId] = useState<string>(females[0]?.id ?? '')
+  const [fatherId, setFatherId] = useState<string>(males[0]?.id ?? '')
+
+  // If the underlying pool changed (a new offspring was bred, or a starter
+  // was delivered), make sure the picker's IDs are still valid.
+  useEffect(() => {
+    if (!blobs.some(b => b.id === motherId) && females[0]) setMotherId(females[0].id)
+    if (!blobs.some(b => b.id === fatherId) && males[0]) setFatherId(males[0].id)
+  }, [blobs, motherId, fatherId, females, males])
+
   if (!focused) return null
   const phen = computePhenotype(focused, blobSpecies)
 
-  // Pick the two starter samples (parentIds === undefined) — those are the
-  // "parents" for the Punnett drawn below the notes. Missions rarely have
-  // an obvious F+M pair, so we pick the first female + first male we find.
-  const starters = blobs.filter(b => !b.parentIds)
-  const motherStarter = starters.find(b => b.sex === 'F')
-  const fatherStarter = starters.find(b => b.sex === 'M')
-  const canPunnett = !!motherStarter && !!fatherStarter && visibleGeneIds.length > 0
+  const mother = blobs.find(b => b.id === motherId)
+  const father = blobs.find(b => b.id === fatherId)
+  const canPunnett =
+    !!mother && !!father && visibleGeneIds.length > 0
 
   const firstGene = visibleGeneIds[0]
     ? blobSpecies.genes.find(g => g.id === visibleGeneIds[0])
@@ -59,7 +78,7 @@ export function MissionNotebook({ blobs, visibleGeneIds }: Props) {
         </div>
       </div>
 
-      {/* Blob picker — thumbnails you click to switch focus. */}
+      {/* Blob picker — thumbnails you click to switch focus (for notes). */}
       <div className="flex flex-wrap gap-2 mb-4">
         {blobs.map(b => {
           const isFocus = b.id === focused.id
@@ -113,52 +132,94 @@ export function MissionNotebook({ blobs, visibleGeneIds }: Props) {
         </div>
       </div>
 
-      {/* Live Punnett of the two starter samples, driven by their notebook
-          guesses. Mission style — passive, always visible below the notes. */}
-      {canPunnett && (
+      {/* Punnett of a chosen pair, driven by their notebook guesses. */}
+      {visibleGeneIds.length > 0 && (
         <div className="mt-4 pt-4 border-t border-stone-200">
-          <div className="text-xs uppercase tracking-widest text-stone-500 mb-2">
-            Cross of the sample pair
+          <div className="flex flex-wrap items-baseline gap-3 mb-3">
+            <div className="text-xs uppercase tracking-widest text-stone-500">
+              Punnett — pick two blobs
+            </div>
+            <label className="flex items-center gap-1 text-xs">
+              <span className="text-stone-500">Mother ♀</span>
+              <select
+                value={motherId}
+                onChange={e => setMotherId(e.target.value)}
+                className="border border-stone-300 rounded px-1 py-0.5 bg-white text-stone-800 max-w-[160px]"
+              >
+                <option value="">— pick a female —</option>
+                {females.map(b => (
+                  <option key={b.id} value={b.id}>
+                    {b.ownerName ?? `#${b.id.slice(-4)}`}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <span className="text-stone-400">×</span>
+            <label className="flex items-center gap-1 text-xs">
+              <span className="text-stone-500">Father ♂</span>
+              <select
+                value={fatherId}
+                onChange={e => setFatherId(e.target.value)}
+                className="border border-stone-300 rounded px-1 py-0.5 bg-white text-stone-800 max-w-[160px]"
+              >
+                <option value="">— pick a male —</option>
+                {males.map(b => (
+                  <option key={b.id} value={b.id}>
+                    {b.ownerName ?? `#${b.id.slice(-4)}`}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
-          {visibleGeneIds.length === 2 && (
-            <LinkageNotice geneIds={visibleGeneIds} />
+          {!canPunnett && (
+            <div className="text-[11px] italic text-stone-500">
+              Pick a female + a male from the sample bench (or from your bred
+              offspring) to preview their cross.
+            </div>
           )}
-          {visibleGeneIds.length === 1 && visibleGeneIds[0] && firstGene?.imprintOrigin && (
-            <ImprintingNotice geneId={visibleGeneIds[0]} />
+          {canPunnett && (
+            <>
+              {visibleGeneIds.length === 2 && (
+                <LinkageNotice geneIds={visibleGeneIds} />
+              )}
+              {visibleGeneIds.length === 1 && visibleGeneIds[0] && firstGene?.imprintOrigin && (
+                <ImprintingNotice geneId={visibleGeneIds[0]} />
+              )}
+              {visibleGeneIds.length === 1 && visibleGeneIds[0] && (
+                <InheritanceQuirkNotice geneId={visibleGeneIds[0]} />
+              )}
+              <div className="flex justify-center mt-2">
+                {isMonohybridSexLinked && visibleGeneIds[0] && (
+                  <PunnettGridSexLinked
+                    motherId={mother!.id}
+                    fatherId={father!.id}
+                    geneId={visibleGeneIds[0]}
+                  />
+                )}
+                {isMonohybridMito && visibleGeneIds[0] && (
+                  <PunnettGridMitochondrial
+                    motherId={mother!.id}
+                    fatherId={father!.id}
+                    geneId={visibleGeneIds[0]}
+                  />
+                )}
+                {!isMonohybridSexLinked && !isMonohybridMito && visibleGeneIds.length === 1 && visibleGeneIds[0] && (
+                  <PunnettGrid
+                    motherId={mother!.id}
+                    fatherId={father!.id}
+                    geneId={visibleGeneIds[0]}
+                  />
+                )}
+                {visibleGeneIds.length === 2 && (
+                  <PunnettGridDihybrid
+                    motherId={mother!.id}
+                    fatherId={father!.id}
+                    geneIds={[visibleGeneIds[0]!, visibleGeneIds[1]!]}
+                  />
+                )}
+              </div>
+            </>
           )}
-          {visibleGeneIds.length === 1 && visibleGeneIds[0] && (
-            <InheritanceQuirkNotice geneId={visibleGeneIds[0]} />
-          )}
-          <div className="flex justify-center mt-2">
-            {isMonohybridSexLinked && visibleGeneIds[0] && (
-              <PunnettGridSexLinked
-                motherId={motherStarter!.id}
-                fatherId={fatherStarter!.id}
-                geneId={visibleGeneIds[0]}
-              />
-            )}
-            {isMonohybridMito && visibleGeneIds[0] && (
-              <PunnettGridMitochondrial
-                motherId={motherStarter!.id}
-                fatherId={fatherStarter!.id}
-                geneId={visibleGeneIds[0]}
-              />
-            )}
-            {!isMonohybridSexLinked && !isMonohybridMito && visibleGeneIds.length === 1 && visibleGeneIds[0] && (
-              <PunnettGrid
-                motherId={motherStarter!.id}
-                fatherId={fatherStarter!.id}
-                geneId={visibleGeneIds[0]}
-              />
-            )}
-            {visibleGeneIds.length === 2 && (
-              <PunnettGridDihybrid
-                motherId={motherStarter!.id}
-                fatherId={fatherStarter!.id}
-                geneIds={[visibleGeneIds[0]!, visibleGeneIds[1]!]}
-              />
-            )}
-          </div>
         </div>
       )}
     </div>
