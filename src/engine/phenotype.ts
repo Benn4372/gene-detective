@@ -14,9 +14,11 @@ export function computePhenotype(creature: Creature, species: Species): Phenotyp
     if (genes.length === 0) continue
     // Polygenic: multiple genes contribute additively to a single trait. Sum
     // the "large" (highest-rank) allele contributions across all polygenic
-    // genes expressing this trait and map to a bucket string.
+    // genes expressing this trait and map to a bucket string. Skip if the
+    // creature carries no polygenic alleles — the trait doesn't apply.
     if (genes[0]!.inheritanceModel === 'polygenic') {
-      phenotype[trait.id] = expressPolygenic(genes, creature)
+      const val = expressPolygenic(genes, creature)
+      if (val !== null) phenotype[trait.id] = val
       continue
     }
     const gene = genes[0]!
@@ -71,12 +73,16 @@ export function computePhenotype(creature: Creature, species: Species): Phenotyp
 
 // Sum the highest-ranked-allele contributions across the polygenic genes
 // expressing this trait. Returns a compact numeric string (e.g. "3" out of a
-// max of "6" for three genes with two alleles each).
-function expressPolygenic(genes: Gene[], creature: Creature): string {
+// max of "6" for three genes with two alleles each). Returns null if the
+// creature carries no polygenic alleles at all — the trait doesn't apply,
+// so we shouldn't render as "0" (smallest size).
+function expressPolygenic(genes: Gene[], creature: Creature): string | null {
   let count = 0
+  let anyAllelesPresent = false
   for (const gene of genes) {
     if (gene.inheritanceModel !== 'polygenic') continue
     const alleles = creature.genotype[gene.id] ?? []
+    if (alleles.length > 0) anyAllelesPresent = true
     const dominantId = [...gene.alleles].sort(
       (a, b) => b.dominanceRank - a.dominanceRank,
     )[0]?.id
@@ -85,6 +91,7 @@ function expressPolygenic(genes: Gene[], creature: Creature): string {
       if (alleleId === dominantId) count += 1
     }
   }
+  if (!anyAllelesPresent) return null
   return String(count)
 }
 

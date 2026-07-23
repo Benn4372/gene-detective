@@ -55,8 +55,22 @@ export function makePreviewCreature(
   species: Species,
 ): Creature {
   const genotype: Record<string, AlleleId[]> = {}
+  // Genes referenced as the `ifGene` of some epistasis rule — leave them
+  // absent so the rule doesn't fire and mask the focus trait. Otherwise the
+  // color preview (say) gets masked yellow by a defaulted coatPigment cc.
+  const epistaticUpstreams = new Set<string>()
+  for (const g of species.genes) {
+    for (const rule of g.epistasisRules ?? []) {
+      epistaticUpstreams.add(rule.ifGene)
+    }
+  }
   for (const g of species.genes) {
     if (g.id === gene.id) continue
+    // Polygenic contributors: leaving them absent makes the preview render at
+    // neutral size instead of "0 dominants → smallest".
+    if (g.inheritanceModel === 'polygenic') continue
+    // Epistatic upstream: leaving absent avoids triggering the mask.
+    if (epistaticUpstreams.has(g.id)) continue
     const recessive = [...g.alleles].sort(
       (a, b) => a.dominanceRank - b.dominanceRank,
     )[0]

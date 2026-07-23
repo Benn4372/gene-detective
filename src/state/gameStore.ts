@@ -571,8 +571,20 @@ export const useGameStore = create<GameState & GameActions>()(
     }),
     {
       name: 'gene-detective-save-v4',
-      version: 4,
+      version: 5,
       storage: createJSONStorage(() => localStorage),
+      // v4 → v5 added environmentTemperature and per-chapter interaction
+      // modes. All existing v4 fields survive unchanged; the merge below
+      // supplies defaults for any newly-added top-level keys.
+      migrate: (persisted) => persisted as GameState,
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<GameState>
+        return {
+          ...current,
+          ...p,
+          environmentTemperature: p.environmentTemperature ?? 50,
+        }
+      },
     },
   ),
 )

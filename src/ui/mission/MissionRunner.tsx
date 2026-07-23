@@ -101,46 +101,54 @@ export function MissionRunner() {
           </div>
         </div>
 
-        <div className="mb-4 rounded p-3 bg-stone-100 border border-stone-200 text-sm text-stone-700">
-          <strong>Lab rules:</strong> two unknown samples are on the bench. Their
-          genotypes are a mystery — you'll have to figure them out on your own,
-          with no notebook validation to help. Breed to test hypotheses, fill in
-          the notecards, and deliver a bred offspring that matches the target.
-          The two starter samples belong to the lab and can never be delivered.
-        </div>
+        {/* Breed-mode-only lab rules copy. Deduce/predict missions use their
+            own panels and don't touch the sample bench. */}
+        {mission.mode === 'breed' && (
+          <div className="mb-4 rounded p-3 bg-stone-100 border border-stone-200 text-sm text-stone-700">
+            <strong>Lab rules:</strong> two unknown samples are on the bench.
+            Their genotypes are a mystery — you'll have to figure them out on
+            your own, with no notebook validation to help. Breed to test
+            hypotheses, fill in the notecards, and deliver a bred offspring
+            that matches the target. The two starter samples belong to the
+            lab and can never be delivered.
+          </div>
+        )}
 
-        {/* Sample notecards */}
-        <div className="mb-4">
-          <div className="text-xs uppercase tracking-widest text-stone-500 mb-2">
-            Samples
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {starters.map(c => (
-              <Notecard
-                key={c.id}
-                creature={c}
-                visibleGeneIds={mission.visibleGeneIds}
-              />
-            ))}
-          </div>
-        </div>
+        {mission.mode === 'breed' && (
+          <>
+            {/* Sample notecards */}
+            <div className="mb-4">
+              <div className="text-xs uppercase tracking-widest text-stone-500 mb-2">
+                Samples
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                {starters.map(c => (
+                  <Notecard
+                    key={c.id}
+                    creature={c}
+                    visibleGeneIds={mission.visibleGeneIds}
+                  />
+                ))}
+              </div>
+            </div>
 
-        {/* Bred offspring — collapsed notecards */}
-        {offspring.length > 0 && (
-          <div className="mb-4">
-            <div className="text-xs uppercase tracking-widest text-stone-500 mb-2">
-              Bred offspring ({offspring.length})
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              {offspring.map(c => (
-                <Notecard
-                  key={c.id}
-                  creature={c}
-                  visibleGeneIds={mission.visibleGeneIds}
-                />
-              ))}
-            </div>
-          </div>
+            {offspring.length > 0 && (
+              <div className="mb-4">
+                <div className="text-xs uppercase tracking-widest text-stone-500 mb-2">
+                  Bred offspring ({offspring.length})
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {offspring.map(c => (
+                    <Notecard
+                      key={c.id}
+                      creature={c}
+                      visibleGeneIds={mission.visibleGeneIds}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Interaction area — depends on mission mode. */}
@@ -174,23 +182,11 @@ export function MissionRunner() {
         )}
 
         {mission.mode === 'deduce-only' && mission.deducePedigree && (
-          <DeduceOnlyPanel
-            pedigree={mission.deducePedigree}
-            onSuccess={() => {
-              const first = pool.find(c => c.parentIds)?.id ?? starters[0]?.id
-              if (first) submit(mission.id, first)
-            }}
-          />
+          <DeduceOnlyPanel pedigree={mission.deducePedigree} />
         )}
 
         {mission.mode === 'predict-only' && mission.predictPrompt && (
-          <PredictOnlyPanel
-            prompt={mission.predictPrompt}
-            onSuccess={() => {
-              const first = pool.find(c => c.parentIds)?.id ?? starters[0]?.id
-              if (first) submit(mission.id, first)
-            }}
-          />
+          <PredictOnlyPanel prompt={mission.predictPrompt} />
         )}
       </div>
 
@@ -215,10 +211,8 @@ export function MissionRunner() {
 
 function DeduceOnlyPanel({
   pedigree,
-  onSuccess,
 }: {
   pedigree: NonNullable<import('../../content/types').Mission['deducePedigree']>
-  onSuccess(): void
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const solvedRef = useRef(false)
@@ -236,10 +230,9 @@ function DeduceOnlyPanel({
       solvedRef.current = true
       setTimeout(() => {
         completeMissionByPuzzle(activeMissionId)
-        onSuccess()
       }, 900)
     }
-  }, [allCorrect, activeMissionId, completeMissionByPuzzle, onSuccess])
+  }, [allCorrect, activeMissionId, completeMissionByPuzzle])
   return (
     <div className="space-y-3">
       <div className="rounded-lg p-3 bg-amber-50 border border-amber-200 text-sm text-amber-900">
@@ -266,10 +259,8 @@ function DeduceOnlyPanel({
 
 function PredictOnlyPanel({
   prompt,
-  onSuccess,
 }: {
   prompt: NonNullable<import('../../content/types').Mission['predictPrompt']>
-  onSuccess(): void
 }) {
   const [dominantPct, setDominantPct] = useState('')
   const [recessivePct, setRecessivePct] = useState('')
@@ -291,7 +282,6 @@ function PredictOnlyPanel({
       if (activeMissionId) {
         setTimeout(() => {
           completeMissionByPuzzle(activeMissionId)
-          onSuccess()
         }, 900)
       }
     } else {

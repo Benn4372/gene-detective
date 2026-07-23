@@ -42,7 +42,7 @@ export function Workbench({
   const breed = useGameStore(s => s.breed)
   const crossHistory = useGameStore(s => s.crossHistory)
   const creatures = useGameStore(s => s.creatures)
-  const envTemp = useGameStore(s => s.environmentTemperature)
+  const envTemp = useGameStore(s => s.environmentTemperature ?? 50)
   const setEnvTemp = useGameStore(s => s.setEnvironmentTemperature)
 
   // Show a temperature slider when any tracked gene is temperature-sensitive.

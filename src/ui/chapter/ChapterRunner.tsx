@@ -39,7 +39,6 @@ import {
   ChimeraWidget,
 } from '../researcher/ResearcherWidgets'
 import { NotebookPanel } from './NotebookPanel'
-import { makePreviewCreature } from '../../engine/codex'
 
 export function ChapterRunner() {
   const currentChapterId = useGameStore(s => s.currentChapterId)
@@ -269,21 +268,25 @@ function WorkedExample({
     scope: 'trophy',
   }
 
-  // Compute one representative offspring genotype (one allele from each) for
-  // the "child" cell. For a two-allele gene, mother AA × father aa always
-  // yields Aa.
+  // Compute one representative offspring genotype (one allele from each
+  // parent, per gene). No forced defaulting to a single focus gene — the
+  // offspring inherits from whatever the parents declared, so every trait
+  // the chapter wants to teach shows up correctly.
   const previewOffspring: Creature | null = useMemo(() => {
-    const g: Record<string, string[]> = {}
+    const genotype: Record<string, string[]> = {}
     for (const gene of blobSpecies.genes) {
       const mA = pMother[gene.id]?.[0]
       const fA = pFather[gene.id]?.[0]
-      if (mA && fA) g[gene.id] = [mA, fA]
+      if (mA && fA) genotype[gene.id] = [mA, fA]
     }
-    return makePreviewCreature(
-      blobSpecies.genes[0]!,
-      [g[blobSpecies.genes[0]!.id]?.[0] ?? 'A', g[blobSpecies.genes[0]!.id]?.[1] ?? 'a'],
-      blobSpecies,
-    )
+    return {
+      id: 'demo-offspring',
+      speciesId: blobSpecies.id,
+      sex: 'F',
+      genotype,
+      age: 0,
+      scope: 'trophy',
+    }
   }, [pMother, pFather])
 
   return (
