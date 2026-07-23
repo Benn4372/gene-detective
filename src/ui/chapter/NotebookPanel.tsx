@@ -1,8 +1,11 @@
 import { useGameStore } from '../../state/gameStore'
 import { blobSpecies } from '../../content'
+import { genotypePlaceholder } from '../../renderer/genotypePlaceholder'
 import { PunnettGrid } from '../workbench/PunnettGrid'
 import { PunnettGridDihybrid } from '../workbench/PunnettGridDihybrid'
+import { PunnettGridSexLinked } from '../workbench/PunnettGridSexLinked'
 import { PunnettDistribution } from '../workbench/PunnettDistribution'
+import { LinkageNotice } from '../workbench/LinkageNotice'
 
 interface Props {
   motherId: string
@@ -69,16 +72,25 @@ export function NotebookPanel({
                 sexGlyph="♂"
               />
             </div>
-            {/* Live Punnett for THIS gene — only shown for a monohybrid
-                view. Dihybrid + polygenic use the combined Punnett rendered
-                below the gene list. */}
+            {/* Live Punnett for THIS gene — the renderer varies by inheritance
+                model. Sex-linked genes get X^A / Y notation; everything else
+                falls through to the standard 2×2 grid. Dihybrid + polygenic
+                use the combined Punnett rendered below the gene list. */}
             {showPunnett && geneIds.length === 1 && (
               <div className="flex justify-center">
-                <PunnettGrid
-                  motherId={mother.id}
-                  fatherId={father.id}
-                  geneId={geneId}
-                />
+                {gene.inheritanceModel === 'sexLinked' ? (
+                  <PunnettGridSexLinked
+                    motherId={mother.id}
+                    fatherId={father.id}
+                    geneId={geneId}
+                  />
+                ) : (
+                  <PunnettGrid
+                    motherId={mother.id}
+                    fatherId={father.id}
+                    geneId={geneId}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -86,14 +98,20 @@ export function NotebookPanel({
       })}
 
       {/* Multi-gene Punnett display sits ONCE at the bottom of the notebook
-          when the notebook tracks more than one gene. */}
+          when the notebook tracks more than one gene. If the two tracked
+          genes share a chromosome (linked traits), a linkage-info banner
+          rides above the grid to reset the player's independent-assortment
+          expectation from Ch 3. */}
       {showPunnett && geneIds.length === 2 && (
-        <div className="border-t border-stone-200 pt-3 mt-3 flex justify-center">
-          <PunnettGridDihybrid
-            motherId={mother.id}
-            fatherId={father.id}
-            geneIds={[geneIds[0]!, geneIds[1]!]}
-          />
+        <div className="border-t border-stone-200 pt-3 mt-3 space-y-3">
+          <LinkageNotice geneIds={geneIds} />
+          <div className="flex justify-center">
+            <PunnettGridDihybrid
+              motherId={mother.id}
+              fatherId={father.id}
+              geneIds={[geneIds[0]!, geneIds[1]!]}
+            />
+          </div>
         </div>
       )}
       {showPunnett && geneIds.length >= 3 && (
@@ -130,16 +148,7 @@ function NotebookCell({
   if (!gene) return null
 
   const validSymbols = new Set(gene.alleles.map(a => a.symbol))
-  const dominant = [...gene.alleles].sort(
-    (a, b) => b.dominanceRank - a.dominanceRank,
-  )[0]!.symbol
-  const recessive = [...gene.alleles].sort(
-    (a, b) => a.dominanceRank - b.dominanceRank,
-  )[0]!.symbol
-  const placeholder =
-    gene.alleles.length === 2
-      ? `${dominant}${dominant} / ${dominant}${recessive} / ${recessive}${recessive}`
-      : gene.alleles.map(a => a.symbol).join('')
+  const placeholder = genotypePlaceholder(gene)
 
   const onGuessChange = (raw: string) => {
     const filtered = raw

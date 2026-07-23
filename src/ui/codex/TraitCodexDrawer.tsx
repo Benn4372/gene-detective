@@ -4,8 +4,10 @@ import { useGameStore } from '../../state/gameStore'
 import { blobSpecies, chapters, glossaryTerms } from '../../content'
 import { computeGenotypeTable, makePreviewCreature } from '../../engine/codex'
 import { BlobRenderer } from '../../renderer/BlobRenderer'
+import { phenotypeLabel } from '../../renderer/phenotypeLabels'
+import { GeneticMap } from './GeneticMap'
 
-type CodexTab = 'traits' | 'concepts' | 'tools'
+type CodexTab = 'map' | 'traits' | 'concepts' | 'tools'
 
 // A persistent right-side drawer plus its floating trigger button. Rendered
 // once at the App level; always accessible via a small 📖 button top-right.
@@ -57,7 +59,8 @@ function DrawerContent({ onClose }: { onClose(): void }) {
   const completedChapters = useGameStore(s => s.completedChapters)
   const currentChapterId = useGameStore(s => s.currentChapterId)
   const unlockedTools = useGameStore(s => s.unlockedTools)
-  const [tab, setTab] = useState<CodexTab>('traits')
+  const [tab, setTab] = useState<CodexTab>('map')
+  const [focusGeneId, setFocusGeneId] = useState<string | undefined>(undefined)
   const [query, setQuery] = useState('')
 
   return (
@@ -87,6 +90,9 @@ function DrawerContent({ onClose }: { onClose(): void }) {
       </div>
 
       <nav className="px-5 pt-3 flex gap-2 border-b border-stone-200 flex-shrink-0">
+        <TabButton current={tab} value="map" onClick={setTab}>
+          Map
+        </TabButton>
         <TabButton current={tab} value="traits" onClick={setTab}>
           Traits
         </TabButton>
@@ -99,8 +105,22 @@ function DrawerContent({ onClose }: { onClose(): void }) {
       </nav>
 
       <div className="p-5 overflow-y-auto flex-1">
+        {tab === 'map' && (
+          <GeneticMap
+            unlockedTraits={unlockedTraits}
+            focusGeneId={focusGeneId}
+            onGeneClick={id => {
+              setFocusGeneId(id)
+              setTab('traits')
+            }}
+          />
+        )}
         {tab === 'traits' && (
-          <TraitsTab unlockedTraits={unlockedTraits} query={query} />
+          <TraitsTab
+            unlockedTraits={unlockedTraits}
+            query={query}
+            focusGeneId={focusGeneId}
+          />
         )}
         {tab === 'concepts' && (
           <ConceptsTab
@@ -149,9 +169,11 @@ function TabButton({
 function TraitsTab({
   unlockedTraits,
   query,
+  focusGeneId,
 }: {
   unlockedTraits: string[]
   query: string
+  focusGeneId?: string
 }) {
   const genes = useMemo(
     () =>
@@ -164,7 +186,9 @@ function TraitsTab({
     ? genes.filter(g =>
         g.name.toLowerCase().includes(query.toLowerCase()),
       )
-    : genes
+    : focusGeneId
+      ? genes.filter(g => g.id === focusGeneId)
+      : genes
 
   if (unlockedTraits.length === 0) {
     return <EmptyState>Complete a chapter to unlock your first trait.</EmptyState>
@@ -176,17 +200,35 @@ function TraitsTab({
     <div className="space-y-6">
       {filtered.map(gene => {
         const rows = computeGenotypeTable(gene, blobSpecies)
+        const chromosome = blobSpecies.chromosomes.find(c => c.id === gene.chromosome)
         return (
           <section key={gene.id}>
             <h3 className="text-base font-semibold text-stone-800 mb-1 font-serif">
               {gene.name}
             </h3>
-            <div className="text-xs text-stone-500 mb-3">
-              Inheritance: {gene.inheritanceModel.replace(/([A-Z])/g, ' $1').toLowerCase()}
+            <div className="text-xs text-stone-500 mb-3 space-y-0.5">
+              <div>
+                <span className="text-stone-600 uppercase tracking-wide text-[10px]">Model</span>{' '}
+                <span className="font-mono">{gene.inheritanceModel.replace(/([A-Z])/g, ' $1').toLowerCase()}</span>
+              </div>
+              <div>
+                <span className="text-stone-600 uppercase tracking-wide text-[10px]">Locus</span>{' '}
+                <span className="font-mono">{gene.chromosome} @ {gene.locusCM} cM</span>
+                {chromosome && (
+                  <span className="italic text-stone-500 ml-1">({chromosome.type})</span>
+                )}
+              </div>
+              <div>
+                <span className="text-stone-600 uppercase tracking-wide text-[10px]">Alleles</span>{' '}
+                <span className="font-mono">
+                  {[...gene.alleles].sort((a, b) => b.dominanceRank - a.dominanceRank).map(a => a.symbol).join(' > ')}
+                </span>
+              </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
               {rows.map(row => {
                 const preview = makePreviewCreature(gene, row.alleles, blobSpecies)
+                const traitId = gene.expressesTraits[0]
                 return (
                   <div
                     key={row.genotype}
@@ -201,7 +243,7 @@ function TraitsTab({
                       {row.genotype}
                     </div>
                     <div className="text-xs text-stone-500 font-mono">
-                      → {row.phenotype}
+                      → {traitId ? phenotypeLabel(traitId, row.phenotype) : row.phenotype}
                     </div>
                   </div>
                 )

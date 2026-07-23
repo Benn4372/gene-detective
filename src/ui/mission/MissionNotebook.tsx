@@ -3,6 +3,7 @@ import { blobSpecies } from '../../content'
 import type { Creature } from '../../engine/types'
 import { useGameStore } from '../../state/gameStore'
 import { BlobRenderer } from '../../renderer/BlobRenderer'
+import { genotypePlaceholder } from '../../renderer/genotypePlaceholder'
 import { phenotypeLabel } from '../../renderer/phenotypeLabels'
 import { SexBadge } from '../atoms/SexBadge'
 import { computePhenotype } from '../../engine/phenotype'
@@ -112,16 +113,7 @@ function MissionNotebookCell({
   const setNotes = useGameStore(s => s.setNotebookNote)
 
   const validSymbols = new Set(gene.alleles.map(a => a.symbol))
-  const dominant = [...gene.alleles].sort(
-    (a, b) => b.dominanceRank - a.dominanceRank,
-  )[0]!.symbol
-  const recessive = [...gene.alleles].sort(
-    (a, b) => a.dominanceRank - b.dominanceRank,
-  )[0]!.symbol
-  const placeholder =
-    gene.alleles.length === 2
-      ? `${dominant}${dominant} / ${dominant}${recessive} / ${recessive}${recessive}`
-      : gene.alleles.map(a => a.symbol).join('')
+  const placeholder = genotypePlaceholder(gene)
 
   const onGuessChange = (raw: string) => {
     const filtered = raw

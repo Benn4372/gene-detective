@@ -1,5 +1,6 @@
 import { useGameStore } from '../../state/gameStore'
 import { blobSpecies } from '../../content'
+import { genotypePlaceholder } from '../../renderer/genotypePlaceholder'
 
 interface Props {
   creatureId: string
@@ -34,17 +35,15 @@ export function GenotypeInput({
   const gene = blobSpecies.genes.find(g => g.id === geneId)
   if (!gene) return null
 
-  const dominant = [...gene.alleles].sort(
-    (a, b) => b.dominanceRank - a.dominanceRank,
-  )[0]!.symbol
-  const recessive = [...gene.alleles].sort(
-    (a, b) => a.dominanceRank - b.dominanceRank,
-  )[0]!.symbol
-  const example =
-    gene.alleles.length === 2
-      ? `${dominant}${dominant}/${dominant}${recessive}/${recessive}${recessive}`
-      : gene.alleles.map(a => a.symbol).join('')
-  const isComplete = value.length >= 2
+  const example = genotypePlaceholder(gene)
+  // Sex-linked males + mitochondrial + Y-linked are hemizygous — one allele
+  // is a complete answer. Everyone else needs the full diploid pair (2 chars).
+  const minChars =
+    gene.inheritanceModel === 'mitochondrial' ||
+    gene.inheritanceModel === 'sexLinked'
+      ? 1
+      : 2
+  const isComplete = value.length >= minChars
 
   const sortChars = (s: string) => s.split('').sort().join('')
   const matchesAnswer =

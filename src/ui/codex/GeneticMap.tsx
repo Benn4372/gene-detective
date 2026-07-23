@@ -1,0 +1,161 @@
+import { useMemo } from 'react'
+import { blobSpecies } from '../../content'
+import type { Chromosome, Gene } from '../../engine/types'
+
+interface Props {
+  unlockedTraits: string[]
+  onGeneClick?(geneId: string): void
+  focusGeneId?: string
+}
+
+// The Genetic Map view of the Codex. Chromosomes are drawn as horizontal
+// bands and genes are plotted at their real locusCM position — so linked
+// genes (fins + antennae at 50 vs 55 cM on autosome 1) sit visibly next to
+// each other, independently assorting genes fall on different bands, and
+// sex chromosomes get their own row. Locked genes render as anonymous grey
+// markers so the player knows there's "more to discover" without spoiling
+// what the trait is.
+export function GeneticMap({ unlockedTraits, onGeneClick, focusGeneId }: Props) {
+  const groups = useMemo(() => groupByChromosome(blobSpecies.chromosomes, blobSpecies.genes), [])
+  return (
+    <div className="space-y-5">
+      <div className="text-xs text-stone-600 italic leading-snug">
+        Each band is one of the blob's chromosomes. Genes are placed at their
+        real position on the chromosome (measured in <span className="font-mono">cM</span>) —
+        closer positions mean tighter linkage.
+      </div>
+      {groups.map(({ chromosome, genes }) => (
+        <ChromosomeBand
+          key={chromosome.id}
+          chromosome={chromosome}
+          genes={genes}
+          unlockedTraits={unlockedTraits}
+          onGeneClick={onGeneClick}
+          focusGeneId={focusGeneId}
+        />
+      ))}
+    </div>
+  )
+}
+
+// -- Chromosome band -------------------------------------------------------
+
+function ChromosomeBand({
+  chromosome,
+  genes,
+  unlockedTraits,
+  onGeneClick,
+  focusGeneId,
+}: {
+  chromosome: Chromosome
+  genes: Gene[]
+  unlockedTraits: string[]
+  onGeneClick?(geneId: string): void
+  focusGeneId?: string
+}) {
+  const trackHeightPct = (chromosome.lengthCM / 100) * 100
+  // Sex chromosomes get a compact horizontal band regardless of true cM
+  // length — mostly so the tiny Y (20 cM) isn't invisible next to the X.
+  const displayWidth = chromosome.type.startsWith('sex-')
+    ? Math.max(chromosome.lengthCM * 3, 60)
+    : Math.max(chromosome.lengthCM * 3.2, 60)
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between mb-1">
+        <div className="text-sm font-semibold text-stone-800 font-mono">
+          {chromosome.id}
+        </div>
+        <div className="text-[10px] uppercase tracking-wide text-stone-500">
+          {formatChromosomeType(chromosome.type)} · {chromosome.lengthCM} cM
+        </div>
+      </div>
+      <div
+        className="relative h-16 rounded-lg bg-stone-100 border border-stone-300"
+        style={{ width: `${displayWidth}px`, maxWidth: '100%' }}
+      >
+        {/* Chromosome centre-line */}
+        <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 h-1 rounded bg-stone-300" />
+        {/* Gene markers */}
+        {genes.length === 0 ? (
+          <div className="absolute inset-0 flex items-center justify-center text-[10px] italic text-stone-500">
+            (no genes assigned)
+          </div>
+        ) : (
+          genes.map(g => {
+            const isUnlocked = g.expressesTraits.some(t =>
+              unlockedTraits.includes(t),
+            )
+            const isFocus = focusGeneId === g.id
+            const leftPct = (g.locusCM / chromosome.lengthCM) * 100
+            return (
+              <button
+                key={g.id}
+                onClick={() => onGeneClick?.(g.id)}
+                disabled={!isUnlocked}
+                title={
+                  isUnlocked
+                    ? `${g.name} · ${formatModel(g.inheritanceModel)} · locus ${g.locusCM} cM`
+                    : `Locked gene at locus ${g.locusCM} cM`
+                }
+                className={
+                  'absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center transition-transform ' +
+                  (isUnlocked ? 'hover:scale-110 cursor-pointer' : 'cursor-not-allowed')
+                }
+                style={{ left: `${leftPct}%` }}
+              >
+                <div
+                  className={
+                    'w-3 h-3 rounded-full border-2 ' +
+                    (isFocus
+                      ? 'bg-amber-500 border-amber-700 ring-2 ring-amber-200'
+                      : isUnlocked
+                        ? 'bg-emerald-400 border-emerald-700'
+                        : 'bg-stone-300 border-stone-400')
+                  }
+                />
+                <div
+                  className={
+                    'mt-1 text-[9px] font-mono max-w-[54px] text-center leading-tight ' +
+                    (isUnlocked ? 'text-stone-700' : 'text-stone-400 italic')
+                  }
+                >
+                  {isUnlocked ? g.name : '???'}
+                </div>
+              </button>
+            )
+          })
+        )}
+      </div>
+    </div>
+  )
+}
+
+// -- Helpers ---------------------------------------------------------------
+
+function groupByChromosome(chromosomes: Chromosome[], genes: Gene[]) {
+  return chromosomes.map(chromosome => ({
+    chromosome,
+    genes: genes
+      .filter(g => g.chromosome === chromosome.id)
+      .sort((a, b) => a.locusCM - b.locusCM),
+  }))
+}
+
+function formatChromosomeType(t: Chromosome['type']): string {
+  switch (t) {
+    case 'autosome': return 'autosome'
+    case 'sex-X': return 'sex X'
+    case 'sex-Y': return 'sex Y'
+    case 'sex-Z': return 'sex Z'
+    case 'sex-W': return 'sex W'
+    case 'mitochondrial': return 'mitochondrial'
+  }
+}
+
+function formatModel(m: Gene['inheritanceModel']): string {
+  return m.replace(/([A-Z])/g, ' $1').toLowerCase().trim()
+}
+
+// Silence "unused" if focusGeneId prop isn't wired up by a caller.
+export type { Props as GeneticMapProps }
