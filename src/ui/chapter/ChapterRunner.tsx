@@ -1089,6 +1089,50 @@ function OutroView({
         </div>
       )}
 
+      {/* Small "you just learned" callout so the chapter has a satisfying
+          landing before trophy-picking. */}
+      <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-4">
+        <div className="text-xs uppercase tracking-widest text-emerald-700 mb-1">
+          You just learned
+        </div>
+        <div className="text-sm font-semibold text-stone-800 font-serif">
+          {chapter.concept}
+        </div>
+        {(chapter.unlocks.traits?.length ||
+          chapter.unlocks.tools?.length ||
+          chapter.unlocks.mentors?.length) && (
+          <div className="text-xs text-emerald-900 mt-2 space-x-1">
+            <span className="uppercase tracking-widest text-emerald-700 text-[10px]">
+              Unlocks
+            </span>{' '}
+            {chapter.unlocks.traits?.map(t => (
+              <span
+                key={t}
+                className="inline-block rounded-full bg-emerald-100 border border-emerald-300 px-2 py-0.5 font-mono text-[10px]"
+              >
+                {t}
+              </span>
+            ))}
+            {chapter.unlocks.tools?.map(t => (
+              <span
+                key={t}
+                className="inline-block rounded-full bg-emerald-100 border border-emerald-300 px-2 py-0.5 font-mono text-[10px]"
+              >
+                {t}
+              </span>
+            ))}
+            {chapter.unlocks.mentors?.map(m => (
+              <span
+                key={m}
+                className="inline-block rounded-full bg-emerald-100 border border-emerald-300 px-2 py-0.5 font-mono text-[10px]"
+              >
+                mentor: {m}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
       {hasPreset ? (
         <div className="rounded-lg p-4 bg-emerald-50 border border-emerald-200 text-sm text-emerald-900">
           <span className="font-semibold">Trophy prepared:</span>{' '}
