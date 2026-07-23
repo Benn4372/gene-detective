@@ -79,7 +79,6 @@ function ChromosomeBand({
   focusGeneId?: string
   chapterInfoByTrait: Record<string, { order: number; title: string }>
 }) {
-  const trackHeightPct = (chromosome.lengthCM / 100) * 100
   // Sex chromosomes get a compact horizontal band regardless of true cM
   // length — mostly so the tiny Y (20 cM) isn't invisible next to the X.
   const displayWidth = chromosome.type.startsWith('sex-')
