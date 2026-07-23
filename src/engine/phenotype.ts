@@ -23,6 +23,15 @@ export function computePhenotype(creature: Creature, species: Species): Phenotyp
     }
     const gene = genes[0]!
     const alleles = creature.genotype[gene.id] ?? []
+    // A creature without ANY of this gene's alleles simply doesn't carry the
+    // trait — skip every override branch and mark it absent. Otherwise the
+    // sex-limited / methylation branches below would materialise a spurious
+    // recessive phenotype (e.g. every male trophy would list broodPouch 'u'
+    // even though they never inherited a broodPouch gene at all).
+    if (alleles.length === 0) {
+      phenotype[trait.id] = 'absent'
+      continue
+    }
     // Sex-limited: gene only expresses in the specified sex. The other sex
     // always shows recessive, regardless of genotype.
     if (gene.sexLimitedTo && creature.sex !== gene.sexLimitedTo) {
