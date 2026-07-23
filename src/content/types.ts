@@ -106,6 +106,82 @@ export interface Chapter {
   // Optional preset used when the Trophy Shelf awards this chapter's blob;
   // if absent, the player's solo-stage mother is used as the trophy.
   trophyBlobPreset?: LabStarterCreature
+  // Optional custom interaction mode. When set, the Chapter Runner swaps out
+  // its default Workbench for the specified mode's UI.
+  interactionMode?:
+    | {
+        kind: 'population-sandbox'
+        focusGeneId: string
+        initialDominantFreq: number
+        populationSize?: number
+        generationsToExplore?: number
+        // From Ch 30 onward: what evolutionary force is active in this
+        // simulation. Undefined = plain random-mating drift (Ch 12).
+        force?:
+          | 'drift'
+          | 'founder'
+          | 'migration'
+          | 'selection'
+          | 'balancing'
+          | 'assortative'
+          | 'inbreeding'
+          | 'hybrid-vigor'
+          | 'speciation'
+      }
+    | {
+        kind: 'karyotype'
+        // Chromosome-id → aberration state override.
+        states: Record<string, 'normal' | 'trisomy' | 'monosomy' | 'deletion' | 'duplication' | 'translocation' | 'inversion'>
+      }
+    | {
+        kind: 'dna-sequence'
+        // Show a sequence of mutation types (label → before → after).
+        variants: Array<{
+          label: string
+          before: string
+          after: string
+          consequence: string
+        }>
+      }
+    | {
+        kind: 'pedigree'
+        // Nodes with parent references + phenotype flags. Player deduces genotype.
+        nodes: Array<{
+          id: string
+          parents?: [string, string]
+          sex: 'M' | 'F'
+          affected: boolean
+          note?: string
+        }>
+      }
+    | {
+        kind: 'methylation'
+        // Which gene the mother can methylate, and the genotype context.
+        focusGeneId: string
+        motherGenotype: string[]
+        fatherGenotype: string[]
+      }
+    | {
+        kind: 'researcher-widget'
+        widget:
+          | 'heritability'
+          | 'qtl-scan'
+          | 'three-point-cross'
+          | 'threshold-trait'
+          | 'crispr-editor'
+          | 'cancer-somatic'
+          | 'gwas-manhattan'
+          | 'phylogenetics-tree'
+          | 'conservation-rescue'
+          | 'hgt-plasmid'
+          | 'prion-conformation'
+          | 'reaction-norm'
+          | 'transposable-element'
+          | 'copy-number'
+          | 'chimera'
+          | 'operon'
+          | 'transgenerational'
+      }
 }
 
 // -- Mission ---------------------------------------------------------------
@@ -126,6 +202,31 @@ export interface Mission {
   breedBudget?: number // undefined = unlimited (still solvable, no ★ though)
   mode: MissionMode
   rewardPreviewText: string
+  // For deduce-only missions: the pedigree the player analyzes, plus the
+  // correct answers for each node the player must fill in.
+  deducePedigree?: {
+    focusGeneId: string
+    nodes: Array<{
+      id: string
+      parents?: [string, string]
+      sex: 'M' | 'F'
+      affected: boolean
+      note?: string
+    }>
+    correctGenotypes: Record<string, string>
+  }
+  // For predict-only missions: the player types a phenotype-frequency
+  // prediction and compares to the expected values.
+  predictPrompt?: {
+    focusGeneId: string
+    // Genotype pair the puzzle uses; predictions are compared against the
+    // Punnett-derived phenotype frequencies for this pair.
+    motherGenotype: string
+    fatherGenotype: string
+    question: string
+    // Percent tolerance for the player's answer (e.g. 5 = ±5%).
+    tolerance: number
+  }
 }
 
 // -- Character / Mentor ----------------------------------------------------

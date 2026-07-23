@@ -7,6 +7,8 @@ import { computePhenotype } from '../../engine/phenotype'
 import { BlobRenderer } from '../../renderer/BlobRenderer'
 import { SexBadge } from '../atoms/SexBadge'
 import { PunnettGrid } from './PunnettGrid'
+import { PunnettGridDihybrid } from './PunnettGridDihybrid'
+import { PunnettDistribution } from './PunnettDistribution'
 import { PhenotypeTally } from '../atoms/PhenotypeTally'
 import type { CrossRecord } from '../../state/types'
 
@@ -40,6 +42,19 @@ export function Workbench({
   const breed = useGameStore(s => s.breed)
   const crossHistory = useGameStore(s => s.crossHistory)
   const creatures = useGameStore(s => s.creatures)
+  const envTemp = useGameStore(s => s.environmentTemperature)
+  const setEnvTemp = useGameStore(s => s.setEnvironmentTemperature)
+
+  // Show a temperature slider when any tracked gene is temperature-sensitive.
+  // Introduced in Ch11; hidden for chapters that don't touch it.
+  const hasEnvGene = useMemo(
+    () =>
+      visibleGeneIds.some(id => {
+        const g = blobSpecies.genes.find(x => x.id === id)
+        return g?.environmentalThreshold !== undefined
+      }),
+    [visibleGeneIds],
+  )
 
   const poolIds = useMemo(() => new Set(pool.map(c => c.id)), [pool])
   const females = pool.filter(c => c.sex === 'F')
@@ -93,19 +108,61 @@ export function Workbench({
         />
       </div>
 
-      {/* Punnett grids — one per gene */}
-      {motherId && fatherId && (
-        <div className="rounded-lg bg-stone-50 border border-stone-300 p-3">
-          <div className="flex flex-wrap gap-6">
-            {visibleGeneIds.map(geneId => (
-              <PunnettGrid
-                key={geneId}
-                motherId={motherId}
-                fatherId={fatherId}
-                geneId={geneId}
-              />
-            ))}
+      {/* Environmental slider — only shown for temp-sensitive traits. */}
+      {hasEnvGene && (
+        <div className="rounded-lg bg-orange-50 border border-orange-200 p-3">
+          <div className="flex items-center justify-between mb-1">
+            <div className="text-xs uppercase tracking-wide text-orange-800">
+              🌡 Ambient temperature
+            </div>
+            <div className="text-xs font-mono text-orange-800">
+              {envTemp}°{' '}
+              <span className="italic text-orange-600">
+                ({envTemp < 40 ? 'cold' : envTemp < 70 ? 'temperate' : 'warm'})
+              </span>
+            </div>
           </div>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={envTemp}
+            onChange={e => setEnvTemp(Number(e.target.value))}
+            className="w-full accent-orange-500"
+          />
+          <div className="text-[10px] text-orange-800 italic mt-1">
+            Some traits only show at warm temperatures. Drag the slider and see
+            what changes.
+          </div>
+        </div>
+      )}
+
+      {/* Punnett — variant chosen by number of tracked genes.
+          1 gene → 2×2, 2 genes → 4×4 dihybrid, 3+ → distribution chart. */}
+      {motherId && fatherId && visibleGeneIds.length > 0 && (
+        <div className="rounded-lg bg-stone-50 border border-stone-300 p-3">
+          {visibleGeneIds.length === 1 && (
+            <PunnettGrid
+              motherId={motherId}
+              fatherId={fatherId}
+              geneId={visibleGeneIds[0]!}
+            />
+          )}
+          {visibleGeneIds.length === 2 && (
+            <PunnettGridDihybrid
+              motherId={motherId}
+              fatherId={fatherId}
+              geneIds={[visibleGeneIds[0]!, visibleGeneIds[1]!]}
+            />
+          )}
+          {visibleGeneIds.length >= 3 && (
+            <PunnettDistribution
+              motherId={motherId}
+              fatherId={fatherId}
+              geneIds={visibleGeneIds}
+            />
+          )}
         </div>
       )}
 

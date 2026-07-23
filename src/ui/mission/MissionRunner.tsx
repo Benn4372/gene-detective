@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Creature } from '../../engine/types'
 import { useGameStore } from '../../state/gameStore'
@@ -8,6 +8,7 @@ import { BlobRenderer } from '../../renderer/BlobRenderer'
 import { SexBadge } from '../atoms/SexBadge'
 import { Modal } from '../atoms/Modal'
 import { Workbench } from '../workbench/Workbench'
+import { PedigreeViewer } from '../pedigree/PedigreeViewer'
 import { Notecard } from './Notecard'
 
 // A single self-contained mission puzzle. Two starter samples on the bench,
@@ -142,33 +143,55 @@ export function MissionRunner() {
           </div>
         )}
 
-        {/* Workbench for breeding */}
-        <Workbench
-          pool={pool}
-          motherId={motherId}
-          fatherId={fatherId}
-          onSelectMother={setMotherId}
-          onSelectFather={setFatherId}
-          visibleGeneIds={mission.visibleGeneIds}
-          litterSize={1}
-          breedBudgetHint={
-            mission.breedBudget
-              ? `Target ≤${mission.breedBudget} crosses for full mastery`
-              : undefined
-          }
-        />
+        {/* Interaction area — depends on mission mode. */}
+        {mission.mode === 'breed' && (
+          <>
+            <Workbench
+              pool={pool}
+              motherId={motherId}
+              fatherId={fatherId}
+              onSelectMother={setMotherId}
+              onSelectFather={setFatherId}
+              visibleGeneIds={mission.visibleGeneIds}
+              litterSize={1}
+              breedBudgetHint={
+                mission.breedBudget
+                  ? `Target ≤${mission.breedBudget} crosses for full mastery`
+                  : undefined
+              }
+            />
+            <div className="mt-6 flex justify-end">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setDeliverOpen(true)}
+                className="px-6 py-3 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 shadow-sm"
+              >
+                📦 Deliver a blob…
+              </motion.button>
+            </div>
+          </>
+        )}
 
-        {/* Deliver button */}
-        <div className="mt-6 flex justify-end">
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => setDeliverOpen(true)}
-            className="px-6 py-3 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 shadow-sm"
-          >
-            📦 Deliver a blob…
-          </motion.button>
-        </div>
+        {mission.mode === 'deduce-only' && mission.deducePedigree && (
+          <DeduceOnlyPanel
+            pedigree={mission.deducePedigree}
+            onSuccess={() => {
+              const first = pool.find(c => c.parentIds)?.id ?? starters[0]?.id
+              if (first) submit(mission.id, first)
+            }}
+          />
+        )}
+
+        {mission.mode === 'predict-only' && mission.predictPrompt && (
+          <PredictOnlyPanel
+            prompt={mission.predictPrompt}
+            onSuccess={() => {
+              const first = pool.find(c => c.parentIds)?.id ?? starters[0]?.id
+              if (first) submit(mission.id, first)
+            }}
+          />
+        )}
       </div>
 
       <DeliverPicker
@@ -186,6 +209,157 @@ export function MissionRunner() {
       />
     </div>
   )
+}
+
+// -- Deduce-only panel ---------------------------------------------------
+
+function DeduceOnlyPanel({
+  pedigree,
+  onSuccess,
+}: {
+  pedigree: NonNullable<import('../../content/types').Mission['deducePedigree']>
+  onSuccess(): void
+}) {
+  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const solvedRef = useRef(false)
+  const completeMissionByPuzzle = useGameStore(s => s.completeMissionByPuzzle)
+  const activeMissionId = useGameStore(s => s.activeMissionId)
+  const allCorrect = useMemo(() => {
+    return Object.entries(pedigree.correctGenotypes).every(
+      ([nodeId, want]) =>
+        (answers[nodeId] ?? '').split('').sort().join('') ===
+        want.split('').sort().join(''),
+    )
+  }, [answers, pedigree.correctGenotypes])
+  useEffect(() => {
+    if (allCorrect && !solvedRef.current && activeMissionId) {
+      solvedRef.current = true
+      setTimeout(() => {
+        completeMissionByPuzzle(activeMissionId)
+        onSuccess()
+      }, 900)
+    }
+  }, [allCorrect, activeMissionId, completeMissionByPuzzle, onSuccess])
+  return (
+    <div className="space-y-3">
+      <div className="rounded-lg p-3 bg-amber-50 border border-amber-200 text-sm text-amber-900">
+        Type each node's genotype. When every one matches, the case closes.
+      </div>
+      <PedigreeViewer
+        nodes={pedigree.nodes}
+        hypotheses={answers}
+        onHypothesisChange={(id, v) =>
+          setAnswers(prev => ({ ...prev, [id]: v }))
+        }
+        correctGenotypes={pedigree.correctGenotypes}
+      />
+      {allCorrect && (
+        <div className="rounded p-3 bg-emerald-50 border border-emerald-300 text-sm text-emerald-800">
+          ✓ Every genotype matches. Filing the report…
+        </div>
+      )}
+    </div>
+  )
+}
+
+// -- Predict-only panel --------------------------------------------------
+
+function PredictOnlyPanel({
+  prompt,
+  onSuccess,
+}: {
+  prompt: NonNullable<import('../../content/types').Mission['predictPrompt']>
+  onSuccess(): void
+}) {
+  const [dominantPct, setDominantPct] = useState('')
+  const [recessivePct, setRecessivePct] = useState('')
+  const [feedback, setFeedback] = useState<null | 'ok' | 'off'>(null)
+  const completeMissionByPuzzle = useGameStore(s => s.completeMissionByPuzzle)
+  const activeMissionId = useGameStore(s => s.activeMissionId)
+  const expected = useMemo(() => computeExpectedRatio(prompt), [prompt])
+  const check = () => {
+    const dom = parseFloat(dominantPct)
+    const rec = parseFloat(recessivePct)
+    if (!Number.isFinite(dom) || !Number.isFinite(rec)) {
+      setFeedback('off')
+      return
+    }
+    const domOK = Math.abs(dom - expected.dominant) <= prompt.tolerance
+    const recOK = Math.abs(rec - expected.recessive) <= prompt.tolerance
+    if (domOK && recOK) {
+      setFeedback('ok')
+      if (activeMissionId) {
+        setTimeout(() => {
+          completeMissionByPuzzle(activeMissionId)
+          onSuccess()
+        }, 900)
+      }
+    } else {
+      setFeedback('off')
+    }
+  }
+  return (
+    <div className="rounded-xl bg-[color:var(--paper)] border border-stone-300 p-5">
+      <div className="text-sm text-stone-800 italic mb-3">{prompt.question}</div>
+      <div className="text-xs uppercase tracking-wide text-stone-500 mb-2">
+        Cross: {prompt.motherGenotype} × {prompt.fatherGenotype}
+      </div>
+      <div className="flex flex-wrap items-center gap-3 mb-3">
+        <label className="flex items-center gap-2 text-sm">
+          Dominant phenotype %
+          <input
+            type="text"
+            value={dominantPct}
+            onChange={e => setDominantPct(e.target.value)}
+            className="w-16 text-center border-2 border-stone-300 rounded font-mono px-2 py-1"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          Recessive phenotype %
+          <input
+            type="text"
+            value={recessivePct}
+            onChange={e => setRecessivePct(e.target.value)}
+            className="w-16 text-center border-2 border-stone-300 rounded font-mono px-2 py-1"
+          />
+        </label>
+        <button
+          onClick={check}
+          className="px-3 py-1.5 rounded bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700"
+        >
+          Submit prediction
+        </button>
+      </div>
+      {feedback === 'ok' && (
+        <div className="text-sm text-emerald-700">
+          ✓ Within tolerance. Case closed.
+        </div>
+      )}
+      {feedback === 'off' && (
+        <div className="text-sm text-rose-700">
+          Off — try again. (Punnett math should give exact fractions.)
+        </div>
+      )}
+    </div>
+  )
+}
+
+function computeExpectedRatio(prompt: {
+  motherGenotype: string
+  fatherGenotype: string
+}) {
+  // Simple 2-allele monohybrid: mother "Aa" × father "aa" style.
+  const m = prompt.motherGenotype.split('')
+  const f = prompt.fatherGenotype.split('')
+  const outcomes: string[] = []
+  for (const a of m) for (const b of f) outcomes.push(a + b)
+  let dominant = 0
+  for (const o of outcomes) {
+    // Any uppercase letter present = dominant phenotype (for 2-allele model).
+    if (/[A-Z]/.test(o)) dominant++
+  }
+  const dominantPct = (dominant / outcomes.length) * 100
+  return { dominant: dominantPct, recessive: 100 - dominantPct }
 }
 
 interface DeliverProps {

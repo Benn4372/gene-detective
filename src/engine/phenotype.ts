@@ -1,5 +1,6 @@
 import type { AlleleId, Creature, Gene, Phenotype, Species, Trait } from './types'
 import { alleleById } from './genotype'
+import { getEnvironmentTemperature } from './environment'
 
 // Compute the full phenotype of a creature given its species.
 // Iterates traits and delegates to a model-specific resolver based on the
@@ -11,14 +12,90 @@ export function computePhenotype(creature: Creature, species: Species): Phenotyp
   for (const trait of species.traits) {
     const genes = genesByTrait[trait.id] ?? []
     if (genes.length === 0) continue
-    // For MVP each trait is expressed by one gene. Multi-gene expression
-    // (polygenic, pleiotropy, epistasis) handled when those lessons unlock.
+    // Polygenic: multiple genes contribute additively to a single trait. Sum
+    // the "large" (highest-rank) allele contributions across all polygenic
+    // genes expressing this trait and map to a bucket string.
+    if (genes[0]!.inheritanceModel === 'polygenic') {
+      phenotype[trait.id] = expressPolygenic(genes, creature)
+      continue
+    }
     const gene = genes[0]!
     const alleles = creature.genotype[gene.id] ?? []
-    phenotype[trait.id] = expressTrait(gene, alleles, trait)
+    // Sex-limited: gene only expresses in the specified sex. The other sex
+    // always shows recessive, regardless of genotype.
+    if (gene.sexLimitedTo && creature.sex !== gene.sexLimitedTo) {
+      const rec = [...gene.alleles].sort((a, b) => a.dominanceRank - b.dominanceRank)[0]
+      phenotype[trait.id] = rec?.symbol ?? 'absent'
+      continue
+    }
+    // Methylation: dominant expression is silenced when this gene is on the
+    // creature's methylated list. Phenotype drops to the recessive symbol.
+    if (creature.methylatedGenes?.includes(gene.id)) {
+      const rec = [...gene.alleles].sort((a, b) => a.dominanceRank - b.dominanceRank)[0]
+      phenotype[trait.id] = rec?.symbol ?? 'absent'
+      continue
+    }
+    // Imprinting: silence one parental copy — expression relies only on the
+    // other. Convention: index 0 = maternal, 1 = paternal (set by cross()).
+    let effectiveAlleles = alleles
+    if (gene.imprintOrigin && alleles.length === 2) {
+      effectiveAlleles =
+        gene.imprintOrigin === 'maternal'
+          ? [alleles[1]!] // maternal silenced → only paternal expresses
+          : [alleles[0]!] // paternal silenced → only maternal expresses
+    }
+    // Epistasis: if another gene masks this one under specific conditions,
+    // its maskWith replaces the normal expression.
+    const masked = evaluateEpistasis(gene, creature)
+    if (masked !== null) {
+      phenotype[trait.id] = masked
+      continue
+    }
+    let value = expressTrait(gene, effectiveAlleles, trait, creature)
+    // Environmental gating: temperature below the gene's threshold forces
+    // the recessive phenotype even if dominants are present.
+    if (
+      gene.environmentalThreshold !== undefined &&
+      getEnvironmentTemperature() < gene.environmentalThreshold
+    ) {
+      const recessive = [...gene.alleles].sort(
+        (a, b) => a.dominanceRank - b.dominanceRank,
+      )[0]
+      if (recessive) value = recessive.symbol
+    }
+    phenotype[trait.id] = value
   }
 
   return phenotype
+}
+
+// Sum the highest-ranked-allele contributions across the polygenic genes
+// expressing this trait. Returns a compact numeric string (e.g. "3" out of a
+// max of "6" for three genes with two alleles each).
+function expressPolygenic(genes: Gene[], creature: Creature): string {
+  let count = 0
+  for (const gene of genes) {
+    if (gene.inheritanceModel !== 'polygenic') continue
+    const alleles = creature.genotype[gene.id] ?? []
+    const dominantId = [...gene.alleles].sort(
+      (a, b) => b.dominanceRank - a.dominanceRank,
+    )[0]?.id
+    if (!dominantId) continue
+    for (const alleleId of alleles) {
+      if (alleleId === dominantId) count += 1
+    }
+  }
+  return String(count)
+}
+
+function evaluateEpistasis(gene: Gene, creature: Creature): string | null {
+  if (!gene.epistasisRules || gene.epistasisRules.length === 0) return null
+  for (const rule of gene.epistasisRules) {
+    const upstream = creature.genotype[rule.ifGene]
+    if (!upstream) continue
+    if (rule.ifGenotypeMatches(upstream)) return rule.maskWith
+  }
+  return null
 }
 
 function indexGenesByTrait(species: Species): Record<string, Gene[]> {
@@ -32,7 +109,17 @@ function indexGenesByTrait(species: Species): Record<string, Gene[]> {
   return idx
 }
 
-function expressTrait(gene: Gene, alleles: AlleleId[], _trait: Trait): string {
+function expressTrait(gene: Gene, alleles: AlleleId[], _trait: Trait, creature: Creature): string {
+  // Sex-influenced: dominance ranks flip for females — the recessive allele
+  // wins in the heterozygote when the creature is female.
+  if (gene.sexInfluenced && creature.sex === 'F' && alleles.length === 2) {
+    const a = alleleById(gene, alleles[0]!)
+    const b = alleleById(gene, alleles[1]!)
+    if (a.id !== b.id) {
+      const sorted = [a, b].sort((x, y) => x.dominanceRank - y.dominanceRank)
+      return sorted[0]!.symbol
+    }
+  }
   switch (gene.inheritanceModel) {
     case 'simpleDominant':
       return expressSimpleDominant(gene, alleles)
@@ -45,17 +132,31 @@ function expressTrait(gene: Gene, alleles: AlleleId[], _trait: Trait): string {
       // as simpleDominant on the highest-ranked allele present.
       return expressSimpleDominant(gene, alleles)
     case 'sexLinked':
+      // Phenotypically the same as simple dominance — highest-ranked allele
+      // present wins. The difference is meiotic: fathers only pass their X
+      // chromosome to daughters, so recessive X-linked alleles show up more
+      // often in sons than daughters. That's handled by the cross/meiosis
+      // machinery, not here.
+      return expressSimpleDominant(gene, alleles)
     case 'polygenic':
+      // Polygenic genes are aggregated at the trait level (see expressPolygenic).
+      // Reaching this branch means a polygenic gene is being expressed alone,
+      // which shouldn't happen in the current game — fall through as simple
+      // dominance so we don't crash.
+      return expressSimpleDominant(gene, alleles)
+    case 'mitochondrial':
+      // Single-allele (haploid), inherited maternally. Express directly.
+      return expressSimpleDominant(gene, alleles)
     case 'epistaticModifier':
     case 'imprinted':
-    case 'mitochondrial':
     case 'lethal':
     case 'modifier':
     case 'pleiotropic':
-      throw new Error(
-        `Inheritance model "${gene.inheritanceModel}" not yet implemented — ` +
-          `will be added when its lesson is built.`,
-      )
+      // Fallback: treat like simple dominance so future chapters can rely on
+      // these models without immediate engine rework. The special behavior
+      // for each is layered on separately (epistasis via evaluateEpistasis,
+      // lethals via the cross() filter, etc.).
+      return expressSimpleDominant(gene, alleles)
   }
 }
 

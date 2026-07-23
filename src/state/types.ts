@@ -63,8 +63,12 @@ export interface GameState {
     | { kind: 'mission'; missionId: string }
     | { kind: 'missions-board' }
     | { kind: 'trophy-shelf' }
+    | { kind: 'settings' }
   // Trait Codex drawer (right-side slide-in) — global, persisted.
   codexOpen: boolean
   // Runs the "auto-open Chapter Book on first-ever load" effect exactly once.
   hasSeenStation: boolean
+  // Ambient temperature (0=cold, 100=hot). Used from Ch11 onwards by
+  // temperature-sensitive traits. Default 50 (temperate).
+  environmentTemperature: number
 }

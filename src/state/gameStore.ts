@@ -6,6 +6,7 @@ import { cross as engineCross } from '../engine/cross'
 import { makeRandom } from '../engine/random'
 import { computePhenotype } from '../engine/phenotype'
 import { validateHypothesis, canonicalizeHypothesis } from '../engine/validators'
+import { setEnvironmentTemperature } from '../engine/environment'
 import { blobSpecies, chapterById, chapters, missionById } from '../content'
 import type { ChapterStage, CrossRecord, DifficultyTier, GameState } from './types'
 
@@ -70,6 +71,7 @@ function initialState(): GameState {
     activeScreen: { kind: 'station' },
     codexOpen: false,
     hasSeenStation: false,
+    environmentTemperature: 50,
   }
 }
 
@@ -95,10 +97,14 @@ interface GameActions {
   openMission(missionId: string): void
   closeMission(): void
   submitMissionBlob(missionId: string, creatureId: string): boolean
+  // Non-breed missions (deduce-only, predict-only) complete without an actual
+  // creature delivery — the mission ends when the puzzle is solved instead.
+  completeMissionByPuzzle(missionId: string): void
   // UI
   setActiveScreen(next: GameState['activeScreen']): void
   toggleCodex(): void
   markStationSeen(): void
+  setEnvironmentTemperature(t: number): void
 }
 
 // -- store -----------------------------------------------------------------
@@ -383,6 +389,30 @@ export const useGameStore = create<GameState & GameActions>()(
       },
 
       awardTrophyBlob(chapterId, creatureId) {
+        // If the chapter declares a trophyBlobPreset, materialize a fresh
+        // trophy-scoped creature from that preset and use its id instead
+        // of whichever mystery-pair blob the player highlighted.
+        const chapter = chapterById[chapterId]
+        if (chapter?.trophyBlobPreset) {
+          const preset = chapter.trophyBlobPreset
+          const id = nextId('c')
+          set(s => ({
+            creatures: {
+              ...s.creatures,
+              [id]: {
+                id,
+                speciesId: blobSpecies.id,
+                ownerName: preset.defaultName,
+                sex: preset.sex,
+                genotype: preset.genotype,
+                age: 1,
+                scope: 'trophy',
+              },
+            },
+            trophyBlobs: { ...s.trophyBlobs, [chapterId]: id },
+          }))
+          return
+        }
         set(s => ({ trophyBlobs: { ...s.trophyBlobs, [chapterId]: creatureId } }))
       },
 
@@ -436,6 +466,42 @@ export const useGameStore = create<GameState & GameActions>()(
 
       closeMission() {
         set({ activeMissionId: null, activeScreen: { kind: 'missions-board' } })
+      },
+
+      completeMissionByPuzzle(missionId) {
+        const state = get()
+        if (state.completedMissions.includes(missionId)) return
+        // Clear this mission's pool + related history, same as breed-mode
+        // submit does, so re-opening starts fresh.
+        const nextCreatures: Record<string, Creature> = {}
+        const nextNotes = { ...state.notes }
+        const nextHypotheses = { ...state.hypotheses }
+        const nextValidated = { ...state.validated }
+        for (const [id, c] of Object.entries(state.creatures)) {
+          if (isMissionScope(c.scope, missionId)) {
+            delete nextNotes[id]
+            delete nextHypotheses[id]
+            delete nextValidated[id]
+          } else {
+            nextCreatures[id] = c
+          }
+        }
+        const nextHistory = state.crossHistory.filter(
+          r => nextCreatures[r.motherId] && nextCreatures[r.fatherId],
+        )
+        const { [missionId]: _drop, ...remainingMissionCreatures } =
+          state.missionCreatures
+        set({
+          creatures: nextCreatures,
+          notes: nextNotes,
+          hypotheses: nextHypotheses,
+          validated: nextValidated,
+          crossHistory: nextHistory,
+          missionCreatures: remainingMissionCreatures,
+          completedMissions: [...state.completedMissions, missionId],
+          activeMissionId: null,
+          activeScreen: { kind: 'missions-board' },
+        })
       },
 
       submitMissionBlob(missionId, creatureId) {
@@ -495,6 +561,12 @@ export const useGameStore = create<GameState & GameActions>()(
 
       markStationSeen() {
         set({ hasSeenStation: true })
+      },
+
+      setEnvironmentTemperature(t) {
+        const clamped = Math.max(0, Math.min(100, t))
+        setEnvironmentTemperature(clamped)
+        set({ environmentTemperature: clamped })
       },
     }),
     {

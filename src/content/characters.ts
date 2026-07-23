@@ -32,6 +32,34 @@ export const mentors: Mentor[] = [
     joinsAtChapterId: 'ch03',
     desk: { x: 68, y: 55, color: '#60a5fa' },
   },
+  {
+    id: 'prof-delta',
+    name: 'Prof. Delta',
+    emoji: '🧑‍🔬',
+    bio: 'A population geneticist with a talent for making Hardy-Weinberg feel obvious. Arrives with the Student tier\'s evolutionary chapters.',
+    voice: {
+      orderIntro:
+        "I have a population-scale question. Bring me an outcome that fits a specific frequency.",
+      orderComplete: "Excellent. The population is doing what the theory says it should.",
+    },
+    specialty: ['population-genetics', 'evolutionary-forces'],
+    joinsAtChapterId: 'ch27',
+    desk: { x: 45, y: 40, color: '#10b981' },
+  },
+  {
+    id: 'dr-nyx',
+    name: 'Dr. Nyx',
+    emoji: '🧑‍⚕️',
+    bio: 'Molecular geneticist and clinician. Arrives with the Researcher tier — the DNA-sequence-level chapters.',
+    voice: {
+      orderIntro:
+        "Sequence-level puzzle. Might get technical — you ready?",
+      orderComplete: "Clean. Add it to the tissue registry.",
+    },
+    specialty: ['molecular-genetics', 'epigenetics', 'crispr'],
+    joinsAtChapterId: 'ch41',
+    desk: { x: 20, y: 40, color: '#f472b6' },
+  },
 ]
 
 // -- Clients: characters who submit missions but aren't full mentors.

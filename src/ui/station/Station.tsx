@@ -60,6 +60,58 @@ export function Station() {
           )}
         </div>
 
+        {/* Mentor desks strip — decorative, always shown, so the Station reads
+            as a shared space rather than a menu screen. */}
+        <div className="mb-6">
+          <div className="text-xs uppercase tracking-widest text-stone-500 mb-2">
+            At their desks
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {availableMentors.map(m => (
+              <div
+                key={m.id}
+                className="flex items-center gap-2 rounded-lg border border-stone-300 bg-[color:var(--paper)] px-3 py-2 shadow-sm"
+                title={m.bio}
+              >
+                <div className="text-2xl leading-none">{m.emoji}</div>
+                <div>
+                  <div className="text-sm font-semibold text-stone-800 leading-tight">
+                    {m.name}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wide text-stone-500 leading-tight">
+                    {m.specialty[0]?.replace(/-/g, ' ')}
+                  </div>
+                </div>
+                <div
+                  className="w-2 h-2 rounded-full ml-1"
+                  style={{ backgroundColor: m.desk.color }}
+                />
+              </div>
+            ))}
+            {/* Empty desks for mentors not yet joined — hints at future arrivals. */}
+            {mentors
+              .filter(m => !unlockedMentors.includes(m.id))
+              .slice(0, 3)
+              .map(m => (
+                <div
+                  key={m.id}
+                  className="flex items-center gap-2 rounded-lg border border-dashed border-stone-300 bg-stone-50 px-3 py-2 opacity-50"
+                  title="An empty desk. A future mentor will occupy it."
+                >
+                  <div className="text-2xl leading-none grayscale">🪑</div>
+                  <div>
+                    <div className="text-sm font-semibold text-stone-500 leading-tight italic">
+                      (vacant)
+                    </div>
+                    <div className="text-[10px] uppercase tracking-wide text-stone-400 leading-tight">
+                      awaiting a new arrival
+                    </div>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+
         {/* Main interactive grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <StationCard
@@ -98,20 +150,12 @@ export function Station() {
           />
 
           <StationCard
-            icon="🧑‍🔬"
-            title="Mentors"
-            subtitle={
-              availableMentors.length +
-              ' at the Station'
-            }
-            body={
-              availableMentors[0]
-                ? `${availableMentors[0].name}: "${availableMentors[0].voice.orderIntro.slice(0, 60)}…"`
-                : 'The Station is empty for now.'
-            }
+            icon="⚙"
+            title="Settings"
+            subtitle="Preferences & save"
+            body="Difficulty, save export/import, and starting over."
             accent="rose"
-            onClick={() => setActiveScreen({ kind: 'station' })}
-            enabled={false}
+            onClick={() => setActiveScreen({ kind: 'settings' })}
           />
         </div>
 

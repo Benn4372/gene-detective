@@ -11,6 +11,7 @@ export interface Offspring {
   sex: Sex
   genotype: Genotype
   parentIds: [string, string]
+  methylatedGenes?: string[]
 }
 
 // Combine two gametes into a diploid genotype and determine sex.
@@ -25,13 +26,13 @@ function combineGametes(
   for (const gene of species.genes) {
     const m = mother.alleles[gene.id]
     const p = father.alleles[gene.id]
-    if (m !== undefined && p !== undefined) {
-      genotype[gene.id] = [m, p]
-    } else if (m !== undefined) {
-      genotype[gene.id] = [m]
-    } else if (p !== undefined) {
-      genotype[gene.id] = [p]
-    }
+    // Nondisjunction encoding: a gamete allele of "id1|id2" means both
+    // homolog copies were contributed. Combined with the other parent's
+    // normal one-allele contribution, this yields three alleles (trisomic).
+    const mAlleles = m !== undefined ? m.split('|') : []
+    const pAlleles = p !== undefined ? p.split('|') : []
+    const combined = [...mAlleles, ...pAlleles]
+    if (combined.length > 0) genotype[gene.id] = combined
     // If neither parent contributed (e.g. Y-linked gene in an XX offspring), gene absent.
   }
 
@@ -84,12 +85,42 @@ export function cross(
     const motherGamete = meiose(mother, species, rng)
     const fatherGamete = meiose(father, species, rng)
     const { genotype, sex } = combineGametes(motherGamete, fatherGamete, species)
+    // Lethal-genotype filter: any gene declaring lethalGenotypes drops
+    // offspring whose canonical genotype string matches. Ratio distortion is
+    // the whole point — the lethal class simply disappears from the litter.
+    if (isLethal(genotype, species)) continue
+    // Methylation inherited maternally by default (roughly mirrors real
+    // biology: methylation reset in male germline is more thorough).
+    const methylatedGenes = mother.methylatedGenes
+      ? [...mother.methylatedGenes]
+      : undefined
     offspring.push({
       id: nextId(),
       sex,
       genotype,
       parentIds: [mother.id, father.id],
+      methylatedGenes,
     })
   }
   return offspring
+}
+
+function isLethal(genotype: Genotype, species: Species): boolean {
+  for (const gene of species.genes) {
+    if (!gene.lethalGenotypes || gene.lethalGenotypes.length === 0) continue
+    const alleles = genotype[gene.id]
+    if (!alleles) continue
+    // Build canonical dominant-first string.
+    const symbols = alleles
+      .map(id => gene.alleles.find(a => a.id === id)?.symbol ?? '')
+      .filter(s => s.length > 0)
+      .sort((a, b) => {
+        const rankA = gene.alleles.find(al => al.symbol === a)?.dominanceRank ?? 0
+        const rankB = gene.alleles.find(al => al.symbol === b)?.dominanceRank ?? 0
+        return rankB - rankA
+      })
+    const genotypeStr = symbols.join('')
+    if (gene.lethalGenotypes.includes(genotypeStr)) return true
+  }
+  return false
 }

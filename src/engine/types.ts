@@ -14,6 +14,10 @@ export interface Chromosome {
   id: string
   type: ChromosomeType
   lengthCM: number
+  // Ch 24. Probability of nondisjunction per meiosis for this chromosome.
+  // When it fires, the gamete carries BOTH homologs' alleles (giving trisomic
+  // offspring when the other parent's gamete is normal). 0 = never.
+  nondisjunctionRate?: number
 }
 
 export type SexSystem = 'XY' | 'ZW' | 'XO' | 'haplodiploid' | 'temperatureDependent'
@@ -60,6 +64,22 @@ export interface Gene {
   imprintOrigin?: 'maternal' | 'paternal'
   lethalGenotypes?: string[]
   mutationRate?: number
+  // Environmental-expression threshold. If defined, the gene's dominant
+  // phenotype only shows when the ambient temperature is at or above this
+  // value; otherwise it expresses as recessive.
+  environmentalThreshold?: number
+  // Ch 16 — sex-influenced dominance. When true, dominance ranks are
+  // effectively INVERTED in females: the recessive allele wins in the
+  // heterozygote.
+  sexInfluenced?: boolean
+  // Ch 17 — sex-limited expression. Gene only expresses phenotypically in
+  // the specified sex; the other sex always shows the recessive phenotype
+  // regardless of genotype.
+  sexLimitedTo?: 'M' | 'F'
+  // Ch 24 — probability of nondisjunction per meiosis for this gene's
+  // chromosome. 0 = never; 0.03 = ~3%. Used by meiose() to occasionally
+  // produce a two-allele gamete.
+  nondisjunctionRate?: number
 }
 
 export interface Trait {
@@ -96,6 +116,10 @@ export interface Creature {
   //   'chapter'  — scratch inside a Chapter Runner stage. Discarded on exit.
   //   'mission'  — scratch inside a Mission Runner. Discarded on submit / exit.
   scope: CreatureScope
+  // Ch 42+: gene ids methylated in this creature. Methylated dominant alleles
+  // don't express (phenotype falls through to recessive). Inherited maternally
+  // during cross(); can be added or removed by environmental interventions.
+  methylatedGenes?: string[]
 }
 
 export type CreatureScope =

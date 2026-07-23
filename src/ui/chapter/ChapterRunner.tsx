@@ -15,6 +15,29 @@ import type { Creature } from '../../engine/types'
 import { BlobRenderer } from '../../renderer/BlobRenderer'
 import { BlobCard } from '../atoms/BlobCard'
 import { Workbench } from '../workbench/Workbench'
+import { PopulationSandbox } from '../population/PopulationSandbox'
+import { KaryotypeViewer } from '../karyotype/KaryotypeViewer'
+import { DNASequenceViewer } from '../dna/DNASequenceViewer'
+import { MethylationExplorer } from '../methylation/MethylationExplorer'
+import {
+  HeritabilityWidget,
+  QTLScanWidget,
+  ThreePointCrossWidget,
+  ThresholdTraitWidget,
+  CRISPREditorWidget,
+  CancerSomaticWidget,
+  GWASManhattanWidget,
+  PhylogeneticsTreeWidget,
+  ConservationWidget,
+  HGTPlasmidWidget,
+  PrionConformationWidget,
+  ReactionNormWidget,
+  TransgenerationalWidget,
+  OperonWidget,
+  TransposableElementWidget,
+  CopyNumberWidget,
+  ChimeraWidget,
+} from '../researcher/ResearcherWidgets'
 import { NotebookPanel } from './NotebookPanel'
 import { makePreviewCreature } from '../../engine/codex'
 
@@ -98,26 +121,28 @@ export function ChapterRunner() {
         )}
 
         {currentChapterStage === 'guided' && chapterCreatures && (
-          <StageWithWorkbench
-            chapter={chapter}
-            stage={chapter.stages.guided}
-            chapterCreatures={chapterCreatures}
-            stageKey="guided"
-            onSolved={() => advance('solo')}
-            hintText={chapter.stages.guided.scaffolding.onOpen}
-          />
+          renderInteractiveStage({
+            chapter,
+            stage: chapter.stages.guided,
+            chapterCreatures,
+            stageKey: 'guided',
+            hintText: chapter.stages.guided.scaffolding.onOpen,
+            onSolved: () => advance('solo'),
+          })
         )}
 
         {currentChapterStage === 'solo' && chapterCreatures && (
-          <StageWithWorkbench
-            chapter={chapter}
-            stage={chapter.stages.solo}
-            chapterCreatures={chapterCreatures}
-            stageKey="solo"
-            onSolved={() =>
-              advance(chapter.stages.master ? 'master' : 'outro')
-            }
-          />
+          renderInteractiveStage({
+            chapter,
+            stage: chapter.stages.solo,
+            chapterCreatures,
+            stageKey: 'solo',
+            hintText:
+              chapter.interactionMode?.kind === 'population-sandbox'
+                ? "Now try a different starting frequency. Same rules — new starting point."
+                : undefined,
+            onSolved: () => advance(chapter.stages.master ? 'master' : 'outro'),
+          })
         )}
 
         {currentChapterStage === 'master' &&
@@ -425,6 +450,11 @@ function StageWithWorkbench({
         motherId={chapterCreatures.motherId}
         fatherId={chapterCreatures.fatherId}
         geneIds={geneIds}
+        guidedScaffolding={
+          stageKey === 'guided' && 'scaffolding' in stage
+            ? stage.scaffolding
+            : undefined
+        }
       />
 
       <Workbench
@@ -441,6 +471,319 @@ function StageWithWorkbench({
       {allSolved && (
         <div className="rounded-lg p-4 bg-emerald-50 border border-emerald-300 text-emerald-800">
           ✓ Solved! Advancing to the next stage…
+        </div>
+      )}
+    </div>
+  )
+}
+
+// -- Interactive stage dispatcher ----------------------------------------
+
+function renderInteractiveStage(args: {
+  chapter: Chapter
+  stage: GuidedStage | SoloStage | MasterStage
+  chapterCreatures: { motherId: string; fatherId: string }
+  stageKey: 'guided' | 'solo' | 'master'
+  hintText?: string
+  onSolved(): void
+}) {
+  const { chapter, stage, chapterCreatures, stageKey, hintText, onSolved } = args
+  const mode = chapter.interactionMode
+  if (mode?.kind === 'population-sandbox') {
+    return (
+      <StageWithSandbox
+        hintText={hintText ?? 'Run generations. Observe the force at work.'}
+        interactionMode={mode}
+        onSolved={onSolved}
+      />
+    )
+  }
+  if (mode?.kind === 'karyotype') {
+    return (
+      <StageWithKaryotype
+        hintText={hintText ?? 'Compare the affected chromosome bars to the healthy ones.'}
+        interactionMode={mode}
+        onSolved={onSolved}
+      />
+    )
+  }
+  if (mode?.kind === 'dna-sequence') {
+    return (
+      <StageWithDNASequence
+        hintText={hintText ?? 'Step through each mutation type and read the consequence.'}
+        interactionMode={mode}
+        onSolved={onSolved}
+      />
+    )
+  }
+  if (mode?.kind === 'methylation') {
+    return (
+      <StageWithMethylation
+        hintText={hintText ?? 'Toggle methylation. See the offspring phenotype flip.'}
+        interactionMode={mode}
+        onSolved={onSolved}
+      />
+    )
+  }
+  if (mode?.kind === 'researcher-widget') {
+    return (
+      <StageWithResearcherWidget
+        hintText={hintText ?? 'Explore the model. Advance when ready.'}
+        interactionMode={mode}
+        onSolved={onSolved}
+      />
+    )
+  }
+  return (
+    <StageWithWorkbench
+      chapter={chapter}
+      stage={stage}
+      chapterCreatures={chapterCreatures}
+      stageKey={stageKey}
+      hintText={hintText}
+      onSolved={onSolved}
+    />
+  )
+}
+
+// -- Karyotype stage -----------------------------------------------------
+
+function StageWithKaryotype({
+  hintText,
+  interactionMode,
+  onSolved,
+}: {
+  hintText: string
+  interactionMode: Extract<NonNullable<Chapter['interactionMode']>, { kind: 'karyotype' }>
+  onSolved(): void
+}) {
+  const advancedRef = useRef(false)
+  const [acknowledged, setAcknowledged] = useState(false)
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg p-3 bg-amber-50 border border-amber-200 text-sm text-amber-900">
+        {hintText}
+      </div>
+      <KaryotypeViewer states={interactionMode.states} />
+      <div className="flex justify-end">
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => {
+            if (advancedRef.current) return
+            advancedRef.current = true
+            setAcknowledged(true)
+            setTimeout(() => onSolved(), 500)
+          }}
+          disabled={acknowledged}
+          className={
+            'px-5 py-2 rounded-lg text-white font-medium shadow-sm ' +
+            (acknowledged ? 'bg-stone-400' : 'bg-emerald-600 hover:bg-emerald-700')
+          }
+        >
+          {acknowledged ? '✓ Advancing…' : 'I read the karyotype →'}
+        </motion.button>
+      </div>
+    </div>
+  )
+}
+
+// -- DNA-sequence stage --------------------------------------------------
+
+function StageWithDNASequence({
+  hintText,
+  interactionMode,
+  onSolved,
+}: {
+  hintText: string
+  interactionMode: Extract<NonNullable<Chapter['interactionMode']>, { kind: 'dna-sequence' }>
+  onSolved(): void
+}) {
+  const advancedRef = useRef(false)
+  const [acknowledged, setAcknowledged] = useState(false)
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg p-3 bg-amber-50 border border-amber-200 text-sm text-amber-900">
+        {hintText}
+      </div>
+      <DNASequenceViewer variants={interactionMode.variants} />
+      <div className="flex justify-end">
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => {
+            if (advancedRef.current) return
+            advancedRef.current = true
+            setAcknowledged(true)
+            setTimeout(() => onSolved(), 500)
+          }}
+          disabled={acknowledged}
+          className={
+            'px-5 py-2 rounded-lg text-white font-medium shadow-sm ' +
+            (acknowledged ? 'bg-stone-400' : 'bg-emerald-600 hover:bg-emerald-700')
+          }
+        >
+          {acknowledged ? '✓ Advancing…' : 'I read the sequences →'}
+        </motion.button>
+      </div>
+    </div>
+  )
+}
+
+// -- Researcher widget stage ---------------------------------------------
+
+function StageWithResearcherWidget({
+  hintText,
+  interactionMode,
+  onSolved,
+}: {
+  hintText: string
+  interactionMode: Extract<NonNullable<Chapter['interactionMode']>, { kind: 'researcher-widget' }>
+  onSolved(): void
+}) {
+  const advancedRef = useRef(false)
+  const [acknowledged, setAcknowledged] = useState(false)
+  const Widget = pickResearcherWidget(interactionMode.widget)
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg p-3 bg-amber-50 border border-amber-200 text-sm text-amber-900">
+        {hintText}
+      </div>
+      <Widget />
+      <div className="flex justify-end">
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => {
+            if (advancedRef.current) return
+            advancedRef.current = true
+            setAcknowledged(true)
+            setTimeout(() => onSolved(), 500)
+          }}
+          disabled={acknowledged}
+          className={
+            'px-5 py-2 rounded-lg text-white font-medium shadow-sm ' +
+            (acknowledged ? 'bg-stone-400' : 'bg-emerald-600 hover:bg-emerald-700')
+          }
+        >
+          {acknowledged ? '✓ Advancing…' : 'Explored — continue →'}
+        </motion.button>
+      </div>
+    </div>
+  )
+}
+
+function pickResearcherWidget(name: string) {
+  switch (name) {
+    case 'heritability': return HeritabilityWidget
+    case 'qtl-scan': return QTLScanWidget
+    case 'three-point-cross': return ThreePointCrossWidget
+    case 'threshold-trait': return ThresholdTraitWidget
+    case 'crispr-editor': return CRISPREditorWidget
+    case 'cancer-somatic': return CancerSomaticWidget
+    case 'gwas-manhattan': return GWASManhattanWidget
+    case 'phylogenetics-tree': return PhylogeneticsTreeWidget
+    case 'conservation-rescue': return ConservationWidget
+    case 'hgt-plasmid': return HGTPlasmidWidget
+    case 'prion-conformation': return PrionConformationWidget
+    case 'reaction-norm': return ReactionNormWidget
+    case 'transgenerational': return TransgenerationalWidget
+    case 'operon': return OperonWidget
+    case 'transposable-element': return TransposableElementWidget
+    case 'copy-number': return CopyNumberWidget
+    case 'chimera': return ChimeraWidget
+    default:
+      // Fallback: a small "coming soon" panel.
+      return () => (
+        <div className="rounded-lg bg-white border border-stone-300 p-4 text-sm text-stone-600 italic">
+          Interactive widget for this chapter is coming in a later polish
+          pass. The chapter text carries the concept.
+        </div>
+      )
+  }
+}
+
+// -- Methylation stage ---------------------------------------------------
+
+function StageWithMethylation({
+  hintText,
+  interactionMode,
+  onSolved,
+}: {
+  hintText: string
+  interactionMode: Extract<NonNullable<Chapter['interactionMode']>, { kind: 'methylation' }>
+  onSolved(): void
+}) {
+  const advancedRef = useRef(false)
+  const [acknowledged, setAcknowledged] = useState(false)
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg p-3 bg-amber-50 border border-amber-200 text-sm text-amber-900">
+        {hintText}
+      </div>
+      <MethylationExplorer
+        focusGeneId={interactionMode.focusGeneId}
+        motherGenotype={interactionMode.motherGenotype}
+        fatherGenotype={interactionMode.fatherGenotype}
+      />
+      <div className="flex justify-end">
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => {
+            if (advancedRef.current) return
+            advancedRef.current = true
+            setAcknowledged(true)
+            setTimeout(() => onSolved(), 500)
+          }}
+          disabled={acknowledged}
+          className={
+            'px-5 py-2 rounded-lg text-white font-medium shadow-sm ' +
+            (acknowledged ? 'bg-stone-400' : 'bg-emerald-600 hover:bg-emerald-700')
+          }
+        >
+          {acknowledged ? '✓ Advancing…' : 'I understand →'}
+        </motion.button>
+      </div>
+    </div>
+  )
+}
+
+// -- Population sandbox stage --------------------------------------------
+
+function StageWithSandbox({
+  hintText,
+  interactionMode,
+  onSolved,
+}: {
+  hintText: string
+  interactionMode: Extract<NonNullable<Chapter['interactionMode']>, { kind: 'population-sandbox' }>
+  onSolved(): void
+}) {
+  const advancedRef = useRef(false)
+  const [solved, setSolved] = useState(false)
+  const handleFullyExplored = () => {
+    if (advancedRef.current) return
+    advancedRef.current = true
+    setSolved(true)
+    setTimeout(() => onSolved(), 900)
+  }
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg p-3 bg-amber-50 border border-amber-200 text-sm text-amber-900">
+        {hintText}
+      </div>
+      <PopulationSandbox
+        focusGeneId={interactionMode.focusGeneId}
+        initialDominantFreq={interactionMode.initialDominantFreq}
+        populationSize={interactionMode.populationSize}
+        generationsToExplore={interactionMode.generationsToExplore}
+        force={interactionMode.force}
+        onFullyExplored={handleFullyExplored}
+      />
+      {solved && (
+        <div className="rounded-lg p-4 bg-emerald-50 border border-emerald-300 text-emerald-800">
+          ✓ Enough runs to see the pattern. Advancing…
         </div>
       )}
     </div>
@@ -469,6 +812,11 @@ function OutroView({
   const father = creatures[fatherId]
   const [pick, setPick] = useState<string>(motherId)
 
+  // Preset overrides player choice. When a chapter declares its trophy blob
+  // (typically a story-relevant blob, not the mystery pair), skip the picker
+  // and just complete on click.
+  const hasPreset = !!chapter.trophyBlobPreset
+
   return (
     <div className="space-y-6">
       {mentorPortrait && (
@@ -485,37 +833,46 @@ function OutroView({
         </div>
       )}
 
-      {/* Trophy blob picker */}
-      <div>
-        <div className="text-xs uppercase tracking-widest text-stone-500 mb-2">
-          Choose a blob for the Trophy Shelf
+      {hasPreset ? (
+        <div className="rounded-lg p-4 bg-emerald-50 border border-emerald-200 text-sm text-emerald-900">
+          <span className="font-semibold">Trophy prepared:</span>{' '}
+          <span className="italic">
+            {chapter.trophyBlobPreset!.defaultName}
+          </span>{' '}
+          will take a spot on your shelf when you complete this chapter.
         </div>
-        <div className="text-xs text-stone-600 mb-3 italic">
-          Which of the mystery pair will you keep as this chapter's trophy?
+      ) : (
+        <div>
+          <div className="text-xs uppercase tracking-widest text-stone-500 mb-2">
+            Choose a blob for the Trophy Shelf
+          </div>
+          <div className="text-xs text-stone-600 mb-3 italic">
+            Which of the mystery pair will you keep as this chapter's trophy?
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {mother && (
+              <BlobCard
+                creature={mother}
+                selected={pick === motherId}
+                onClick={() => setPick(motherId)}
+                visibleTraitIds={chapter.stages.solo.correctAssertions.map(
+                  a => a.geneId,
+                )}
+              />
+            )}
+            {father && (
+              <BlobCard
+                creature={father}
+                selected={pick === fatherId}
+                onClick={() => setPick(fatherId)}
+                visibleTraitIds={chapter.stages.solo.correctAssertions.map(
+                  a => a.geneId,
+                )}
+              />
+            )}
+          </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          {mother && (
-            <BlobCard
-              creature={mother}
-              selected={pick === motherId}
-              onClick={() => setPick(motherId)}
-              visibleTraitIds={chapter.stages.solo.correctAssertions.map(
-                a => a.geneId,
-              )}
-            />
-          )}
-          {father && (
-            <BlobCard
-              creature={father}
-              selected={pick === fatherId}
-              onClick={() => setPick(fatherId)}
-              visibleTraitIds={chapter.stages.solo.correctAssertions.map(
-                a => a.geneId,
-              )}
-            />
-          )}
-        </div>
-      </div>
+      )}
 
       <div className="flex justify-end">
         <motion.button
