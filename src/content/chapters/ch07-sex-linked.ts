@@ -113,6 +113,10 @@ That asymmetry — recessive phenotype surfacing mostly in sons — is the finge
       },
     },
 
+    // Solo swaps to a sex-linked TEST CROSS: mystery glowing mother × known
+    // no-glow father. Because the father is hemizygous g, ALL offspring
+    // (both sons AND daughters) directly reveal the mother's allele contribution.
+    // Different puzzle from guided (Gg × G), same concept.
     solo: {
       starterCreatures: [
         {
@@ -124,38 +128,38 @@ That asymmetry — recessive phenotype surfacing mostly in sons — is the finge
             spots: ['s', 's'],
             tail: ['t', 't'],
           },
-          defaultName: 'Carrier α',
+          defaultName: 'Glow-eye Mystery',
         },
         {
           role: 'father',
           sex: 'M',
           genotype: {
-            eyeGlow: ['G'],
+            eyeGlow: ['g'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             tail: ['t', 't'],
           },
-          defaultName: 'Glow β',
+          defaultName: 'No-glow father',
         },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'eyeGlow', correctGenotype: 'Gg' },
-        { creatureRole: 'father', geneId: 'eyeGlow', correctGenotype: 'G' },
+        { creatureRole: 'father', geneId: 'eyeGlow', correctGenotype: 'g' },
       ],
       litterSize: 8,
       validationTier: 'medium',
       hints: [
         {
           stage: 'reframe',
-          text: 'Both parents glow. Fathers with only one X show whatever allele they have. Mothers with two Xs can hide a recessive.',
+          text: "The father doesn't glow — hemizygous 'g' visible from his phenotype alone. He's the test cross partner. Mother glows — could be GG or Gg.",
         },
         {
           stage: 'point',
-          text: 'Watch offspring by sex. If any SONS lack the glow, the mother must be Gg.',
+          text: "If mother is GG: every daughter is Gg (glow), every son is G (glow) — every offspring glows. If mother is Gg: about half the daughters AND half the sons DON'T glow.",
         },
         {
           stage: 'suggest',
-          text: 'Enter Gg for the mother and G for the father (males have only one X-linked allele).',
+          text: "Any non-glowing offspring → mother is Gg. Enter Gg for mother, g for father.",
         },
       ],
     },

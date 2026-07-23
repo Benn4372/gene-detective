@@ -85,7 +85,7 @@ Cross these two kk parents. Most offspring will be kk (as expected). But among m
             tailGrowth: ['G', 'G'],
             heatSpot: ['h', 'h'],
           },
-          defaultName: 'kk α',
+          defaultName: 'Plain mother',
         },
         {
           role: 'father',
@@ -100,7 +100,7 @@ Cross these two kk parents. Most offspring will be kk (as expected). But among m
             tailGrowth: ['G', 'G'],
             heatSpot: ['h', 'h'],
           },
-          defaultName: 'kk β',
+          defaultName: 'Plain father',
         },
       ],
       correctAssertions: [
@@ -122,13 +122,17 @@ Cross these two kk parents. Most offspring will be kk (as expected). But among m
       },
     },
 
+    // Solo flips the mutation-recognition into a homozygous puzzle. A visibly
+    // sparkling mother × plain father — the reverse setup. Almost every
+    // offspring sparkles (all Kk), but the rare non-sparkler is the FORWARD
+    // mutation (K→k) still teaching the same concept from the other direction.
     solo: {
       starterCreatures: [
         {
           role: 'mother',
           sex: 'F',
           genotype: {
-            sparkle: ['k', 'k'],
+            sparkle: ['K', 'K'],
             tail: ['t', 't'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
@@ -137,7 +141,7 @@ Cross these two kk parents. Most offspring will be kk (as expected). But among m
             tailGrowth: ['G', 'G'],
             heatSpot: ['h', 'h'],
           },
-          defaultName: 'kk α',
+          defaultName: 'Sparkle mother',
         },
         {
           role: 'father',
@@ -152,11 +156,11 @@ Cross these two kk parents. Most offspring will be kk (as expected). But among m
             tailGrowth: ['G', 'G'],
             heatSpot: ['h', 'h'],
           },
-          defaultName: 'kk β',
+          defaultName: 'Plain father',
         },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'sparkle', correctGenotype: 'kk' },
+        { creatureRole: 'mother', geneId: 'sparkle', correctGenotype: 'KK' },
         { creatureRole: 'father', geneId: 'sparkle', correctGenotype: 'kk' },
       ],
       litterSize: 10,
@@ -164,15 +168,15 @@ Cross these two kk parents. Most offspring will be kk (as expected). But among m
       hints: [
         {
           stage: 'reframe',
-          text: "Neither parent shows the sparkle. Under normal rules that would mean neither can produce a sparkling child. But you've seen mutation exists.",
+          text: "Mother sparkles, father doesn't. Every offspring inherits k from the father. If mother is KK, every offspring is Kk — every one sparkles.",
         },
         {
           stage: 'point',
-          text: 'The parent genotype is exactly what you see — kk. The occasional sparkling offspring is not evidence they were hiding a K; it\'s evidence of a k→K mutation event.',
+          text: 'If you EVER see a plain offspring from many litters, it\'s not because mother is hiding a k — it\'s a K→k mutation.',
         },
         {
           stage: 'suggest',
-          text: 'Enter kk for both parents. The sparkling offspring you saw came from a spontaneous mutation.',
+          text: 'Enter KK for mother, kk for father. Rare plain offspring in the litter tally are the mutation signal.',
         },
       ],
     },

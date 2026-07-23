@@ -27,8 +27,8 @@ For the mitoHalo gene: mother Q → every child Q. Mother q → every child q. F
     },
     guided: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, mitoHalo: ['Q'] }, defaultName: 'Halo ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, mitoHalo: ['q'] }, defaultName: 'Plain ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, mitoHalo: ['Q'] }, defaultName: 'Halo mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, mitoHalo: ['q'] }, defaultName: 'Plain father' },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'mitoHalo', correctGenotype: 'Q' },
@@ -40,18 +40,21 @@ For the mitoHalo gene: mother Q → every child Q. Mother q → every child q. F
         onWrongHypothesis: {},
       },
     },
+    // Solo swaps to the RECIPROCAL cross: plain mother × halo father. Every
+    // offspring still resembles the MOTHER (plain, no halo) even though the
+    // father visibly has one. Nails the mother-only inheritance rule.
     solo: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, mitoHalo: ['Q'] }, defaultName: 'Halo ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, mitoHalo: ['q'] }, defaultName: 'Plain ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, mitoHalo: ['q'] }, defaultName: 'Plain mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, mitoHalo: ['Q'] }, defaultName: 'Halo father' },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'mitoHalo', correctGenotype: 'Q' },
-        { creatureRole: 'father', geneId: 'mitoHalo', correctGenotype: 'q' },
+        { creatureRole: 'mother', geneId: 'mitoHalo', correctGenotype: 'q' },
+        { creatureRole: 'father', geneId: 'mitoHalo', correctGenotype: 'Q' },
       ],
       litterSize: 6,
       validationTier: 'loose',
-      hints: [{ stage: 'reframe', text: 'Mito DNA is maternal only.' }, { stage: 'point', text: 'Every child matches mother.' }, { stage: 'suggest', text: 'Q mother, q father.' }],
+      hints: [{ stage: 'reframe', text: 'Reciprocal cross — mother plain, father halo.' }, { stage: 'point', text: 'Every child still resembles the mother.' }, { stage: 'suggest', text: 'q mother, Q father.' }],
     },
   },
   unlocks: { traits: ['mitoHalo'], nextChapterId: 'ch19' },

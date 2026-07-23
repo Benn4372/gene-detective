@@ -31,12 +31,12 @@ Consequence: a Jj offspring where father contributed J shows the mark. A Jj offs
         {
           role: 'mother', sex: 'F',
           genotype: { ...NEUTRAL_FEMALE, imprintMark: ['J', 'J'] },
-          defaultName: 'JJ ♀ (silenced)',
+          defaultName: 'Marked-mother mystery',
         },
         {
           role: 'father', sex: 'M',
           genotype: { ...NEUTRAL_MALE, imprintMark: ['j', 'j'] },
-          defaultName: 'jj ♂',
+          defaultName: 'Unmarked father',
         },
       ],
       correctAssertions: [
@@ -49,21 +49,25 @@ Consequence: a Jj offspring where father contributed J shows the mark. A Jj offs
         onWrongHypothesis: {},
       },
     },
+    // Solo runs the RECIPROCAL cross: jj mother × JJ father. Genotype-wise
+    // every offspring is still Jj — but now the father's J is the one that
+    // expresses, so ALL offspring show the mark. Same genotype, opposite
+    // phenotype from guided → imprinting fingerprint.
     solo: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, imprintMark: ['J', 'J'] }, defaultName: 'JJ ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, imprintMark: ['j', 'j'] }, defaultName: 'jj ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, imprintMark: ['j', 'j'] }, defaultName: 'Unmarked mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, imprintMark: ['J', 'J'] }, defaultName: 'Marked-father mystery' },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'imprintMark', correctGenotype: 'JJ' },
-        { creatureRole: 'father', geneId: 'imprintMark', correctGenotype: 'jj' },
+        { creatureRole: 'mother', geneId: 'imprintMark', correctGenotype: 'jj' },
+        { creatureRole: 'father', geneId: 'imprintMark', correctGenotype: 'JJ' },
       ],
       litterSize: 6,
       validationTier: 'loose',
       hints: [
-        { stage: 'reframe', text: 'Note: offspring inherit both alleles but only the paternal one expresses.' },
-        { stage: 'point', text: 'Try the reciprocal: swap parent genotypes and re-run.' },
-        { stage: 'suggest', text: 'JJ mother × jj father.' },
+        { stage: 'reframe', text: "This is guided flipped — mother has no mark, father does. Offspring still inherit J from father and j from mother, and now father's J expresses in every one." },
+        { stage: 'point', text: 'Same Jj genotype as guided offspring, opposite phenotype. That reciprocal difference IS the imprinting signature.' },
+        { stage: 'suggest', text: 'jj mother, JJ father.' },
       ],
     },
   },

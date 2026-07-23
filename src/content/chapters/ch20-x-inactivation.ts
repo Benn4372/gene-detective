@@ -27,8 +27,8 @@ Gg heterozygous females for the eyeGlow gene should show a patchy expression —
     },
     guided: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, eyeGlow: ['G', 'g'] }, defaultName: 'Gg mother' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, eyeGlow: ['g'] }, defaultName: 'g father' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, eyeGlow: ['G', 'g'] }, defaultName: 'Mosaic mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, eyeGlow: ['g'] }, defaultName: 'No-glow father' },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'eyeGlow', correctGenotype: 'Gg' },
@@ -37,18 +37,22 @@ Gg heterozygous females for the eyeGlow gene should show a patchy expression —
       litterSize: 6,
       scaffolding: { onOpen: 'Female Gg is really a mosaic — some cells glow, others don\'t. Real body-cell composition varies.', onWrongHypothesis: {} },
     },
+    // Solo: GG mother × g father — every offspring inherits G from mother
+    // and g/Y from father. Daughters all Gg mosaics; sons all G hemizygous.
+    // Every offspring glows outwardly, but daughters are patchy under close
+    // inspection.
     solo: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, eyeGlow: ['G', 'g'] }, defaultName: 'Gg mother' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, eyeGlow: ['g'] }, defaultName: 'g father' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, eyeGlow: ['G', 'G'] }, defaultName: 'Uniform-glow mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, eyeGlow: ['g'] }, defaultName: 'No-glow father' },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'eyeGlow', correctGenotype: 'Gg' },
+        { creatureRole: 'mother', geneId: 'eyeGlow', correctGenotype: 'GG' },
         { creatureRole: 'father', geneId: 'eyeGlow', correctGenotype: 'g' },
       ],
       litterSize: 6,
       validationTier: 'loose',
-      hints: [{ stage: 'reframe', text: 'Mother is a carrier; father shows recessive.' }, { stage: 'point', text: 'Mother Gg heterozygous.' }, { stage: 'suggest', text: 'Gg mother, g father.' }],
+      hints: [{ stage: 'reframe', text: 'Every offspring glows visibly. Sons hemizygous G; daughters Gg mosaic.' }, { stage: 'point', text: 'Uniform outer glow across offspring means mother is GG (else half would be gg / dim).' }, { stage: 'suggest', text: 'GG mother, g father.' }],
     },
   },
   unlocks: { nextChapterId: 'ch21' },

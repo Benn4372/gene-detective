@@ -82,7 +82,7 @@ Try dragging the temperature slider on the workbench. Genotypes stay the same; p
             eyeGlow: ['g', 'g'],
             tailGrowth: ['G', 'G'],
           },
-          defaultName: 'Hh α',
+          defaultName: 'Heat mystery α',
         },
         {
           role: 'father',
@@ -96,7 +96,7 @@ Try dragging the temperature slider on the workbench. Genotypes stay the same; p
             eyeGlow: ['g'],
             tailGrowth: ['G', 'G'],
           },
-          defaultName: 'Hh β',
+          defaultName: 'Heat mystery β',
         },
       ],
       correctAssertions: [
@@ -118,13 +118,17 @@ Try dragging the temperature slider on the workbench. Genotypes stay the same; p
       },
     },
 
+    // Solo poses a fixed-outcome environmental cross: mother HH × father hh.
+    // At WARM temperature every offspring visibly shows the spot (all Hh);
+    // at cold, everyone (including the mother) looks plain. Distinguishes
+    // "environment reveals underlying genotype" from Ch 11 guided's het puzzle.
     solo: {
       starterCreatures: [
         {
           role: 'mother',
           sex: 'F',
           genotype: {
-            heatSpot: ['H', 'h'],
+            heatSpot: ['H', 'H'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             tail: ['t', 't'],
@@ -132,13 +136,13 @@ Try dragging the temperature slider on the workbench. Genotypes stay the same; p
             eyeGlow: ['g', 'g'],
             tailGrowth: ['G', 'G'],
           },
-          defaultName: 'Hh α',
+          defaultName: 'Spotty mother',
         },
         {
           role: 'father',
           sex: 'M',
           genotype: {
-            heatSpot: ['H', 'h'],
+            heatSpot: ['h', 'h'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             tail: ['t', 't'],
@@ -146,12 +150,12 @@ Try dragging the temperature slider on the workbench. Genotypes stay the same; p
             eyeGlow: ['g'],
             tailGrowth: ['G', 'G'],
           },
-          defaultName: 'Hh β',
+          defaultName: 'Plain father',
         },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'heatSpot', correctGenotype: 'Hh' },
-        { creatureRole: 'father', geneId: 'heatSpot', correctGenotype: 'Hh' },
+        { creatureRole: 'mother', geneId: 'heatSpot', correctGenotype: 'HH' },
+        { creatureRole: 'father', geneId: 'heatSpot', correctGenotype: 'hh' },
       ],
       litterSize: 8,
       validationTier: 'medium',

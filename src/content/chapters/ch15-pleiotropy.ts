@@ -31,12 +31,12 @@ Look at the Codex (📖) — the metabolism trait is listed there. Same genotype
         {
           role: 'mother', sex: 'F',
           genotype: { ...NEUTRAL_FEMALE, antennae: ['A', 'a'] },
-          defaultName: 'Aa α',
+          defaultName: 'Antenna mystery',
         },
         {
           role: 'father', sex: 'M',
           genotype: { ...NEUTRAL_MALE, antennae: ['a', 'a'] },
-          defaultName: 'aa β',
+          defaultName: 'Recessive tester',
         },
       ],
       correctAssertions: [
@@ -52,22 +52,25 @@ Look at the Codex (📖) — the metabolism trait is listed there. Same genotype
         },
       },
     },
+    // Solo: both antennae-bearing parents (Aa × Aa). Some non-antennae
+    // offspring reveal both parents hidden 'a' — and the pleiotropic
+    // metabolism marker segregates identically because it's the same gene.
     solo: {
       starterCreatures: [
         {
           role: 'mother', sex: 'F',
           genotype: { ...NEUTRAL_FEMALE, antennae: ['A', 'a'] },
-          defaultName: 'Aa α',
+          defaultName: 'Antenna pair α',
         },
         {
           role: 'father', sex: 'M',
-          genotype: { ...NEUTRAL_MALE, antennae: ['a', 'a'] },
-          defaultName: 'aa β',
+          genotype: { ...NEUTRAL_MALE, antennae: ['A', 'a'] },
+          defaultName: 'Antenna pair β',
         },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'antennae', correctGenotype: 'Aa' },
-        { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'aa' },
+        { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'Aa' },
       ],
       litterSize: 6,
       validationTier: 'medium',

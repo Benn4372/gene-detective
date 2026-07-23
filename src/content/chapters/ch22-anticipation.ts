@@ -37,18 +37,22 @@ Not modeled directly in blob crosses, but you'll see the concept in the pedigree
       litterSize: 8,
       scaffolding: { onOpen: 'Both kk — no sparkle. Watch for the rare mutations climbing in later generations.', onWrongHypothesis: {} },
     },
+    // Solo: heterozygous sparkler mother × plain father. Half the offspring
+    // inherit K (sparkling). Different setup from guided's kk × kk mutation
+    // scenario — teaches that anticipation is layered on top of the ordinary
+    // inheritance rules the player already knows.
     solo: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, sparkle: ['k', 'k'] }, defaultName: 'Stable ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, sparkle: ['k', 'k'] }, defaultName: 'Stable ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, sparkle: ['K', 'k'] }, defaultName: 'Faint-sparkle mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, sparkle: ['k', 'k'] }, defaultName: 'Plain father' },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'sparkle', correctGenotype: 'kk' },
+        { creatureRole: 'mother', geneId: 'sparkle', correctGenotype: 'Kk' },
         { creatureRole: 'father', geneId: 'sparkle', correctGenotype: 'kk' },
       ],
       litterSize: 8,
       validationTier: 'loose',
-      hints: [{ stage: 'reframe', text: 'No sparkle showing means kk.' }, { stage: 'point', text: 'Both parents kk.' }, { stage: 'suggest', text: 'Enter kk for both.' }],
+      hints: [{ stage: 'reframe', text: 'Mother is Kk carrier, father kk. Half offspring sparkle. Watch for repeat expansions strengthening the signal in later gens.' }, { stage: 'point', text: 'About 50/50 sparkle:plain in offspring → mother is Kk.' }, { stage: 'suggest', text: 'Kk mother, kk father.' }],
     },
   },
   unlocks: { nextChapterId: 'ch23' },

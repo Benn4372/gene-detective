@@ -65,6 +65,8 @@ Our antennae gene is at locus 50 on chromosome 1. Our new fins gene is at locus 
     },
 
     guided: {
+      // Coupling phase: dominants together on one homolog (AF), recessives
+      // on the other (af). Offspring will show mostly parental phenotypes.
       starterCreatures: [
         {
           role: 'mother',
@@ -76,7 +78,7 @@ Our antennae gene is at locus 50 on chromosome 1. Our new fins gene is at locus 
             tail: ['t', 't'],
             eyeGlow: ['g', 'g'],
           },
-          defaultName: 'AF/af mother',
+          defaultName: 'Linked mother α',
         },
         {
           role: 'father',
@@ -88,7 +90,7 @@ Our antennae gene is at locus 50 on chromosome 1. Our new fins gene is at locus 
             tail: ['t', 't'],
             eyeGlow: ['g'],
           },
-          defaultName: 'af/af father',
+          defaultName: 'Recessive tester',
         },
       ],
       correctAssertions: [
@@ -112,6 +114,11 @@ Our antennae gene is at locus 50 on chromosome 1. Our new fins gene is at locus 
       },
     },
 
+    // Solo swaps the linkage PHASE. Repulsion: dominants on OPPOSITE homologs
+    // (Af on one, aF on the other). Same per-gene genotypes as guided (Aa Ff),
+    // but the parental gamete classes flip — the rare classes are now AF and
+    // af, while Af and aF dominate. Teaches that "linkage" doesn't automatically
+    // mean "dominants travel together".
     solo: {
       starterCreatures: [
         {
@@ -119,12 +126,12 @@ Our antennae gene is at locus 50 on chromosome 1. Our new fins gene is at locus 
           sex: 'F',
           genotype: {
             antennae: ['A', 'a'],
-            fins: ['F', 'f'],
+            fins: ['f', 'F'], // A on homolog 0 paired with f; a on homolog 1 with F
             spots: ['s', 's'],
             tail: ['t', 't'],
             eyeGlow: ['g', 'g'],
           },
-          defaultName: 'AF/af mother',
+          defaultName: 'Linked mother β',
         },
         {
           role: 'father',
@@ -136,7 +143,7 @@ Our antennae gene is at locus 50 on chromosome 1. Our new fins gene is at locus 
             tail: ['t', 't'],
             eyeGlow: ['g'],
           },
-          defaultName: 'af/af father',
+          defaultName: 'Recessive tester',
         },
       ],
       correctAssertions: [
@@ -150,15 +157,15 @@ Our antennae gene is at locus 50 on chromosome 1. Our new fins gene is at locus 
       hints: [
         {
           stage: 'reframe',
-          text: 'Under independent assortment you\'d expect ~25% of each phenotype class. Under linkage, two classes dominate and two are rare.',
+          text: "Same mother genotype as before — Aa for antennae, Ff for fins — but the PHASE is different. Which pair of gametes will dominate this time?",
         },
         {
           stage: 'point',
-          text: 'The parental combinations (AF and af) are common; the recombinants (Af and aF) are rare. The rare-class frequency ≈ the map distance in cM / 100.',
+          text: 'This mother\'s alleles started as Af on one homolog, aF on the other. The parental gametes are now Af and aF; AF and af are the rare recombinants.',
         },
         {
           stage: 'suggest',
-          text: 'The mother is Aa for antennae and Ff for fins — the coupling is AF/af (both dominants on one homolog).',
+          text: 'The per-gene answer is still Aa Ff for mother and aa ff for father — the change is in which linkage phase the offspring reveal.',
         },
       ],
     },

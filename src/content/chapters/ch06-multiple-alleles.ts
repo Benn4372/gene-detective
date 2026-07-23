@@ -103,18 +103,21 @@ Six genotypes, only three phenotypes. A long-horned blob might be LL, LM, or Ln 
       },
     },
 
+    // Solo poses the same three-allele reasoning with a same-phenotype pair.
+    // Both parents show medium horns — the visible dominant is 'M' — but
+    // short-horn offspring reveal both are hiding an n.
     solo: {
       starterCreatures: [
         {
           role: 'mother',
           sex: 'F',
           genotype: {
-            horns: ['L', 'n'],
+            horns: ['M', 'n'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             tail: ['t', 't'],
           },
-          defaultName: 'Long-horn α',
+          defaultName: 'Mid-horn γ',
         },
         {
           role: 'father',
@@ -125,11 +128,11 @@ Six genotypes, only three phenotypes. A long-horned blob might be LL, LM, or Ln 
             spots: ['s', 's'],
             tail: ['t', 't'],
           },
-          defaultName: 'Mid-horn β',
+          defaultName: 'Mid-horn δ',
         },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'horns', correctGenotype: 'Ln' },
+        { creatureRole: 'mother', geneId: 'horns', correctGenotype: 'Mn' },
         { creatureRole: 'father', geneId: 'horns', correctGenotype: 'Mn' },
       ],
       litterSize: 6,
@@ -137,15 +140,15 @@ Six genotypes, only three phenotypes. A long-horned blob might be LL, LM, or Ln 
       hints: [
         {
           stage: 'reframe',
-          text: "One parent shows long horns, the other medium. That fixes each parent's DOMINANT allele — but the recessive is still hidden.",
+          text: "This time both parents look identical — medium horns. Each could be MM or Mn. Which is it?",
         },
         {
           stage: 'point',
-          text: "Short-horn offspring are the tell. If they appear, both parents must be carrying an n.",
+          text: "MM × MM → every offspring MM (medium). If ANY short-horn (nn) child appears, both parents must be carrying n.",
         },
         {
           stage: 'suggest',
-          text: 'Enter Ln for mother, Mn for father. The presence of a single short-horn child confirms both.',
+          text: 'Look for a short-horn offspring. Enter Mn for both. Roughly 1 in 4 offspring should be nn.',
         },
       ],
     },

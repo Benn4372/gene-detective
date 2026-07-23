@@ -35,12 +35,12 @@ Cross Ww × Ww: expect crests in half of male offspring, and in only the WW quar
         {
           role: 'mother', sex: 'F',
           genotype: { ...NEUTRAL_FEMALE, braincrest: ['W', 'w'] },
-          defaultName: 'Ww ♀ (no crest)',
+          defaultName: 'Crest-carrier ♀',
         },
         {
           role: 'father', sex: 'M',
           genotype: { ...NEUTRAL_MALE, braincrest: ['W', 'w'] },
-          defaultName: 'Ww ♂ (crest)',
+          defaultName: 'Crested ♂',
         },
       ],
       correctAssertions: [
@@ -56,22 +56,26 @@ Cross Ww × Ww: expect crests in half of male offspring, and in only the WW quar
         },
       },
     },
+    // Solo: WW mother × ww father. Every offspring is Ww. Sex-influenced
+    // dominance flip becomes stark: ALL sons show a crest (W dominant),
+    // NONE of the daughters do (w dominant in females). Different
+    // pedagogical angle from guided's Ww × Ww ratio puzzle.
     solo: {
       starterCreatures: [
         {
           role: 'mother', sex: 'F',
-          genotype: { ...NEUTRAL_FEMALE, braincrest: ['W', 'w'] },
-          defaultName: 'Ww ♀ (no crest)',
+          genotype: { ...NEUTRAL_FEMALE, braincrest: ['W', 'W'] },
+          defaultName: 'Crested-female mystery',
         },
         {
           role: 'father', sex: 'M',
-          genotype: { ...NEUTRAL_MALE, braincrest: ['W', 'w'] },
-          defaultName: 'Ww ♂ (crest)',
+          genotype: { ...NEUTRAL_MALE, braincrest: ['w', 'w'] },
+          defaultName: 'Crestless male',
         },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'braincrest', correctGenotype: 'Ww' },
-        { creatureRole: 'father', geneId: 'braincrest', correctGenotype: 'Ww' },
+        { creatureRole: 'mother', geneId: 'braincrest', correctGenotype: 'WW' },
+        { creatureRole: 'father', geneId: 'braincrest', correctGenotype: 'ww' },
       ],
       litterSize: 8,
       validationTier: 'medium',

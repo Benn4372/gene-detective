@@ -106,6 +106,10 @@ So a tail-less blob could secretly be TT, Tt, or tt — you can't tell without b
       },
     },
 
+    // Solo swaps to an EPISTASIS TEST CROSS: long-tail mystery mother × known
+    // tail-less father (gg for tailGrowth). Every offspring inherits g from
+    // the father, so their tail depends entirely on which allele the mother
+    // contributes. Half tail-less means she must be Gg.
     solo: {
       starterCreatures: [
         {
@@ -116,7 +120,7 @@ So a tail-less blob could secretly be TT, Tt, or tt — you can't tell without b
             tail: ['T', 'T'],
             tailGrowth: ['G', 'g'],
           },
-          defaultName: 'Long-tail α',
+          defaultName: 'Long-tail mystery',
         },
         {
           role: 'father',
@@ -124,14 +128,14 @@ So a tail-less blob could secretly be TT, Tt, or tt — you can't tell without b
           genotype: {
             ...NEUTRAL_MALE,
             tail: ['T', 'T'],
-            tailGrowth: ['G', 'g'],
+            tailGrowth: ['g', 'g'],
           },
-          defaultName: 'Long-tail β',
+          defaultName: 'Tail-less father',
         },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'Gg' },
-        { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'Gg' },
+        { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'gg' },
       ],
       litterSize: 8,
       validationTier: 'medium',

@@ -30,12 +30,12 @@ For blobs: U (brood pouch) only expresses in **females**. UU or Uu male → look
         {
           role: 'mother', sex: 'F',
           genotype: { ...NEUTRAL_FEMALE, broodPouch: ['U', 'u'] },
-          defaultName: 'Uu ♀ (pouch)',
+          defaultName: 'Pouch mother',
         },
         {
           role: 'father', sex: 'M',
           genotype: { ...NEUTRAL_MALE, broodPouch: ['U', 'u'] },
-          defaultName: 'Uu ♂ (silent)',
+          defaultName: 'Silent-carrier father',
         },
       ],
       correctAssertions: [
@@ -51,14 +51,18 @@ For blobs: U (brood pouch) only expresses in **females**. UU or Uu male → look
         },
       },
     },
+    // Solo: UU mother × uu father. Every offspring is Uu. Daughters ALL
+    // show the pouch (Uu → expressed). Sons all carry u silently. Shifts
+    // teaching focus from "sex-limited hides carriers" to "sex-limited
+    // reveals uniform expression in the one expressing sex".
     solo: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, broodPouch: ['U', 'u'] }, defaultName: 'Uu ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, broodPouch: ['U', 'u'] }, defaultName: 'Uu ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, broodPouch: ['U', 'U'] }, defaultName: 'Pouch mystery' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, broodPouch: ['u', 'u'] }, defaultName: 'Silent father' },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'broodPouch', correctGenotype: 'Uu' },
-        { creatureRole: 'father', geneId: 'broodPouch', correctGenotype: 'Uu' },
+        { creatureRole: 'mother', geneId: 'broodPouch', correctGenotype: 'UU' },
+        { creatureRole: 'father', geneId: 'broodPouch', correctGenotype: 'uu' },
       ],
       litterSize: 8,
       validationTier: 'medium',

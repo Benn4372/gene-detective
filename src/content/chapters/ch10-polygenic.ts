@@ -133,6 +133,12 @@ Cross two medium (XxYyZz) parents and you get a bell-curve of offspring sizes ce
       },
     },
 
+    // Solo poses a polygenic TESTCROSS — same test-cross reasoning as Ch 2,
+    // now scaled to three additive genes. Mystery medium-sized mother × known
+    // smallest father (0 large alleles). Every offspring gets x/y/z from the
+    // father, so offspring sizes range 0-3 depending on which allele the
+    // mother contributes. Extremes at both ends confirm the mother is
+    // heterozygous on every gene.
     solo: {
       starterCreatures: [
         {
@@ -149,15 +155,15 @@ Cross two medium (XxYyZz) parents and you get a bell-curve of offspring sizes ce
             eyeGlow: ['g', 'g'],
             tailGrowth: ['G', 'G'],
           },
-          defaultName: 'Medium α',
+          defaultName: 'Medium mystery',
         },
         {
           role: 'father',
           sex: 'M',
           genotype: {
-            sizeA: ['X', 'x'],
-            sizeB: ['Y', 'y'],
-            sizeC: ['Z', 'z'],
+            sizeA: ['x', 'x'],
+            sizeB: ['y', 'y'],
+            sizeC: ['z', 'z'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             tail: ['t', 't'],
@@ -165,31 +171,31 @@ Cross two medium (XxYyZz) parents and you get a bell-curve of offspring sizes ce
             eyeGlow: ['g'],
             tailGrowth: ['G', 'G'],
           },
-          defaultName: 'Medium β',
+          defaultName: 'Smallest tester',
         },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'sizeA', correctGenotype: 'Xx' },
         { creatureRole: 'mother', geneId: 'sizeB', correctGenotype: 'Yy' },
         { creatureRole: 'mother', geneId: 'sizeC', correctGenotype: 'Zz' },
-        { creatureRole: 'father', geneId: 'sizeA', correctGenotype: 'Xx' },
-        { creatureRole: 'father', geneId: 'sizeB', correctGenotype: 'Yy' },
-        { creatureRole: 'father', geneId: 'sizeC', correctGenotype: 'Zz' },
+        { creatureRole: 'father', geneId: 'sizeA', correctGenotype: 'xx' },
+        { creatureRole: 'father', geneId: 'sizeB', correctGenotype: 'yy' },
+        { creatureRole: 'father', geneId: 'sizeC', correctGenotype: 'zz' },
       ],
       litterSize: 10,
       validationTier: 'medium',
       hints: [
         {
           stage: 'reframe',
-          text: "You're looking at a continuous distribution of offspring sizes. Where the extremes are tells you how heterozygous each parent is.",
+          text: "The father is smallest — 0 large alleles across all three genes. Every offspring inherits only x, y, z from him, so their size depends entirely on the mother's contribution.",
         },
         {
           stage: 'point',
-          text: 'Any extreme-small offspring (size 0) requires both parents to be heterozygous for ALL three size genes.',
+          text: 'If the mother were homozygous large for any gene, the offspring would never inherit its recessive for that gene. Watch for size-0 offspring — those need her to contribute x AND y AND z on the same gamete.',
         },
         {
           stage: 'suggest',
-          text: 'Enter Xx / Yy / Zz for both parents — each gene contributes one recessive to the small-size tail.',
+          text: 'Offspring range from size 0 to size 3 → mother must be heterozygous on all three (Xx / Yy / Zz). Enter xx / yy / zz for the smallest-tester father.',
         },
       ],
     },

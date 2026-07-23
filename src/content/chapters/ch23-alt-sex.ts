@@ -41,18 +41,22 @@ Real biology has more than one answer for the same problem.`,
       litterSize: 6,
       scaffolding: { onOpen: 'Standard testcross under XY. Note the ratio still holds — sex system doesn\'t override Mendel.', onWrongHypothesis: {} },
     },
+    // Solo: both antennae-bearing parents — some non-antennae offspring
+    // reveal both are heterozygous. Different structure from guided's
+    // testcross — still a Mendelian puzzle to reinforce that alternative
+    // sex-determination systems don't rewrite the inheritance math.
     solo: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, antennae: ['A', 'a'] }, defaultName: 'Blob ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, antennae: ['a', 'a'] }, defaultName: 'Blob ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, antennae: ['A', 'a'] }, defaultName: 'Antenna mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, antennae: ['A', 'a'] }, defaultName: 'Antenna father' },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'antennae', correctGenotype: 'Aa' },
-        { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'aa' },
+        { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'Aa' },
       ],
       litterSize: 6,
       validationTier: 'loose',
-      hints: [{ stage: 'reframe', text: 'Standard testcross — antennae mother × plain father.' }, { stage: 'point', text: 'Aa × aa gives 50/50.' }, { stage: 'suggest', text: 'Aa mother, aa father.' }],
+      hints: [{ stage: 'reframe', text: 'Both parents show antennae. Some offspring don\'t — both parents must be Aa.' }, { stage: 'point', text: 'About 1 in 4 offspring should lack antennae.' }, { stage: 'suggest', text: 'Aa mother, Aa father.' }],
     },
   },
   unlocks: { nextChapterId: 'ch24' },

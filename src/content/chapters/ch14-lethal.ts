@@ -62,13 +62,13 @@ The recessive-phenotype fraction rises from 1/4 to 1/3. That deviation is the fi
           role: 'mother',
           sex: 'F',
           genotype: { ...NEUTRAL, lethalCoat: ['Y', 'y'] },
-          defaultName: 'Yellow α',
+          defaultName: 'Yellow-coat α',
         },
         {
           role: 'father',
           sex: 'M',
           genotype: { ...NEUTRAL_MALE, lethalCoat: ['Y', 'y'] },
-          defaultName: 'Yellow β',
+          defaultName: 'Yellow-coat β',
         },
       ],
       correctAssertions: [
@@ -88,31 +88,35 @@ The recessive-phenotype fraction rises from 1/4 to 1/3. That deviation is the fi
       },
     },
 
+    // Solo swaps to a lethal TEST CROSS: yellow Yy mother × dark yy father.
+    // No YY lethality involved this time. Cross gives clean 50% Yy (yellow) :
+    // 50% yy (dark). The 2:1 signature only shows in Yy × Yy — this puzzle
+    // teaches that the ratio distortion needs BOTH parents heterozygous.
     solo: {
       starterCreatures: [
         {
           role: 'mother',
           sex: 'F',
           genotype: { ...NEUTRAL, lethalCoat: ['Y', 'y'] },
-          defaultName: 'Yellow α',
+          defaultName: 'Yellow mystery',
         },
         {
           role: 'father',
           sex: 'M',
-          genotype: { ...NEUTRAL_MALE, lethalCoat: ['Y', 'y'] },
-          defaultName: 'Yellow β',
+          genotype: { ...NEUTRAL_MALE, lethalCoat: ['y', 'y'] },
+          defaultName: 'Dark father',
         },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'lethalCoat', correctGenotype: 'Yy' },
-        { creatureRole: 'father', geneId: 'lethalCoat', correctGenotype: 'Yy' },
+        { creatureRole: 'father', geneId: 'lethalCoat', correctGenotype: 'yy' },
       ],
       litterSize: 12,
       validationTier: 'medium',
       hints: [
-        { stage: 'reframe', text: 'Yellow parents, both showing dominant. Under lethal-YY rules only Yy survives among yellow adults.' },
-        { stage: 'point', text: 'Observed 2:1 yellow:dark instead of 3:1 confirms both parents are Yy.' },
-        { stage: 'suggest', text: 'Enter Yy for both.' },
+        { stage: 'reframe', text: 'A yellow mother × dark father. No YY lethality here — the father can only contribute y.' },
+        { stage: 'point', text: 'Observed 50/50 yellow:dark → mother is Yy (heterozygous). If she were YY, every offspring would be yellow (Yy).' },
+        { stage: 'suggest', text: 'Enter Yy for mother, yy for father.' },
       ],
     },
   },
