@@ -24,9 +24,11 @@ const EMPTY: Record<string, string> = Object.freeze(
 // click 📝 to open a modal for freeform notes and unvalidated allele guesses.
 export function Notecard({ creature, visibleGeneIds, selected, onSelect }: Props) {
   const [notesOpen, setNotesOpen] = useState(false)
-  const hypotheses = useGameStore(s => s.hypotheses[creature.id] ?? EMPTY)
+  // Read the mission's freeform notebook guesses — hypotheses is the (unused
+  // in missions) validated answer store.
+  const guesses = useGameStore(s => s.notebookGuess[creature.id] ?? EMPTY)
   const guessLine = visibleGeneIds
-    .map(id => hypotheses[id])
+    .map(id => guesses[id])
     .filter(Boolean)
     .join(' · ')
 
