@@ -49,6 +49,21 @@ export function InheritanceQuirkNotice({ geneId }: Props) {
     )
   }
 
+  if (gene.lethalGenotypes && gene.lethalGenotypes.length > 0) {
+    return (
+      <NoticeShell tone="rose" label="Lethal allele">
+        The{' '}
+        <span className="font-mono font-semibold">
+          {gene.lethalGenotypes.join(', ')}
+        </span>{' '}
+        genotype{gene.lethalGenotypes.length > 1 ? 's die' : ' dies'} before
+        observation, so the offspring class you'd normally count is simply
+        missing. Ratios get distorted — a 3:1 Punnett prediction turns into
+        an observed 2:1 among the survivors.
+      </NoticeShell>
+    )
+  }
+
   return null
 }
 
@@ -57,15 +72,22 @@ function NoticeShell({
   label,
   children,
 }: {
-  tone: 'teal' | 'orange'
+  tone: 'teal' | 'orange' | 'rose'
   label: string
   children: React.ReactNode
 }) {
   const cls =
     tone === 'teal'
       ? 'bg-teal-50 border-teal-200 text-teal-900'
-      : 'bg-orange-50 border-orange-200 text-orange-900'
-  const stripCls = tone === 'teal' ? 'text-teal-700' : 'text-orange-700'
+      : tone === 'rose'
+        ? 'bg-rose-50 border-rose-200 text-rose-900'
+        : 'bg-orange-50 border-orange-200 text-orange-900'
+  const stripCls =
+    tone === 'teal'
+      ? 'text-teal-700'
+      : tone === 'rose'
+        ? 'text-rose-700'
+        : 'text-orange-700'
   return (
     <div className={'rounded-lg border p-3 text-xs mb-3 ' + cls}>
       <div className={'uppercase tracking-widest mb-1 text-[10px] ' + stripCls}>
