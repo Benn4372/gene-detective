@@ -20,6 +20,19 @@ interface Props {
   correctGenotype?: string
 }
 
+// Sex-linked genes are hemizygous in males (one X) and diploid in females
+// (two Xs). A female Gg mother needs to type "Gg" (2 chars); a male G father
+// needs to type "G" (1 char). Return the minimum number of chars an entry
+// must reach before we start firing validation nudges.
+function requiredCharsFor(
+  inheritanceModel: string,
+  sex?: 'M' | 'F',
+): number {
+  if (inheritanceModel === 'mitochondrial') return 1
+  if (inheritanceModel === 'sexLinked') return sex === 'M' ? 1 : 2
+  return 2
+}
+
 // Single-line input for the player's genotype hypothesis on one gene. Fills in
 // canonically (dominant-first) via the store's `canonicalizeHypothesis`, so
 // AaAa becomes Aa. Shows a green ✓ once the notebook validator accepts, a red
@@ -41,6 +54,7 @@ export function GenotypeInput({
   )
   const value = useNotebookGuess ? notebookValue : hypothesisValue
   const valid = useGameStore(s => s.validated[creatureId]?.[geneId] ?? false)
+  const creature = useGameStore(s => s.creatures[creatureId])
   const setHypothesis = useGameStore(s => s.setHypothesis)
   const setNotebookGuess = useGameStore(s => s.setNotebookGuess)
   const commit = useNotebookGuess ? setNotebookGuess : setHypothesis
@@ -49,13 +63,7 @@ export function GenotypeInput({
   if (!gene) return null
 
   const example = genotypePlaceholder(gene)
-  // Sex-linked males + mitochondrial + Y-linked are hemizygous — one allele
-  // is a complete answer. Everyone else needs the full diploid pair (2 chars).
-  const minChars =
-    gene.inheritanceModel === 'mitochondrial' ||
-    gene.inheritanceModel === 'sexLinked'
-      ? 1
-      : 2
+  const minChars = requiredCharsFor(gene.inheritanceModel, creature?.sex)
   const isComplete = value.length >= minChars
 
   const sortChars = (s: string) => s.split('').sort().join('')
