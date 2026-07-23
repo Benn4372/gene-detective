@@ -337,14 +337,26 @@ function WorkedExample({
       {/* Progressive Punnett + notebook demo. Fills piece-by-piece as the
           player clicks Next → so the reader sees exactly what step of the
           reasoning each narration line corresponds to. */}
-      {focusGeneIds.length > 0 && (
-        <ShowStagePunnett
-          focusGeneIds={focusGeneIds}
-          motherGenotype={pMother}
-          fatherGenotype={pFather}
-          step={step}
-        />
-      )}
+      {focusGeneIds.length > 0 &&
+        // Skip the generic monohybrid/dihybrid grid for genes whose real
+        // shape is fundamentally different (sex-linked X^A/Y notation,
+        // mitochondrial mother-only inheritance). Those chapters lean on
+        // the story-intro dialogue in the show stage and the specialised
+        // renderer inside the guided/solo notebook.
+        !focusGeneIds.some(id => {
+          const gene = blobSpecies.genes.find(g => g.id === id)
+          return (
+            gene?.inheritanceModel === 'sexLinked' ||
+            gene?.inheritanceModel === 'mitochondrial'
+          )
+        }) && (
+          <ShowStagePunnett
+            focusGeneIds={focusGeneIds}
+            motherGenotype={pMother}
+            fatherGenotype={pFather}
+            step={step}
+          />
+        )}
 
       <div className="text-sm text-stone-800 italic text-center min-h-[3em] mt-3">
         {worked.narration[step]}
