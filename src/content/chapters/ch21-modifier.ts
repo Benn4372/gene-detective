@@ -16,10 +16,10 @@ export const ch21: Chapter = {
 
   storyIntro: `Prof. Weaver, tapping a field notebook:
 "Back in Chapter 9 you met tailGrowth — the gene that switches the tail off entirely. That's the extreme end of a bigger category called **modifier genes**: genes whose whole job is to change how another gene expresses."
-"Today, a mystery mother. I know the father is a Gg carrier — I bred him myself. Figure out whether the mother is GG or Gg."`,
+"Today, a mystery mother. I know the father is a Pp carrier — I bred him myself. Figure out whether the mother is PP or Pp."`,
 
   storyOutro: `Prof. Weaver:
-"A test cross with a known heterozygote — the field geneticist's staple. If any offspring were tail-less, the mother had to be Gg. If none appeared across a big enough litter, she's almost certainly GG."
+"A test cross with a known heterozygote — the field geneticist's staple. If any offspring were tail-less, the mother had to be Pp. If none appeared across a big enough litter, she's almost certainly PP."
 "Modifier genes explain variable expressivity in real biology — why the same disease-causing allele can be mild in one family and severe in another. Different modifier backgrounds."`,
 
   pinnedGlossaryTerms: ['modifier-gene', 'expressivity', 'test-cross'],
@@ -30,30 +30,30 @@ export const ch21: Chapter = {
 
 **tailGrowth** is the modifier you already know. Its two alleles:
 
-- **GG or Gg** → tail-growth pathway on. The tail gene (T/t) expresses normally.
-- **gg** → tail-growth pathway off. No tail forms, whatever the T/t alleles say.
+- **PP or Pp** → tail-growth pathway on. The tail gene (T/t) expresses normally.
+- **pp** → tail-growth pathway off. No tail forms, whatever the T/t alleles say.
 
 That's an all-or-nothing modifier — a switch. Other modifier genes act as dimmers, tuning the *intensity* of another gene's phenotype rather than turning it off. Same category, different strength.
 
-Today's puzzle: the father is a known **Gg** carrier. The mother is a mystery — either GG or Gg. A single test cross will tell you which. If any tail-less offspring appear, she must be Gg. If none appear across a big enough litter, she's almost certainly GG.`,
+Today's puzzle: the father is a known **Pp** carrier. The mother is a mystery — either PP or Pp. A single test cross will tell you which. If any tail-less offspring appear, she must be Pp. If none appear across a big enough litter, she's almost certainly PP.`,
       workedExample: {
         parents: [
           {
             ...NEUTRAL_FEMALE,
             tail: ['T', 'T'],
-            tailGrowth: ['G', 'g'], // mystery mother — you don't KNOW yet
+            tailGrowth: ['P', 'P'], // show walks through Case A: mother is PP
           },
           {
             ...NEUTRAL_MALE,
             tail: ['T', 'T'],
-            tailGrowth: ['G', 'g'], // known Gg
+            tailGrowth: ['P', 'p'], // known Pp
           },
         ],
         narration: [
-          'Mother: mystery. Tail visible → she carries at least one G.',
-          'Father: known Gg. He passes G or g with 50/50 odds.',
-          'Case A — mother is GG. Every offspring inherits G from her; no tail-less children ever appear.',
-          'Case B — mother is Gg. About 1/4 of offspring are gg → tail-less. Even one settles it.',
+          'Case A walkthrough: mother is PP. Every gamete she produces is P.',
+          'Father: known Pp. He passes P or p with 50/50 odds.',
+          'Every offspring gets P from mother, so pp is impossible — no tail-less children ever appear.',
+          'Case B (mother is Pp): about 1/4 of offspring would be pp. Even one tail-less child settles it.',
         ],
       },
     },
@@ -66,7 +66,7 @@ Today's puzzle: the father is a known **Gg** carrier. The mother is a mystery �
           genotype: {
             ...NEUTRAL_FEMALE,
             tail: ['T', 'T'],
-            tailGrowth: ['G', 'g'],
+            tailGrowth: ['P', 'p'],
           },
           defaultName: 'Mystery mother',
         },
@@ -76,37 +76,37 @@ Today's puzzle: the father is a known **Gg** carrier. The mother is a mystery �
           genotype: {
             ...NEUTRAL_MALE,
             tail: ['T', 'T'],
-            tailGrowth: ['G', 'g'],
+            tailGrowth: ['P', 'p'],
           },
           defaultName: 'Known-carrier father',
         },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'Gg' },
-        { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'Gg' },
+        { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'Pp' },
+        { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'Pp' },
       ],
       supportingGeneIds: ['tail'],
       litterSize: 8,
       scaffolding: {
         onOpen:
-          "The father is a known Gg carrier. Cross him with the mother a few times. Any tail-less offspring settles the mother's genotype instantly.",
+          "The father is a known Pp carrier. Cross him with the mother a few times. Any tail-less offspring settles the mother's genotype instantly.",
         onWrongHypothesis: {
-          'mother:tailGrowth:GG':
-            "If a tail-less offspring appeared, the mother can't be GG — she must be Gg.",
-          'mother:tailGrowth:gg':
-            "gg would mean SHE has no tail. She clearly does — she has at least one G.",
-          'father:tailGrowth:GG':
-            "The father's genotype is stated in the brief — he's Gg.",
-          'father:tailGrowth:gg':
-            "The father visibly has a tail. He's not gg.",
+          'mother:tailGrowth:PP':
+            "If a tail-less offspring appeared, the mother can't be PP — she must be Pp.",
+          'mother:tailGrowth:pp':
+            "pp would mean SHE has no tail. She clearly does — she has at least one P.",
+          'father:tailGrowth:PP':
+            "The father's genotype is stated in the brief — he's Pp.",
+          'father:tailGrowth:pp':
+            "The father visibly has a tail. He's not pp.",
         },
       },
     },
 
     // Solo is the RECIPROCAL test cross — this time the mother is the known
-    // Gg carrier and the FATHER is the mystery. Every offspring inherits her
-    // g half the time. If any tail-less children appear, father must also be
-    // carrying g; if none appear across a big litter, he's GG.
+    // Pp carrier and the FATHER is the mystery. Every offspring inherits her
+    // p half the time. If any tail-less children appear, father must also be
+    // carrying p; if none appear across a big litter, he's PP.
     solo: {
       starterCreatures: [
         {
@@ -115,7 +115,7 @@ Today's puzzle: the father is a known **Gg** carrier. The mother is a mystery �
           genotype: {
             ...NEUTRAL_FEMALE,
             tail: ['T', 'T'],
-            tailGrowth: ['G', 'g'],
+            tailGrowth: ['P', 'p'],
           },
           defaultName: 'Known-carrier mother',
         },
@@ -125,14 +125,14 @@ Today's puzzle: the father is a known **Gg** carrier. The mother is a mystery �
           genotype: {
             ...NEUTRAL_MALE,
             tail: ['T', 'T'],
-            tailGrowth: ['G', 'g'],
+            tailGrowth: ['P', 'p'],
           },
           defaultName: 'Mystery father',
         },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'Gg' },
-        { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'Gg' },
+        { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'Pp' },
+        { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'Pp' },
       ],
       supportingGeneIds: ['tail'],
       litterSize: 8,
@@ -140,15 +140,15 @@ Today's puzzle: the father is a known **Gg** carrier. The mother is a mystery �
       hints: [
         {
           stage: 'reframe',
-          text: 'This time the mother is the known Gg — the father is the unknown. If no tail-less offspring appear across many litters, father must be GG.',
+          text: 'This time the mother is the known Pp — the father is the unknown. If no tail-less offspring appear across many litters, father must be PP.',
         },
         {
           stage: 'point',
-          text: "Tail-less offspring (gg) mean father carries g AND mother passed her g on the same gamete. Watch the tally.",
+          text: "Tail-less offspring (pp) mean father carries p AND mother passed her p on the same gamete. Watch the tally.",
         },
         {
           stage: 'suggest',
-          text: 'If tail-less offspring appear, enter Gg for the father. The mother is stated as Gg in the brief.',
+          text: 'If tail-less offspring appear, enter Pp for the father. The mother is stated as Pp in the brief.',
         },
       ],
     },
@@ -158,7 +158,7 @@ Today's puzzle: the father is a known **Gg** carrier. The mother is a mystery �
 
   trophyBlobPreset: {
     sex: 'F',
-    genotype: { ...NEUTRAL_FEMALE, tail: ['T', 'T'], tailGrowth: ['G', 'g'] },
+    genotype: { ...NEUTRAL_FEMALE, tail: ['T', 'T'], tailGrowth: ['P', 'p'] },
     defaultName: 'Modifier Trophy',
   },
 }

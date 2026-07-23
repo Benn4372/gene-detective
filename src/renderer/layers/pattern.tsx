@@ -2,16 +2,16 @@ import { registerLayer, type LayerComponent } from '../layerRegistry'
 
 // Pattern layer — codominant.
 // Phenotype values (from expressCodominant):
-//   'T'  → stripes only    — thin horizontal dark lines across the body
+//   'R'  → stripes only    — thin horizontal dark lines across the body
 //   'B'  → blotches only   — irregular rust-brown teardrop patches
-//   'TB' → both simultaneously (heterozygote codominant expression)
+//   'RB' → both simultaneously (heterozygote codominant expression)
 //
 // The blotch design deliberately uses non-circular teardrop paths in a
 // rust-brown tone so it never gets confused with the (circular purple) spots
 // layer — same body region, distinctly different shape + colour.
 export const PatternLayer: LayerComponent = ({ phenotypeValue }) => {
   if (!phenotypeValue) return null
-  const showStripes = phenotypeValue.includes('T')
+  const showStripes = phenotypeValue.includes('R')
   const showBlotches = phenotypeValue.includes('B')
   if (!showStripes && !showBlotches) return null
   return (

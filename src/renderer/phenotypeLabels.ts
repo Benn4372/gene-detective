@@ -12,9 +12,9 @@ const LABELS: Record<string, Record<string, string>> = {
     none: 'no tail',
   },
   pattern: {
-    T: 'stripes',
+    R: 'stripes',
     B: 'blotches',
-    TB: 'stripes + blotches',
+    RB: 'stripes + blotches',
   },
   horns: {
     L: 'long',

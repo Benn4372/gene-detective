@@ -63,14 +63,14 @@ export const blobSpecies: Species = {
         {
           ifGene: 'tailGrowth',
           ifGenotypeMatches: alleles =>
-            alleles.length === 2 && alleles.every(a => a === 'g'),
+            alleles.length === 2 && alleles.every(a => a === 'p'),
           maskWith: 'none',
         },
       ],
     },
-    // Ch 9 — epistasis. tailGrowth 'gg' arrests tail development entirely,
-    // so gg individuals have no tail regardless of TT/Tt/tt at the tail
-    // gene. Reframed after color→tail rename.
+    // Ch 9 — epistasis. tailGrowth 'pp' arrests tail development entirely,
+    // so pp individuals have no tail regardless of TT/Tt/tt at the tail
+    // gene. Uses P/p to avoid colliding with eyeGlow's G/g on X.
     {
       id: 'tailGrowth',
       name: 'Tail Growth',
@@ -79,13 +79,15 @@ export const blobSpecies: Species = {
       inheritanceModel: 'simpleDominant',
       expressesTraits: ['tailGrowth'],
       alleles: [
-        { id: 'G', symbol: 'G', dominanceRank: 1 },
-        { id: 'g', symbol: 'g', dominanceRank: 0 },
+        { id: 'P', symbol: 'P', dominanceRank: 1 },
+        { id: 'p', symbol: 'p', dominanceRank: 0 },
       ],
     },
     // Three polygenic size genes. Each contributes one "large" allele to the
     // additive tally. Total range: 0 (smallest) to 6 (largest). Renderer scales
     // the entire blob group based on the sum.
+    // Polygenic size — 3 unrelated genes each with 2 alleles. Renamed off
+    // X/Y/Z to avoid collision with sex chromosomes; now D/d, E/e, V/v.
     {
       id: 'sizeA',
       name: 'Size (Ⅰ)',
@@ -94,8 +96,8 @@ export const blobSpecies: Species = {
       inheritanceModel: 'polygenic',
       expressesTraits: ['size'],
       alleles: [
-        { id: 'X', symbol: 'X', dominanceRank: 1 },
-        { id: 'x', symbol: 'x', dominanceRank: 0 },
+        { id: 'D', symbol: 'D', dominanceRank: 1 },
+        { id: 'd', symbol: 'd', dominanceRank: 0 },
       ],
     },
     {
@@ -106,8 +108,8 @@ export const blobSpecies: Species = {
       inheritanceModel: 'polygenic',
       expressesTraits: ['size'],
       alleles: [
-        { id: 'Y', symbol: 'Y', dominanceRank: 1 },
-        { id: 'y', symbol: 'y', dominanceRank: 0 },
+        { id: 'E', symbol: 'E', dominanceRank: 1 },
+        { id: 'e', symbol: 'e', dominanceRank: 0 },
       ],
     },
     {
@@ -118,8 +120,8 @@ export const blobSpecies: Species = {
       inheritanceModel: 'polygenic',
       expressesTraits: ['size'],
       alleles: [
-        { id: 'Z', symbol: 'Z', dominanceRank: 1 },
-        { id: 'z', symbol: 'z', dominanceRank: 0 },
+        { id: 'V', symbol: 'V', dominanceRank: 1 },
+        { id: 'v', symbol: 'v', dominanceRank: 0 },
       ],
     },
     {
@@ -209,10 +211,11 @@ export const blobSpecies: Species = {
         { id: 'j', symbol: 'j', dominanceRank: 0 },
       ],
     },
-    // Introduced in Ch14. The dominant 'Y' allele is lethal when homozygous
-    // (YY dies before observation). Yy is viable and yellow; yy is viable and
-    // black. Yellow × yellow crosses produce a 2:1 yellow:black ratio instead
-    // of the expected 3:1.
+    // Introduced in Ch14. The dominant 'C' allele is lethal when homozygous
+    // (CC dies before observation). Cc is viable and yellow-tinged; cc is
+    // viable and dark. Yellow × yellow crosses produce a 2:1 yellow:dark
+    // ratio instead of the expected 3:1. Renamed off Y to avoid collision
+    // with sex chromosome + polygenic size gene.
     {
       id: 'lethalCoat',
       name: 'Lethal Coat',
@@ -220,12 +223,14 @@ export const blobSpecies: Species = {
       locusCM: 65,
       inheritanceModel: 'simpleDominant',
       expressesTraits: ['lethalCoat'],
-      lethalGenotypes: ['YY'],
+      lethalGenotypes: ['CC'],
       alleles: [
-        { id: 'Y', symbol: 'Y', dominanceRank: 1 },
-        { id: 'y', symbol: 'y', dominanceRank: 0 },
+        { id: 'C', symbol: 'C', dominanceRank: 1 },
+        { id: 'c', symbol: 'c', dominanceRank: 0 },
       ],
     },
+    // Codominant pattern gene. Renamed T→R (Ribbon/stripe) to avoid
+    // collision with tail T/t. RR = stripes, RB = both, BB = blotches.
     {
       id: 'pattern',
       name: 'Pattern',
@@ -234,7 +239,7 @@ export const blobSpecies: Species = {
       inheritanceModel: 'codominant',
       expressesTraits: ['pattern'],
       alleles: [
-        { id: 'T', symbol: 'T', dominanceRank: 1 },
+        { id: 'R', symbol: 'R', dominanceRank: 1 },
         { id: 'B', symbol: 'B', dominanceRank: 1 },
       ],
     },
