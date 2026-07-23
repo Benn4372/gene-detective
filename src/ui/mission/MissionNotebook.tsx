@@ -12,6 +12,8 @@ import { PunnettGridDihybrid } from '../workbench/PunnettGridDihybrid'
 import { PunnettGridSexLinked } from '../workbench/PunnettGridSexLinked'
 import { PunnettGridMitochondrial } from '../workbench/PunnettGridMitochondrial'
 import { LinkageNotice } from '../workbench/LinkageNotice'
+import { ImprintingNotice } from '../workbench/ImprintingNotice'
+import { InheritanceQuirkNotice } from '../workbench/InheritanceQuirkNotice'
 
 interface Props {
   blobs: Creature[]
@@ -120,6 +122,12 @@ export function MissionNotebook({ blobs, visibleGeneIds }: Props) {
           </div>
           {visibleGeneIds.length === 2 && (
             <LinkageNotice geneIds={visibleGeneIds} />
+          )}
+          {visibleGeneIds.length === 1 && visibleGeneIds[0] && firstGene?.imprintOrigin && (
+            <ImprintingNotice geneId={visibleGeneIds[0]} />
+          )}
+          {visibleGeneIds.length === 1 && visibleGeneIds[0] && (
+            <InheritanceQuirkNotice geneId={visibleGeneIds[0]} />
           )}
           <div className="flex justify-center mt-2">
             {isMonohybridSexLinked && visibleGeneIds[0] && (
