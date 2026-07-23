@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 // (useState still used for local pool picks below)
 import { motion } from 'framer-motion'
 import { useGameStore } from '../../state/gameStore'
@@ -178,6 +178,19 @@ export function ChapterRunner() {
   )
 }
 
+// Minimal markdown-bold renderer. Splits on '**' and wraps odd segments in
+// <strong>. Used by story-intro/outro so mentor dialogue with **term**
+// doesn't display raw asterisks.
+function renderBold(text: string): React.ReactNode {
+  return text.split('**').map((segment, i) =>
+    i % 2 === 0 ? (
+      <span key={i}>{segment}</span>
+    ) : (
+      <strong key={i} className="not-italic font-semibold">{segment}</strong>
+    ),
+  )
+}
+
 // -- Show stage ---------------------------------------------------------------
 
 function ShowStageView({
@@ -204,7 +217,7 @@ function ShowStageView({
               {mentorName}
             </div>
             <div className="text-sm text-stone-800 whitespace-pre-line italic">
-              {storyIntro}
+              {renderBold(storyIntro)}
             </div>
           </div>
         </div>
@@ -830,7 +843,7 @@ function OutroView({
               {mentorName}
             </div>
             <div className="text-sm text-stone-800 whitespace-pre-line italic">
-              {chapter.storyOutro}
+              {renderBold(chapter.storyOutro)}
             </div>
           </div>
         </div>
