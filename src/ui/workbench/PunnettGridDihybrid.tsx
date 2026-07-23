@@ -22,10 +22,11 @@ export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
   const gene1 = blobSpecies.genes.find(g => g.id === g1)
   const gene2 = blobSpecies.genes.find(g => g.id === g2)
 
-  const motherHyp1 = useGameStore(s => s.hypotheses[motherId]?.[g1] ?? '')
-  const motherHyp2 = useGameStore(s => s.hypotheses[motherId]?.[g2] ?? '')
-  const fatherHyp1 = useGameStore(s => s.hypotheses[fatherId]?.[g1] ?? '')
-  const fatherHyp2 = useGameStore(s => s.hypotheses[fatherId]?.[g2] ?? '')
+  // Read from the freeform notebook GUESS, not the validated Final Answer.
+  const motherHyp1 = useGameStore(s => s.notebookGuess[motherId]?.[g1] ?? '')
+  const motherHyp2 = useGameStore(s => s.notebookGuess[motherId]?.[g2] ?? '')
+  const fatherHyp1 = useGameStore(s => s.notebookGuess[fatherId]?.[g1] ?? '')
+  const fatherHyp2 = useGameStore(s => s.notebookGuess[fatherId]?.[g2] ?? '')
 
   const [topRow, setTopRow] = useState<string[]>(['', '', '', ''])
   const [sideCol, setSideCol] = useState<string[]>(['', '', '', ''])
@@ -97,6 +98,16 @@ export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
   const inputCls =
     'w-14 h-8 text-center font-mono text-sm border-2 border-stone-300 rounded bg-white text-stone-800'
 
+  // Sample gamete for placeholder + inline hint: dominant allele of each gene
+  // concatenated, e.g. "AS". Gives the player a concrete pattern to copy.
+  const dominantG1 = [...gene1.alleles].sort(
+    (a, b) => b.dominanceRank - a.dominanceRank,
+  )[0]?.symbol ?? '?'
+  const dominantG2 = [...gene2.alleles].sort(
+    (a, b) => b.dominanceRank - a.dominanceRank,
+  )[0]?.symbol ?? '?'
+  const gameteExample = `${dominantG1}${dominantG2}`
+
   const renderCell = (row: string, col: string) => {
     if (row.length < 2 || col.length < 2) {
       return (
@@ -128,27 +139,19 @@ export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
         ? [s1.symbol, s2.symbol]
         : [s2.symbol, s1.symbol]
 
-    // Build the preview creature: use these alleles for the two tracked
-    // genes; leave every other gene as homozygous recessive so its layer
-    // stays hidden.
-    const genotype: Record<string, string[]> = {}
-    for (const gene of blobSpecies.genes) {
-      if (gene.id === g1) {
-        genotype[gene.id] = [
-          r1.dominanceRank >= r2.dominanceRank ? r1.id : r2.id,
-          r1.dominanceRank >= r2.dominanceRank ? r2.id : r1.id,
-        ]
-      } else if (gene.id === g2) {
-        genotype[gene.id] = [
-          s1.dominanceRank >= s2.dominanceRank ? s1.id : s2.id,
-          s1.dominanceRank >= s2.dominanceRank ? s2.id : s1.id,
-        ]
-      } else {
-        const rec = [...gene.alleles].sort(
-          (a, b) => a.dominanceRank - b.dominanceRank,
-        )[0]
-        if (rec) genotype[gene.id] = [rec.id, rec.id]
-      }
+    // Build the preview creature: only the two tracked genes get alleles.
+    // Every other gene is left ABSENT (no entry in genotype) so its layer's
+    // guard hides it — no spurious horns, pattern, tail, or size scaling
+    // showing up in a Ch 3 dihybrid Punnett cell.
+    const genotype: Record<string, string[]> = {
+      [g1]: [
+        r1.dominanceRank >= r2.dominanceRank ? r1.id : r2.id,
+        r1.dominanceRank >= r2.dominanceRank ? r2.id : r1.id,
+      ],
+      [g2]: [
+        s1.dominanceRank >= s2.dominanceRank ? s1.id : s2.id,
+        s1.dominanceRank >= s2.dominanceRank ? s2.id : s1.id,
+      ],
     }
     const preview: Creature = {
       id: `preview-${g1}-${g2}-${row}${col}`,
@@ -186,7 +189,7 @@ export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
       type="text"
       value={value}
       onChange={e => onChange(sanitize(e.target.value))}
-      placeholder="?"
+      placeholder={gameteExample}
       maxLength={2}
       className={
         inputCls +
@@ -224,6 +227,13 @@ export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
             clear
           </button>
         </div>
+      </div>
+
+      <div className="text-xs text-stone-600 italic mb-2 leading-snug">
+        Each gamete carries <span className="font-semibold">two letters</span>:
+        one {gene1.name.toLowerCase()} allele + one {gene2.name.toLowerCase()} allele
+        (e.g. <span className="font-mono not-italic">{gameteExample}</span>).
+        A parent that's heterozygous for both makes four different gametes.
       </div>
 
       <table className="border-separate border-spacing-1">

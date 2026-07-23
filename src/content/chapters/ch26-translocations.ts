@@ -26,20 +26,20 @@ Both leave gene content intact — the carrier is usually fine. But offspring in
     },
     guided: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, tail: ['T', 't'] }, defaultName: 'Pink ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, tail: ['T', 't'] }, defaultName: 'Pink ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, tail: ['T', 't'] }, defaultName: 'Medium-tail ♀' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, tail: ['T', 't'] }, defaultName: 'Medium-tail ♂' },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'tail', correctGenotype: 'Tt' },
         { creatureRole: 'father', geneId: 'tail', correctGenotype: 'Tt' },
       ],
       litterSize: 8,
-      scaffolding: { onOpen: 'Rw × Rw. Notebook puzzle stays classical; the chapter concept is visualised in the karyotype viewer.', onWrongHypothesis: {} },
+      scaffolding: { onOpen: 'Tt × Tt medium-tail pair. Notebook puzzle stays classical; the chapter concept is visualised in the karyotype viewer.', onWrongHypothesis: {} },
     },
     solo: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, tail: ['T', 't'] }, defaultName: 'Pink ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, tail: ['T', 't'] }, defaultName: 'Pink ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, tail: ['T', 't'] }, defaultName: 'Medium-tail ♀' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, tail: ['T', 't'] }, defaultName: 'Medium-tail ♂' },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'tail', correctGenotype: 'Tt' },
@@ -47,7 +47,7 @@ Both leave gene content intact — the carrier is usually fine. But offspring in
       ],
       litterSize: 8,
       validationTier: 'loose',
-      hints: [{ stage: 'reframe', text: 'Pink pair.' }, { stage: 'point', text: 'Rw × Rw.' }, { stage: 'suggest', text: 'Rw for both.' }],
+      hints: [{ stage: 'reframe', text: 'Medium-tail pair.' }, { stage: 'point', text: 'Tt × Tt.' }, { stage: 'suggest', text: 'Tt for both.' }],
     },
   },
   unlocks: { mentors: ['prof-delta'], nextChapterId: 'ch27' },

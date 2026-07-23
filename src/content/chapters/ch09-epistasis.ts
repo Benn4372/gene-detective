@@ -1,10 +1,12 @@
 import type { Chapter } from '../types'
+import { NEUTRAL_FEMALE, NEUTRAL_MALE } from './_scaffold'
 
 // Chapter 9 — Epistasis
 //
-// A second gene (coatPigment) masks the color gene: a cc individual is yellow
-// regardless of its R/w alleles. The player sees a body colour that isn't
-// predicted by the color gene alone — the classic epistasis puzzle.
+// The tailGrowth gene (G/g) masks the tail gene (T/t): gg individuals have
+// NO tail at all, regardless of what T/t alleles they carry. The player sees
+// tail-less offspring appear from two visibly-tailed parents — classic
+// epistasis, where one gene switches another off entirely.
 export const ch09: Chapter = {
   id: 'ch09',
   order: 9,
@@ -13,12 +15,12 @@ export const ch09: Chapter = {
   title: 'The gene above the gene',
   mentorId: 'prof-weaver',
 
-  storyIntro: `Prof. Weaver, sliding a photo of a bright yellow blob across the bench:
-"Two red parents. Yellow child. Red doesn't turn into yellow under the color model we know. So something else is going on."
-"Meet **coatPigment**. When both copies are recessive — cc — the whole colour system is switched off. Yellow, regardless of the color gene."`,
+  storyIntro: `Prof. Weaver, sliding a photo of a tail-less blob across the bench:
+"Two long-tailed parents. This tail-less child. You know the tail gene — TT should breed true for long tails. So what's stopping this one from growing a tail at all?"
+"Meet **tailGrowth**. When both copies are recessive — gg — the tail-growth pathway arrests entirely. No tail forms, whatever the T/t alleles say."`,
 
   storyOutro: `Prof. Weaver:
-"That's epistasis. One gene controls whether another can express at all. In real biology it's everywhere — blood types, coat colours, disease modifiers."
+"That's epistasis. One gene controls whether another can express at all. Real biology is stitched together this way — a hormone gene switching a target gene off, a regulator silencing a whole cascade."
 "Ten chapters in. Time to zoom out."`,
 
   pinnedGlossaryTerms: [
@@ -30,42 +32,32 @@ export const ch09: Chapter = {
 
   stages: {
     show: {
-      body: `**Epistasis** is when one gene interferes with another gene's expression. The masked gene may be "expressed" in a genetic sense — the alleles are there — but its phenotypic output is overridden.
+      body: `**Epistasis** is when one gene interferes with another gene's expression. The masked gene still exists in the genome — its alleles are there — but its phenotypic output is overridden by the masking gene.
 
-The coatPigment gene has two alleles:
+The **tailGrowth** gene has two alleles:
 
-- **CC or Cc** → pigment produced. The color gene expresses normally (RR = red, Rw = pink, ww = white).
-- **cc** → no pigment produced. Colour system off — blob is **yellow** regardless of R/w.
+- **GG or Gg** → growth pathway on. The tail gene (T/t) expresses normally — TT long, Tt medium, tt short.
+- **gg** → growth pathway off. **No tail at all**, no matter what T/t alleles the blob carries.
 
-So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from looking. But breeding a yellow to a red-with-CC can tell you a lot.`,
+So a tail-less blob could secretly be TT, Tt, or tt — you can't tell without breeding it. But two long-tailed parents producing a tail-less child? That reveals both parents must be carrying a hidden **g**.`,
       workedExample: {
         parents: [
           {
+            ...NEUTRAL_FEMALE,
             tail: ['T', 'T'],
             tailGrowth: ['G', 'g'],
-            antennae: ['a', 'a'],
-            spots: ['s', 's'],
-            pattern: ['B', 'B'],
-            horns: ['n', 'n'],
-            fins: ['f', 'f'],
-            eyeGlow: ['g', 'g'],
           },
           {
+            ...NEUTRAL_MALE,
             tail: ['T', 'T'],
             tailGrowth: ['G', 'g'],
-            antennae: ['a', 'a'],
-            spots: ['s', 's'],
-            pattern: ['B', 'B'],
-            horns: ['n', 'n'],
-            fins: ['f', 'f'],
-            eyeGlow: ['g'],
           },
         ],
         narration: [
-          'Both parents look red — RR for color, Cc for coatPigment.',
-          'Cross them: 3/4 of offspring inherit at least one C (pigment on) → red.',
-          '1/4 of offspring are cc (pigment off) → yellow.',
-          "Yellow appears even though NEITHER parent is 'yellow' — that's the epistasis fingerprint.",
+          'Both parents are TT for tail — should breed nothing but long tails.',
+          'Both are also Gg for tailGrowth — heterozygous carriers of the "off" allele.',
+          '3/4 of offspring inherit at least one G → tail grows normally (long).',
+          "1/4 of offspring are gg → no tail forms, even though they're TT for the tail gene.",
         ],
       },
     },
@@ -76,31 +68,21 @@ So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from 
           role: 'mother',
           sex: 'F',
           genotype: {
+            ...NEUTRAL_FEMALE,
             tail: ['T', 'T'],
             tailGrowth: ['G', 'g'],
-            antennae: ['a', 'a'],
-            spots: ['s', 's'],
-            pattern: ['B', 'B'],
-            horns: ['n', 'n'],
-            fins: ['f', 'f'],
-            eyeGlow: ['g', 'g'],
           },
-          defaultName: 'Red Cc α',
+          defaultName: 'Long-tail Gg α',
         },
         {
           role: 'father',
           sex: 'M',
           genotype: {
+            ...NEUTRAL_MALE,
             tail: ['T', 'T'],
             tailGrowth: ['G', 'g'],
-            antennae: ['a', 'a'],
-            spots: ['s', 's'],
-            pattern: ['B', 'B'],
-            horns: ['n', 'n'],
-            fins: ['f', 'f'],
-            eyeGlow: ['g'],
           },
-          defaultName: 'Red Cc β',
+          defaultName: 'Long-tail Gg β',
         },
       ],
       correctAssertions: [
@@ -110,16 +92,16 @@ So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from 
       litterSize: 8,
       scaffolding: {
         onOpen:
-          "Both parents look red — no visible yellow. But if any offspring turns yellow, both parents must be carrying a hidden c.",
+          "Both parents have long tails. If a tail-less offspring appears, that's impossible from the tail gene alone — both parents must be carrying a hidden g in tailGrowth.",
         onWrongHypothesis: {
-          'mother:tailGrowth:CC':
-            "If she were CC, no offspring could ever be cc. If a yellow child appeared, mother must be Cc.",
-          'mother:tailGrowth:cc':
-            "cc would make her yellow. She's clearly not — she must have at least one C.",
-          'father:tailGrowth:CC':
-            "Same logic — if you've seen a yellow child, father must be Cc.",
-          'father:tailGrowth:cc':
-            "Father looks red, so he can't be cc.",
+          'mother:tailGrowth:GG':
+            "If she were GG, no offspring could ever be gg. Any tail-less child means she must be Gg.",
+          'mother:tailGrowth:gg':
+            "gg would mean SHE has no tail. She clearly does — she must have at least one G.",
+          'father:tailGrowth:GG':
+            "Same logic — a tail-less offspring means the father must be Gg, not GG.",
+          'father:tailGrowth:gg':
+            "The father has a tail. He can't be gg.",
         },
       },
     },
@@ -130,31 +112,21 @@ So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from 
           role: 'mother',
           sex: 'F',
           genotype: {
+            ...NEUTRAL_FEMALE,
             tail: ['T', 'T'],
             tailGrowth: ['G', 'g'],
-            antennae: ['a', 'a'],
-            spots: ['s', 's'],
-            pattern: ['B', 'B'],
-            horns: ['n', 'n'],
-            fins: ['f', 'f'],
-            eyeGlow: ['g', 'g'],
           },
-          defaultName: 'Red Cc α',
+          defaultName: 'Long-tail Gg α',
         },
         {
           role: 'father',
           sex: 'M',
           genotype: {
+            ...NEUTRAL_MALE,
             tail: ['T', 'T'],
             tailGrowth: ['G', 'g'],
-            antennae: ['a', 'a'],
-            spots: ['s', 's'],
-            pattern: ['B', 'B'],
-            horns: ['n', 'n'],
-            fins: ['f', 'f'],
-            eyeGlow: ['g'],
           },
-          defaultName: 'Red Cc β',
+          defaultName: 'Long-tail Gg β',
         },
       ],
       correctAssertions: [
@@ -166,15 +138,15 @@ So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from 
       hints: [
         {
           stage: 'reframe',
-          text: 'Two red parents producing a yellow child is impossible under the color gene alone. Something else must be at play.',
+          text: 'Two long-tailed parents producing a tail-less child is impossible under the tail gene alone. Something else must be involved.',
         },
         {
           stage: 'point',
-          text: 'Yellow means cc for coatPigment. If a yellow offspring appears, both parents must be Cc.',
+          text: 'A tail-less blob means gg on the tailGrowth gene. If a gg offspring appears, both parents must be Gg heterozygotes.',
         },
         {
           stage: 'suggest',
-          text: 'Enter Cc for both parents on coatPigment — they mask their heterozygous state as long as one C is around.',
+          text: 'Enter Gg for both parents on tailGrowth — they carry the "off" allele silently while their own G keeps their tail growing.',
         },
       ],
     },
@@ -188,15 +160,10 @@ So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from 
   trophyBlobPreset: {
     sex: 'M',
     genotype: {
+      ...NEUTRAL_MALE,
       tail: ['T', 'T'],
       tailGrowth: ['g', 'g'],
-      antennae: ['a', 'a'],
-      spots: ['s', 's'],
-      pattern: ['B', 'B'],
-      horns: ['n', 'n'],
-      fins: ['f', 'f'],
-      eyeGlow: ['g'],
     },
-    defaultName: 'Yellow Trophy',
+    defaultName: 'Tail-less Trophy',
   },
 }

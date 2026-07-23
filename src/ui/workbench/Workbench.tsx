@@ -97,6 +97,59 @@ export function Workbench({
 
   return (
     <div className="space-y-4">
+      {/* Latest litter reveal — pinned near the top so it stays visible as
+          the primary result of the last cross. Ordered above the pickers +
+          Punnett + Execute so the player sees "what happened" first, then
+          scrolls into "what to try next" below. */}
+      {latestCross && (
+        <div className="rounded-lg bg-white border border-stone-300 p-3">
+          <div className="text-xs uppercase tracking-wide text-stone-500 mb-2">
+            Latest litter · {latestCross.offspringIds.length} offspring
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <AnimatePresence mode="popLayout">
+              {latestCross.offspringIds.map((id, idx) => {
+                const child = creatures[id]
+                if (!child) return null
+                const phen = computePhenotype(child, blobSpecies)
+                return (
+                  <motion.div
+                    key={id}
+                    initial={{ opacity: 0, scale: 0.5, y: -8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    transition={{
+                      delay: idx * 0.05,
+                      type: 'spring',
+                      stiffness: 260,
+                      damping: 20,
+                    }}
+                    className="flex flex-col items-center"
+                  >
+                    <BlobRenderer creature={child} species={blobSpecies} size={64} />
+                    <div className="flex items-center gap-1 text-xs mt-1">
+                      <SexBadge sex={child.sex} />
+                      <span className="font-mono text-stone-600">
+                        {visibleGeneIds.map(t => phen[t]).join(' · ')}
+                      </span>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
+
+      {/* Running tally across every offspring bred so far this stage. */}
+      {allOffspring.length > 0 && (
+        <PhenotypeTally
+          offspring={allOffspring}
+          visibleTraitIds={visibleGeneIds}
+          label={`Running totals across ${allOffspring.length} offspring`}
+        />
+      )}
+
       {showPicker && (
         <div className="grid grid-cols-2 gap-4">
           <PickerColumn
@@ -198,55 +251,6 @@ export function Workbench({
         )}
       </div>
 
-      {/* Latest litter reveal */}
-      {latestCross && (
-        <div className="rounded-lg bg-white border border-stone-300 p-3">
-          <div className="text-xs uppercase tracking-wide text-stone-500 mb-2">
-            Latest litter · {latestCross.offspringIds.length} offspring
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <AnimatePresence mode="popLayout">
-              {latestCross.offspringIds.map((id, idx) => {
-                const child = creatures[id]
-                if (!child) return null
-                const phen = computePhenotype(child, blobSpecies)
-                return (
-                  <motion.div
-                    key={id}
-                    initial={{ opacity: 0, scale: 0.5, y: -8 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.5 }}
-                    transition={{
-                      delay: idx * 0.05,
-                      type: 'spring',
-                      stiffness: 260,
-                      damping: 20,
-                    }}
-                    className="flex flex-col items-center"
-                  >
-                    <BlobRenderer creature={child} species={blobSpecies} size={64} />
-                    <div className="flex items-center gap-1 text-xs mt-1">
-                      <SexBadge sex={child.sex} />
-                      <span className="font-mono text-stone-600">
-                        {visibleGeneIds.map(t => phen[t]).join(' · ')}
-                      </span>
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </AnimatePresence>
-          </div>
-        </div>
-      )}
-
-      {/* Running tally */}
-      {allOffspring.length > 0 && (
-        <PhenotypeTally
-          offspring={allOffspring}
-          visibleTraitIds={visibleGeneIds}
-          label={`Running totals across ${allOffspring.length} offspring`}
-        />
-      )}
     </div>
   )
 }

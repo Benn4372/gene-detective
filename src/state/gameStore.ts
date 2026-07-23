@@ -66,6 +66,8 @@ function initialState(): GameState {
     trophyBlobs: {},
     hypotheses: {},
     validated: {},
+    notebookGuess: {},
+    notebookNotes: {},
     notes: {},
     crossHistory: [],
     solvedGenes: [],
@@ -83,6 +85,8 @@ interface GameActions {
   setDifficultyTier(tier: DifficultyTier): void
   // Notebook
   setHypothesis(creatureId: string, geneId: string, text: string): void
+  setNotebookGuess(creatureId: string, geneId: string, text: string): void
+  setNotebookNote(creatureId: string, geneId: string, text: string): void
   setNote(creatureId: string, text: string): void
   showNextHint(chapterId: string): void
   // Breeding — used by Workbench in any context.
@@ -178,6 +182,26 @@ export const useGameStore = create<GameState & GameActions>()(
           breedsSinceLastNotebookProgress: progressed
             ? 0
             : state.breedsSinceLastNotebookProgress,
+        })
+      },
+
+      setNotebookGuess(creatureId, geneId, text) {
+        set(s => {
+          const perCreature = { ...(s.notebookGuess[creatureId] ?? {}) }
+          perCreature[geneId] = text
+          return {
+            notebookGuess: { ...s.notebookGuess, [creatureId]: perCreature },
+          }
+        })
+      },
+
+      setNotebookNote(creatureId, geneId, text) {
+        set(s => {
+          const perCreature = { ...(s.notebookNotes[creatureId] ?? {}) }
+          perCreature[geneId] = text
+          return {
+            notebookNotes: { ...s.notebookNotes, [creatureId]: perCreature },
+          }
         })
       },
 
@@ -302,22 +326,93 @@ export const useGameStore = create<GameState & GameActions>()(
 
       advanceChapterStage(next) {
         const state = get()
-        // Solo stage validates at a stricter tier (medium/strict) and needs
-        // real breeding evidence. If the loose-tier "validated" flags from
-        // the guided stage carry over, the solo stage detects allSolved
-        // instantly and skips itself. Clear per-mystery-pair validation on
-        // any advance so each stage re-earns its own solved state.
         const chapterId = state.currentChapterId
-        const pair = chapterId ? state.chapterCreatures[chapterId] : null
-        const nextValidated = { ...state.validated }
-        if (pair) {
-          if (pair.motherId) delete nextValidated[pair.motherId]
-          if (pair.fatherId) delete nextValidated[pair.fatherId]
+        // Outro / no-chapter: just flip the stage. No creature churn.
+        if (!chapterId || next === 'outro' || next === 'show') {
+          set({ currentChapterStage: next, breedsSinceLastNotebookProgress: 0 })
+          return
         }
+        const chapter = chapterById[chapterId]
+        if (!chapter) {
+          set({ currentChapterStage: next, breedsSinceLastNotebookProgress: 0 })
+          return
+        }
+        // Every transition into an interactive stage purges the previous
+        // stage's scratch state so the new stage starts clean:
+        //   • all chapter-scoped creatures (starters + offspring) are removed
+        //   • crossHistory entries involving them are removed
+        //   • hypotheses / validated / notebook state on the old pair are cleared
+        //   • a fresh pair is spawned from the INCOMING stage's starterCreatures
+        // The regeneration is what makes Ch 4's master (TT × tt) show the
+        // correct phenotype instead of reusing the guided Tt × Tt pair.
+        const oldPair = state.chapterCreatures[chapterId]
+        const purgedIds = new Set<string>()
+        const nextCreatures: Record<string, Creature> = {}
+        for (const [id, c] of Object.entries(state.creatures)) {
+          const inThisChapter =
+            typeof c.scope !== 'string' &&
+            c.scope.kind === 'chapter' &&
+            c.scope.chapterId === chapterId
+          if (inThisChapter) purgedIds.add(id)
+          else nextCreatures[id] = c
+        }
+        const nextCrossHistory = state.crossHistory.filter(
+          r => !purgedIds.has(r.motherId) && !purgedIds.has(r.fatherId),
+        )
+        const nextHypotheses = { ...state.hypotheses }
+        const nextValidated = { ...state.validated }
+        const nextNotebookGuess = { ...state.notebookGuess }
+        const nextNotebookNotes = { ...state.notebookNotes }
+        for (const pid of purgedIds) {
+          delete nextHypotheses[pid]
+          delete nextValidated[pid]
+          delete nextNotebookGuess[pid]
+          delete nextNotebookNotes[pid]
+        }
+
+        // Spawn fresh starters from the incoming stage.
+        const nextStageDef =
+          next === 'guided'
+            ? chapter.stages.guided
+            : next === 'solo'
+              ? chapter.stages.solo
+              : next === 'master'
+                ? chapter.stages.master
+                : null
+        let nextChapterCreatures = { ...state.chapterCreatures }
+        if (nextStageDef && 'starterCreatures' in nextStageDef) {
+          let motherId = ''
+          let fatherId = ''
+          for (const starter of nextStageDef.starterCreatures) {
+            const id = nextId('c')
+            nextCreatures[id] = {
+              id,
+              speciesId: blobSpecies.id,
+              ownerName: starter.defaultName,
+              sex: starter.sex,
+              genotype: starter.genotype,
+              age: 1,
+              scope: chapterScope(chapterId, next as 'guided' | 'solo' | 'master'),
+            }
+            if (starter.role === 'mother') motherId = id
+            if (starter.role === 'father') fatherId = id
+          }
+          nextChapterCreatures[chapterId] = { motherId, fatherId }
+        } else if (oldPair) {
+          // No new starters (unusual) — drop the stale pointer.
+          delete nextChapterCreatures[chapterId]
+        }
+
         set({
           currentChapterStage: next,
           breedsSinceLastNotebookProgress: 0,
+          creatures: nextCreatures,
+          crossHistory: nextCrossHistory,
+          hypotheses: nextHypotheses,
           validated: nextValidated,
+          notebookGuess: nextNotebookGuess,
+          notebookNotes: nextNotebookNotes,
+          chapterCreatures: nextChapterCreatures,
         })
       },
 
@@ -601,6 +696,8 @@ export const useGameStore = create<GameState & GameActions>()(
           ...current,
           ...p,
           environmentTemperature: p.environmentTemperature ?? 50,
+          notebookGuess: p.notebookGuess ?? {},
+          notebookNotes: p.notebookNotes ?? {},
         }
       },
     },

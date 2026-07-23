@@ -151,7 +151,10 @@ You won't see that exactly in any single litter — but over 30+ offspring, the 
         { creatureRole: 'father', geneId: 'spots', correctGenotype: 'Ss' },
       ],
       litterSize: 8,
-      breedBudget: 3,
+      // 5 × 8 = 40 offspring. For Aa × Aa with 1/4 recessive per gene,
+      // P(no recessive in 40) = (3/4)^40 ≈ 1e-5 per gene. Needing both aa
+      // AND ss to appear at least once is now essentially guaranteed.
+      breedBudget: 5,
       rewardMentorDialogue:
         "That's efficient dihybrid work. Prof. Weaver will be impressed.",
     },

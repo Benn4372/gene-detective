@@ -19,8 +19,11 @@ interface Props {
 // parents' hypothesized genotypes stored in the notebook. This is the game's
 // main punnett shortcut — no free info, but no tedious data entry either.
 export function PunnettGrid({ motherId, fatherId, geneId }: Props) {
-  const motherHyp = useGameStore(s => s.hypotheses[motherId]?.[geneId] ?? '')
-  const fatherHyp = useGameStore(s => s.hypotheses[fatherId]?.[geneId] ?? '')
+  // Read from the freeform notebook GUESS, not the validated Final Answer.
+  // The Notebook is where the player writes what they THINK is going on;
+  // the Punnett square is a tool for testing that thought.
+  const motherHyp = useGameStore(s => s.notebookGuess[motherId]?.[geneId] ?? '')
+  const fatherHyp = useGameStore(s => s.notebookGuess[fatherId]?.[geneId] ?? '')
 
   const gene = useMemo(
     () => blobSpecies.genes.find(g => g.id === geneId) ?? null,

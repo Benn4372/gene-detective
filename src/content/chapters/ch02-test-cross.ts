@@ -143,7 +143,9 @@ The absence or presence of even a single recessive-phenotype offspring is your a
         { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'aa' },
       ],
       litterSize: 4,
-      breedBudget: 3,
+      // 5 × 4 = 20 offspring. For Aa × aa, P(no recessive offspring across
+      // 20) = (1/2)^20 ≈ 1e-6 — RNG can't sabotage the player anymore.
+      breedBudget: 5,
       rewardMentorDialogue:
         "Efficient. That's the way real fieldwork is done — no wasted breedings.",
     },

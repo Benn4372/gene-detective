@@ -9,9 +9,9 @@ export const deltaTier2Missions: Mission[] = [
     minCompletedChapters: 27,
     clientCharacterId: 'prof-delta',
     clientBrief:
-      "Small colony. I need a pure-red founder — RR homozygote — to seed a new drift experiment.",
+      "Small colony. I need a long-tail founder — TT homozygote — to seed a new drift experiment.",
     targetPhenotype: { tail: 'T' },
-    visibleGeneIds: ['color'],
+    visibleGeneIds: ['tail'],
     labStarters: [
       {
         sex: 'F',
@@ -34,9 +34,9 @@ export const deltaTier2Missions: Mission[] = [
     minCompletedChapters: 30,
     clientCharacterId: 'prof-delta',
     clientBrief:
-      "Selection sweep. Bring me a double-recessive (yellow, no antennae) — a rare tail-end phenotype.",
+      "Selection sweep. Bring me a double-recessive (short-tail, no antennae) — a rare tail-end phenotype.",
     targetPhenotype: { tail: 't', antennae: 'a' },
-    visibleGeneIds: ['color', 'antennae'],
+    visibleGeneIds: ['tail', 'antennae'],
     labStarters: [
       {
         sex: 'F',

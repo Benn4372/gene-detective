@@ -14,7 +14,7 @@ export interface GenotypeTableRow {
 }
 
 // Enumerate every possible diploid genotype for a single gene, paired with its
-// phenotype. Used by the Trait Codex to render "RR=red, Rr=pink, rr=white"
+// phenotype. Used by the Trait Codex to render "TT=long, Tt=medium, tt=short"
 // tables the player can look up any time.
 export function computeGenotypeTable(
   gene: Gene,

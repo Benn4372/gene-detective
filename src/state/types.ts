@@ -49,8 +49,16 @@ export interface GameState {
   trophyBlobs: Record<string, string> // chapterId → creatureId
 
   // -- Notebook ------------------------------------------------------------
+  // The validated "Final Answer" surface. GenotypeInput commits here.
   hypotheses: Record<string, Record<string, string>>
   validated: Record<string, Record<string, boolean>>
+  // Freeform notebook scratchpad, per creature × gene. Never validated.
+  //   notebookGuess: a single-genotype guess (allele letters) that feeds the
+  //     Punnett square's "Fill from notebook" button.
+  //   notebookNotes: freeform prose the player writes while thinking
+  //     ("AA or Aa", "father can't be AA because…", etc).
+  notebookGuess: Record<string, Record<string, string>>
+  notebookNotes: Record<string, Record<string, string>>
   notes: Record<string, string>
   crossHistory: CrossRecord[]
   solvedGenes: string[]

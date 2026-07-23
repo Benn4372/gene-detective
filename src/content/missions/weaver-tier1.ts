@@ -97,24 +97,24 @@ export const weaverTier1Missions: Mission[] = [
     rewardPreviewText: "adds a chart to the Station's dihybrid noticeboard",
   },
   {
-    id: 'mission-weaver-04-color-red',
+    id: 'mission-weaver-04-tail-long',
     chapterTier: 'curious',
     minCompletedChapters: 4,
     clientCharacterId: 'prof-weaver',
     clientBrief:
-      "Two pink parents. I want a fully red child — Rw × Rw should give me one in every four tries. Prove me right.",
+      "Two medium-tail parents. I want a fully long-tailed child — Tt × Tt should give me one in every four tries. Prove me right.",
     targetPhenotype: { tail: 'T' },
-    visibleGeneIds: ['color'],
+    visibleGeneIds: ['tail'],
     labStarters: [
       {
         sex: 'F',
         genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
-        defaultName: 'Pink F-04',
+        defaultName: 'Medium-tail F-04',
       },
       {
         sex: 'M',
         genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
-        defaultName: 'Pink M-04',
+        defaultName: 'Medium-tail M-04',
       },
     ],
     breedBudget: 4,
@@ -122,29 +122,29 @@ export const weaverTier1Missions: Mission[] = [
     rewardPreviewText: 'a note on incomplete-dominant ratios for the record',
   },
   {
-    id: 'mission-weaver-05-color-white',
+    id: 'mission-weaver-05-tail-short',
     chapterTier: 'curious',
     minCompletedChapters: 4,
     clientCharacterId: 'prof-weaver',
     clientBrief:
-      "Same pink pair — this time bring me a WHITE child. Same 1/4 odds but rarer to sight-check.",
+      "Same medium-tail pair — this time bring me a SHORT-tail child. Same 1/4 odds but rarer to sight-check.",
     targetPhenotype: { tail: 't' },
-    visibleGeneIds: ['color'],
+    visibleGeneIds: ['tail'],
     labStarters: [
       {
         sex: 'F',
         genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
-        defaultName: 'Pink F-05',
+        defaultName: 'Medium-tail F-05',
       },
       {
         sex: 'M',
         genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
-        defaultName: 'Pink M-05',
+        defaultName: 'Medium-tail M-05',
       },
     ],
     breedBudget: 4,
     mode: 'breed',
-    rewardPreviewText: 'field notes on the wild-population color distribution',
+    rewardPreviewText: 'field notes on the wild-population tail-length distribution',
   },
   // Predict-only mission — no breeding needed. Player answers directly.
   {
@@ -155,27 +155,27 @@ export const weaverTier1Missions: Mission[] = [
     clientBrief:
       "A quick prediction exercise. No breeding needed — just work the math.",
     targetPhenotype: {},
-    visibleGeneIds: ['color'],
+    visibleGeneIds: ['tail'],
     labStarters: [
       {
         sex: 'F',
         genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
-        defaultName: 'Pink F',
+        defaultName: 'Medium-tail F',
       },
       {
         sex: 'M',
         genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
-        defaultName: 'Pink M',
+        defaultName: 'Medium-tail M',
       },
     ],
     mode: 'predict-only',
     rewardPreviewText: 'a paper napkin with the answer inked in',
     predictPrompt: {
       focusGeneId: 'tail',
-      motherGenotype: 'Rw',
-      fatherGenotype: 'Rw',
+      motherGenotype: 'Tt',
+      fatherGenotype: 'Tt',
       question:
-        "Rw × Rw pink parents. Under incomplete dominance, what percent of offspring show at least a hint of the R phenotype (RR or Rw)?",
+        "Tt × Tt medium-tail parents. Under incomplete dominance, what percent of offspring carry at least one T allele (TT or Tt)?",
       tolerance: 3,
     },
   },

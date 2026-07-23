@@ -40,6 +40,7 @@ import {
   ChimeraWidget,
 } from '../researcher/ResearcherWidgets'
 import { NotebookPanel } from './NotebookPanel'
+import { AnswerPanel } from './AnswerPanel'
 
 export function ChapterRunner() {
   const currentChapterId = useGameStore(s => s.currentChapterId)
@@ -284,7 +285,7 @@ function WorkedExample({
 
   // Compute one representative offspring genotype. Pick mother's FIRST
   // allele and father's SECOND allele per gene: for two-allele hetero pairs
-  // (Rw × Rw, Aa × aa, etc.) this yields the modal outcome — the
+  // (Tt × Tt, Aa × aa, etc.) this yields the modal outcome — the
   // heterozygote — which matches what the show-stage narration typically
   // walks the player through.
   const previewOffspring: Creature | null = useMemo(() => {
@@ -381,6 +382,18 @@ function StageWithWorkbench({
   const validated = useGameStore(s => s.validated)
   const creatures = useGameStore(s => s.creatures)
   const currentChapterId = useGameStore(s => s.currentChapterId)
+  const crossHistory = useGameStore(s => s.crossHistory)
+  // The Final Answer panel only appears once the player has bred at least
+  // once — evidence-before-commitment.
+  const hasBred = useMemo(
+    () =>
+      crossHistory.some(
+        r =>
+          r.motherId === chapterCreatures.motherId ||
+          r.fatherId === chapterCreatures.fatherId,
+      ),
+    [crossHistory, chapterCreatures],
+  )
   const [motherPick, setMotherPick] = useState<string | null>(
     chapterCreatures.motherId,
   )
@@ -467,8 +480,15 @@ function StageWithWorkbench({
         </div>
       </div>
 
-      {/* Workbench comes BEFORE the notebook so the reasoning tools (breeding
-          + Punnett once unlocked) precede recording the answer. */}
+      {/* Freeform notebook comes FIRST — the guess feeds the Punnett square
+          inside the Workbench below, and the Notes field is the player's
+          thinking space. No answer-checking here. */}
+      <NotebookPanel
+        motherId={chapterCreatures.motherId}
+        fatherId={chapterCreatures.fatherId}
+        geneIds={geneIds}
+      />
+
       <Workbench
         pool={pool}
         motherId={motherPick}
@@ -481,16 +501,21 @@ function StageWithWorkbench({
         showPunnett={punnettUnlocked}
       />
 
-      <NotebookPanel
-        motherId={chapterCreatures.motherId}
-        fatherId={chapterCreatures.fatherId}
-        geneIds={geneIds}
-        guidedScaffolding={
-          stageKey === 'guided' && 'scaffolding' in stage
-            ? stage.scaffolding
-            : undefined
-        }
-      />
+      {/* Final Answer only appears once a litter is on the bench — nothing
+          to commit against before evidence exists. */}
+      {hasBred && (
+        <AnswerPanel
+          motherId={chapterCreatures.motherId}
+          fatherId={chapterCreatures.fatherId}
+          geneIds={geneIds}
+          correctAssertions={stage.correctAssertions}
+          guidedScaffolding={
+            stageKey === 'guided' && 'scaffolding' in stage
+              ? stage.scaffolding
+              : undefined
+          }
+        />
+      )}
 
       <SolveCelebration
         open={celebrationOpen}
