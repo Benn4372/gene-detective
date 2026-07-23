@@ -37,10 +37,15 @@ export function TrophyShelf() {
         <h1 className="text-3xl font-bold text-stone-800 font-serif mb-1">
           🏆 Trophy Shelf
         </h1>
-        <p className="text-sm text-stone-600 italic mb-6">
-          One blob from every chapter you've completed. Sentimental only —
-          they're safely displayed here and never leave.
-        </p>
+        <div className="flex items-baseline gap-3 mb-6">
+          <p className="text-sm text-stone-600 italic">
+            One blob from every chapter you've completed. Sentimental only —
+            they're safely displayed here and never leave.
+          </p>
+          <div className="text-xs text-stone-500 uppercase tracking-wide whitespace-nowrap">
+            {completedChapters.length} of {chapters.length}
+          </div>
+        </div>
 
         {trophyBlobs.length === 0 ? (
           <div className="rounded-xl bg-[color:var(--paper)] border border-stone-300 p-8 text-center">
