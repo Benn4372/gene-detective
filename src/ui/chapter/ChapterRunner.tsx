@@ -1132,6 +1132,22 @@ function OutroView({
             ))}
           </div>
         )}
+        {(() => {
+          const nextId = chapter.unlocks.nextChapterId
+          if (!nextId) return null
+          const next = chapterById[nextId]
+          if (!next) return null
+          return (
+            <div className="text-xs text-emerald-900 mt-3 pt-3 border-t border-emerald-200">
+              <span className="uppercase tracking-widest text-emerald-700 text-[10px]">
+                Up next
+              </span>{' '}
+              <span className="italic">
+                Ch {next.order} · {next.title} — {next.concept}
+              </span>
+            </div>
+          )
+        })()}
       </div>
 
       {hasPreset ? (
