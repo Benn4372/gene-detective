@@ -193,6 +193,16 @@ export const useGameStore = create<GameState & GameActions>()(
             notebookGuess: { ...s.notebookGuess, [creatureId]: perCreature },
           }
         })
+        // The notebook guess is ALSO the player's committed answer — running
+        // it through setHypothesis re-validates against evidence and drives
+        // the AnswerPanel's ✓/✗ badge. Two years of playtesting revealed the
+        // "type it in the notebook, then type it AGAIN in the answer" flow
+        // was universally confusing. Only chapters (not missions) validate;
+        // missions have no correct answer so this is a no-op there.
+        const creature = get().creatures[creatureId]
+        if (creature) {
+          get().setHypothesis(creatureId, geneId, text)
+        }
       },
 
       setNotebookNote(creatureId, geneId, text) {

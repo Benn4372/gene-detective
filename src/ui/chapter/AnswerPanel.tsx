@@ -85,6 +85,7 @@ export function AnswerPanel({
                   creatureId={mother.id}
                   geneId={geneId}
                   correctGenotype={correctFor('mother', geneId)}
+                  useNotebookGuess
                 />
                 {motherHint && (
                   <div className="mt-2 text-xs text-rose-800 bg-rose-50 border border-rose-200 rounded p-2 leading-snug">
@@ -101,6 +102,7 @@ export function AnswerPanel({
                   creatureId={father.id}
                   geneId={geneId}
                   correctGenotype={correctFor('father', geneId)}
+                  useNotebookGuess
                 />
                 {fatherHint && (
                   <div className="mt-2 text-xs text-rose-800 bg-rose-50 border border-rose-200 rounded p-2 leading-snug">
