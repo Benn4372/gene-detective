@@ -41,8 +41,8 @@ So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from 
       workedExample: {
         parents: [
           {
-            color: ['R', 'R'],
-            coatPigment: ['C', 'c'],
+            tail: ['T', 'T'],
+            tailGrowth: ['G', 'g'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             pattern: ['B', 'B'],
@@ -51,8 +51,8 @@ So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from 
             eyeGlow: ['g', 'g'],
           },
           {
-            color: ['R', 'R'],
-            coatPigment: ['C', 'c'],
+            tail: ['T', 'T'],
+            tailGrowth: ['G', 'g'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             pattern: ['B', 'B'],
@@ -76,8 +76,8 @@ So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from 
           role: 'mother',
           sex: 'F',
           genotype: {
-            color: ['R', 'R'],
-            coatPigment: ['C', 'c'],
+            tail: ['T', 'T'],
+            tailGrowth: ['G', 'g'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             pattern: ['B', 'B'],
@@ -91,8 +91,8 @@ So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from 
           role: 'father',
           sex: 'M',
           genotype: {
-            color: ['R', 'R'],
-            coatPigment: ['C', 'c'],
+            tail: ['T', 'T'],
+            tailGrowth: ['G', 'g'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             pattern: ['B', 'B'],
@@ -104,21 +104,21 @@ So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from 
         },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'coatPigment', correctGenotype: 'Cc' },
-        { creatureRole: 'father', geneId: 'coatPigment', correctGenotype: 'Cc' },
+        { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'Gg' },
+        { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'Gg' },
       ],
       litterSize: 8,
       scaffolding: {
         onOpen:
           "Both parents look red — no visible yellow. But if any offspring turns yellow, both parents must be carrying a hidden c.",
         onWrongHypothesis: {
-          'mother:coatPigment:CC':
+          'mother:tailGrowth:CC':
             "If she were CC, no offspring could ever be cc. If a yellow child appeared, mother must be Cc.",
-          'mother:coatPigment:cc':
+          'mother:tailGrowth:cc':
             "cc would make her yellow. She's clearly not — she must have at least one C.",
-          'father:coatPigment:CC':
+          'father:tailGrowth:CC':
             "Same logic — if you've seen a yellow child, father must be Cc.",
-          'father:coatPigment:cc':
+          'father:tailGrowth:cc':
             "Father looks red, so he can't be cc.",
         },
       },
@@ -130,8 +130,8 @@ So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from 
           role: 'mother',
           sex: 'F',
           genotype: {
-            color: ['R', 'R'],
-            coatPigment: ['C', 'c'],
+            tail: ['T', 'T'],
+            tailGrowth: ['G', 'g'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             pattern: ['B', 'B'],
@@ -145,8 +145,8 @@ So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from 
           role: 'father',
           sex: 'M',
           genotype: {
-            color: ['R', 'R'],
-            coatPigment: ['C', 'c'],
+            tail: ['T', 'T'],
+            tailGrowth: ['G', 'g'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             pattern: ['B', 'B'],
@@ -158,8 +158,8 @@ So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from 
         },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'coatPigment', correctGenotype: 'Cc' },
-        { creatureRole: 'father', geneId: 'coatPigment', correctGenotype: 'Cc' },
+        { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'Gg' },
+        { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'Gg' },
       ],
       litterSize: 8,
       validationTier: 'medium',
@@ -181,15 +181,15 @@ So a yellow blob could be RR, Rw, or ww for the color gene. You can't tell from 
   },
 
   unlocks: {
-    traits: ['coatPigment'],
+    traits: ['tailGrowth'],
     nextChapterId: 'ch10',
   },
 
   trophyBlobPreset: {
     sex: 'M',
     genotype: {
-      color: ['R', 'R'],
-      coatPigment: ['c', 'c'],
+      tail: ['T', 'T'],
+      tailGrowth: ['g', 'g'],
       antennae: ['a', 'a'],
       spots: ['s', 's'],
       pattern: ['B', 'B'],

@@ -27,24 +27,24 @@ In blobs, coatPigment (C/c) doesn't just switch color on/off; it also modulates 
     },
     guided: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, color: ['R', 'R'], coatPigment: ['C', 'c'] }, defaultName: 'Muted red ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, color: ['R', 'R'], coatPigment: ['C', 'c'] }, defaultName: 'Muted red ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, tail: ['T', 'T'], tailGrowth: ['G', 'g'] }, defaultName: 'Muted red ♀' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, tail: ['T', 'T'], tailGrowth: ['G', 'g'] }, defaultName: 'Muted red ♂' },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'coatPigment', correctGenotype: 'Cc' },
-        { creatureRole: 'father', geneId: 'coatPigment', correctGenotype: 'Cc' },
+        { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'Gg' },
+        { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'Gg' },
       ],
       litterSize: 8,
       scaffolding: { onOpen: 'Both parents RR for color — you\'d expect all offspring red. Some are yellow (cc). Cc modifier.', onWrongHypothesis: {} },
     },
     solo: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, color: ['R', 'R'], coatPigment: ['C', 'c'] }, defaultName: 'Muted red ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, color: ['R', 'R'], coatPigment: ['C', 'c'] }, defaultName: 'Muted red ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, tail: ['T', 'T'], tailGrowth: ['G', 'g'] }, defaultName: 'Muted red ♀' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, tail: ['T', 'T'], tailGrowth: ['G', 'g'] }, defaultName: 'Muted red ♂' },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'coatPigment', correctGenotype: 'Cc' },
-        { creatureRole: 'father', geneId: 'coatPigment', correctGenotype: 'Cc' },
+        { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'Gg' },
+        { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'Gg' },
       ],
       litterSize: 8,
       validationTier: 'loose',
@@ -53,7 +53,7 @@ In blobs, coatPigment (C/c) doesn't just switch color on/off; it also modulates 
   },
   unlocks: { nextChapterId: 'ch22' },
   trophyBlobPreset: {
-    sex: 'F', genotype: { ...NEUTRAL_FEMALE, color: ['R', 'R'], coatPigment: ['C', 'C'] },
+    sex: 'F', genotype: { ...NEUTRAL_FEMALE, tail: ['T', 'T'], tailGrowth: ['G', 'G'] },
     defaultName: 'Modifier Trophy',
   },
 }

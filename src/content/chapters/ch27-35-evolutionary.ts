@@ -12,7 +12,7 @@ export const ch27 = evolutionaryChapter({
 
 Run the sandbox with a small population. Frequencies wobble. Given enough time, one allele fixes at 100%.`,
   glossary: ['genetic-drift'],
-  focusGeneId: 'color',
+  focusGeneId: 'tail',
   initialDominantFreq: 0.5,
   populationSize: 24,
   generationsToExplore: 5,
@@ -32,7 +32,7 @@ export const ch28 = evolutionaryChapter({
 
 A **bottleneck** is the same principle: a population crashes to a small size, then rebuilds. The rebuilt population reflects the survivors' frequencies, not the original's.`,
   glossary: ['founder-effect', 'bottleneck'],
-  focusGeneId: 'color',
+  focusGeneId: 'tail',
   initialDominantFreq: 0.25,
   populationSize: 20,
   generationsToExplore: 5,
@@ -52,7 +52,7 @@ export const ch29 = evolutionaryChapter({
 
 If you had two isolated populations at different starting frequencies, gene flow would drag them together over time.`,
   glossary: ['gene-flow', 'migration'],
-  focusGeneId: 'color',
+  focusGeneId: 'tail',
   initialDominantFreq: 0.7,
   populationSize: 48,
   generationsToExplore: 5,
@@ -72,7 +72,7 @@ export const ch30 = evolutionaryChapter({
 
 Directional, stabilising, disruptive — selection has three main flavors, depending on which phenotype the environment favors.`,
   glossary: ['natural-selection', 'fitness'],
-  focusGeneId: 'color',
+  focusGeneId: 'tail',
   initialDominantFreq: 0.1,
   populationSize: 48,
   generationsToExplore: 5,
@@ -92,7 +92,7 @@ export const ch31 = evolutionaryChapter({
 
 Even under strong selection, the allele that's bad in homozygous form is protected because it\'s valuable in heterozygous form.`,
   glossary: ['balancing-selection', 'heterozygote-advantage'],
-  focusGeneId: 'color',
+  focusGeneId: 'tail',
   initialDominantFreq: 0.4,
   populationSize: 48,
   generationsToExplore: 5,
@@ -112,7 +112,7 @@ export const ch32 = evolutionaryChapter({
 
 Assortative mating doesn't change allele frequencies but raises homozygosity: fewer heterozygotes than HW predicts.`,
   glossary: ['assortative-mating', 'sexual-selection'],
-  focusGeneId: 'color',
+  focusGeneId: 'tail',
   initialDominantFreq: 0.5,
   populationSize: 48,
   generationsToExplore: 5,
@@ -132,7 +132,7 @@ export const ch33 = evolutionaryChapter({
 
 **Inbreeding depression** is the fitness loss from raised homozygosity for bad recessives.`,
   glossary: ['inbreeding', 'homozygosity'],
-  focusGeneId: 'color',
+  focusGeneId: 'tail',
   initialDominantFreq: 0.5,
   populationSize: 16,
   generationsToExplore: 5,
@@ -152,7 +152,7 @@ export const ch34 = evolutionaryChapter({
 
 The mirror image of inbreeding depression.`,
   glossary: ['hybrid-vigor', 'heterosis'],
-  focusGeneId: 'color',
+  focusGeneId: 'tail',
   initialDominantFreq: 0.5,
   populationSize: 48,
   generationsToExplore: 5,
@@ -172,7 +172,7 @@ export const ch35 = evolutionaryChapter({
 
 Mechanisms: **allopatric** (geographic separation), **sympatric** (same location, ecological or behavioral separation), and everything in between.`,
   glossary: ['speciation', 'reproductive-isolation'],
-  focusGeneId: 'color',
+  focusGeneId: 'tail',
   initialDominantFreq: 0.5,
   populationSize: 48,
   generationsToExplore: 5,

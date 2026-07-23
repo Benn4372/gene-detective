@@ -8,10 +8,10 @@
 export const NEUTRAL_FEMALE: Record<string, string[]> = {
   antennae: ['a', 'a'],
   spots: ['s', 's'],
-  color: ['w', 'w'],
+  tail: ['t', 't'],
   fins: ['f', 'f'],
   eyeGlow: ['g', 'g'],
-  coatPigment: ['C', 'C'],
+  tailGrowth: ['G', 'G'],
   sizeA: ['x', 'x'],
   sizeB: ['y', 'y'],
   sizeC: ['z', 'z'],

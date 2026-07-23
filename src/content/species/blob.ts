@@ -43,39 +43,44 @@ export const blobSpecies: Species = {
         { id: 's', symbol: 's', dominanceRank: 0 },
       ],
     },
+    // Ch 4 — incomplete dominance. Tail length has exactly three natural
+    // states: TT = long, Tt = medium (blend), tt = short/nub. No debate
+    // about "what colour?" — length is just length.
     {
-      id: 'color',
-      name: 'Color',
+      id: 'tail',
+      name: 'Tail',
       chromosome: 'auto-1',
       locusCM: 90,
       inheritanceModel: 'incompleteDominant',
-      expressesTraits: ['color'],
+      expressesTraits: ['tail'],
       alleles: [
-        { id: 'R', symbol: 'R', dominanceRank: 1 },
-        { id: 'w', symbol: 'w', dominanceRank: 0 },
+        { id: 'T', symbol: 'T', dominanceRank: 1 },
+        { id: 't', symbol: 't', dominanceRank: 0 },
       ],
-      // Epistasis: coatPigment 'cc' masks color as 'yellow' regardless of
-      // R/w alleles. Introduced in Ch 9 — the pigment gene supplies the
-      // biological reason for a coat's colour to appear at all.
+      // Ch 9 epistasis: gg tailGrowth arrests development entirely, so
+      // any T-genotype blob with gg shows no tail at all ("none").
       epistasisRules: [
         {
-          ifGene: 'coatPigment',
-          ifGenotypeMatches: (alleles) =>
-            alleles.length === 2 && alleles.every(a => a === 'c'),
-          maskWith: 'yellow',
+          ifGene: 'tailGrowth',
+          ifGenotypeMatches: alleles =>
+            alleles.length === 2 && alleles.every(a => a === 'g'),
+          maskWith: 'none',
         },
       ],
     },
+    // Ch 9 — epistasis. tailGrowth 'gg' arrests tail development entirely,
+    // so gg individuals have no tail regardless of TT/Tt/tt at the tail
+    // gene. Reframed after color→tail rename.
     {
-      id: 'coatPigment',
-      name: 'Coat Pigment',
+      id: 'tailGrowth',
+      name: 'Tail Growth',
       chromosome: 'auto-2',
       locusCM: 15,
       inheritanceModel: 'simpleDominant',
-      expressesTraits: ['coatPigment'],
+      expressesTraits: ['tailGrowth'],
       alleles: [
-        { id: 'C', symbol: 'C', dominanceRank: 1 },
-        { id: 'c', symbol: 'c', dominanceRank: 0 },
+        { id: 'G', symbol: 'G', dominanceRank: 1 },
+        { id: 'g', symbol: 'g', dominanceRank: 0 },
       ],
     },
     // Three polygenic size genes. Each contributes one "large" allele to the
@@ -285,11 +290,18 @@ export const blobSpecies: Species = {
       description: 'A polka-dot pattern on the body.',
     },
     {
-      id: 'color',
-      name: 'Color',
+      id: 'tail',
+      name: 'Tail',
       category: 'visible',
       description:
-        "A blob's body colour. Red and white blend into pink in the heterozygote — a textbook example of incomplete dominance.",
+        "A trailing tail. TT = long, Tt = medium (visible blend), tt = short/nub — a textbook example of incomplete dominance where each genotype has its own clearly-visible phenotype.",
+    },
+    {
+      id: 'tailGrowth',
+      name: 'Tail Growth',
+      category: 'chemical',
+      description:
+        "Whether the tail's growth pathway is active. Recessive gg arrests development entirely: gg blobs have no tail regardless of what T/t alleles they carry.",
     },
     {
       id: 'pattern',
@@ -318,13 +330,6 @@ export const blobSpecies: Species = {
       category: 'visible',
       description:
         'Small side fins. Sits close to the antennae gene on chromosome 1 — linked, not independent.',
-    },
-    {
-      id: 'coatPigment',
-      name: 'Coat Pigment',
-      category: 'chemical',
-      description:
-        'Whether the body deposits any colour at all. Recessive cc masks the color gene: cc individuals are yellow regardless of R/w.',
     },
     {
       id: 'size',

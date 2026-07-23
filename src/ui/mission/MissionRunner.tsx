@@ -9,6 +9,7 @@ import { SexBadge } from '../atoms/SexBadge'
 import { Modal } from '../atoms/Modal'
 import { Workbench } from '../workbench/Workbench'
 import { PedigreeViewer } from '../pedigree/PedigreeViewer'
+import { MissionNotebook } from './MissionNotebook'
 import { Notecard } from './Notecard'
 
 // A single self-contained mission puzzle. Two starter samples on the bench,
@@ -162,12 +163,19 @@ export function MissionRunner() {
               onSelectFather={setFatherId}
               visibleGeneIds={mission.visibleGeneIds}
               litterSize={1}
+              showPunnett
               breedBudgetHint={
                 mission.breedBudget
                   ? `Target ≤${mission.breedBudget} crosses for full mastery`
                   : undefined
               }
             />
+            <div className="mt-4">
+              <MissionNotebook
+                blobs={pool}
+                visibleGeneIds={mission.visibleGeneIds}
+              />
+            </div>
             <div className="mt-6 flex justify-end">
               <motion.button
                 whileHover={{ scale: 1.03 }}

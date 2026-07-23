@@ -51,14 +51,17 @@ export function PunnettGrid({ motherId, fatherId, geneId }: Props) {
     return validSymbols.includes(ch) ? ch : ''
   }
 
-  const canFill = motherHyp.length >= 2 && fatherHyp.length >= 2
+  // Any hint of a notebook entry is enough to offer the fill — one letter
+  // fills one column, two letters fill both. Partial info from either parent
+  // is used; the other side stays blank so the player can hand-fill it.
+  const canFill = motherHyp.length >= 1 || fatherHyp.length >= 1
   const fillFromNotebook = () => {
     if (!canFill) return
     // Mother's alleles go down the side; father's along the top.
-    setSideA(motherHyp[0]!)
-    setSideB(motherHyp[1]!)
-    setTopA(fatherHyp[0]!)
-    setTopB(fatherHyp[1]!)
+    if (motherHyp.length >= 1) setSideA(motherHyp[0]!)
+    if (motherHyp.length >= 2) setSideB(motherHyp[1]!)
+    if (fatherHyp.length >= 1) setTopA(fatherHyp[0]!)
+    if (fatherHyp.length >= 2) setTopB(fatherHyp[1]!)
   }
 
   const clear = () => {

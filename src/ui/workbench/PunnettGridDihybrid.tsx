@@ -64,16 +64,29 @@ export function PunnettGridDihybrid({ motherId, fatherId, geneIds }: Props) {
     return [a1a + a2a, a1a + a2b, a1b + a2a, a1b + a2b]
   }
 
+  // Fill whatever the notebook has now — one gene alone, one parent alone,
+  // whatever. Missing pieces stay blank for hand-fill.
   const canFillFather =
     fatherHyp1.length >= 2 && fatherHyp2.length >= 2
   const canFillMother =
     motherHyp1.length >= 2 && motherHyp2.length >= 2
-  const canFill = canFillFather && canFillMother
+  const canFill =
+    fatherHyp1.length >= 1 ||
+    fatherHyp2.length >= 1 ||
+    motherHyp1.length >= 1 ||
+    motherHyp2.length >= 1
 
   const fillFromNotebook = () => {
     if (!canFill) return
-    setTopRow(gametesOf(fatherHyp1, fatherHyp2))
-    setSideCol(gametesOf(motherHyp1, motherHyp2))
+    if (canFillFather) setTopRow(gametesOf(fatherHyp1, fatherHyp2))
+    if (canFillMother) setSideCol(gametesOf(motherHyp1, motherHyp2))
+    // Partial: only one parent complete — still fill that side.
+    if (!canFillFather && canFillMother) {
+      // leave top row blank for hand-fill
+    }
+    if (canFillFather && !canFillMother) {
+      // leave side col blank for hand-fill
+    }
   }
 
   const clear = () => {

@@ -67,7 +67,7 @@ export function evolutionaryChapter(spec: EvolutionaryChapterSpec): Chapter {
     },
     trophyBlobPreset: {
       sex: 'F',
-      genotype: { ...NEUTRAL_FEMALE, color: ['R', 'w'] },
+      genotype: { ...NEUTRAL_FEMALE, tail: ['T', 't'] },
       defaultName: `${spec.title} Trophy`,
     },
     interactionMode: {

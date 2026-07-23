@@ -10,17 +10,17 @@ export const deltaTier2Missions: Mission[] = [
     clientCharacterId: 'prof-delta',
     clientBrief:
       "Small colony. I need a pure-red founder — RR homozygote — to seed a new drift experiment.",
-    targetPhenotype: { color: 'R' },
+    targetPhenotype: { tail: 'T' },
     visibleGeneIds: ['color'],
     labStarters: [
       {
         sex: 'F',
-        genotype: { color: ['R', 'w'], antennae: ['a', 'a'], spots: ['s', 's'] },
+        genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
         defaultName: 'Delta F-01',
       },
       {
         sex: 'M',
-        genotype: { color: ['R', 'w'], antennae: ['a', 'a'], spots: ['s', 's'] },
+        genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
         defaultName: 'Delta M-01',
       },
     ],
@@ -35,17 +35,17 @@ export const deltaTier2Missions: Mission[] = [
     clientCharacterId: 'prof-delta',
     clientBrief:
       "Selection sweep. Bring me a double-recessive (yellow, no antennae) — a rare tail-end phenotype.",
-    targetPhenotype: { color: 'w', antennae: 'a' },
+    targetPhenotype: { tail: 't', antennae: 'a' },
     visibleGeneIds: ['color', 'antennae'],
     labStarters: [
       {
         sex: 'F',
-        genotype: { color: ['R', 'w'], antennae: ['A', 'a'], spots: ['s', 's'] },
+        genotype: { tail: ['T', 't'], antennae: ['A', 'a'], spots: ['s', 's'] },
         defaultName: 'Delta F-02',
       },
       {
         sex: 'M',
-        genotype: { color: ['R', 'w'], antennae: ['A', 'a'], spots: ['s', 's'] },
+        genotype: { tail: ['T', 't'], antennae: ['A', 'a'], spots: ['s', 's'] },
         defaultName: 'Delta M-02',
       },
     ],

@@ -14,29 +14,12 @@ import './layers/mitoHalo'
 import './layers/braincrest'
 import './layers/broodPouch'
 import './layers/imprintMark'
+import './layers/tail'
 
 interface Props {
   creature: Creature
   species: Species
   size?: number
-}
-
-// Map the color-trait phenotype to a body fill. Undefined / 'absent' means
-// the creature doesn't carry the color gene (chapters before Ch4) — fall
-// back to the neutral purple used since the start of the game.
-function bodyFillFor(colorPhenotype: string | undefined): string {
-  switch (colorPhenotype) {
-    case 'R':
-      return '#f87171'
-    case 'w':
-      return '#fef2f2'
-    case 'R/w':
-      return '#fbb6ce'
-    case 'yellow':
-      return '#facc15' // epistasis: cc masks color
-    default:
-      return '#c4b5fd'
-  }
 }
 
 // Map the polygenic size phenotype (a numeric string 0-6, or undefined) to a
@@ -50,7 +33,6 @@ function scaleFor(sizePhenotype: string | undefined): number {
 
 export function BlobRenderer({ creature, species, size = 120 }: Props) {
   const phenotype = computePhenotype(creature, species)
-  const bodyFill = bodyFillFor(phenotype.color)
   const scale = scaleFor(phenotype.size)
   return (
     <svg
@@ -61,8 +43,8 @@ export function BlobRenderer({ creature, species, size = 120 }: Props) {
     >
       {/* All blob content scaled around the body's center (50, 55). */}
       <g transform={`translate(50 55) scale(${scale}) translate(-50 -55)`}>
-        {/* Base blob body — fill can be replaced by the color trait. */}
-        <ellipse cx="50" cy="55" rx="35" ry="30" fill={bodyFill} stroke="#7c3aed" strokeWidth="1.5" />
+        {/* Base blob body — neutral purple, colour is no longer a genotype. */}
+        <ellipse cx="50" cy="55" rx="35" ry="30" fill="#c4b5fd" stroke="#7c3aed" strokeWidth="1.5" />
         {/* Eyes */}
         <circle cx="40" cy="50" r="3.5" fill="#1e293b" />
         <circle cx="60" cy="50" r="3.5" fill="#1e293b" />
@@ -71,11 +53,11 @@ export function BlobRenderer({ creature, species, size = 120 }: Props) {
         {/* Mouth */}
         <path d="M 42 66 Q 50 71 58 66" stroke="#1e293b" strokeWidth="1.8" fill="none" strokeLinecap="round" />
 
-        {/* Trait-driven layers (decoration only — body fill is handled above) */}
+        {/* Trait-driven layers */}
         {species.traits.map(t => {
-          if (t.id === 'color') return null // color drives bodyFill, no layer
           if (t.id === 'size') return null // size drives group scale
-          if (t.id === 'coatPigment') return null // masks color, no direct render
+          if (t.id === 'tailGrowth') return null // masks tail, no direct render
+          if (t.id === 'metabolism') return null // pleiotropic chemical, invisible
           const Layer = getLayer(t.id)
           return Layer ? <Layer key={t.id} phenotypeValue={phenotype[t.id]} /> : null
         })}

@@ -103,17 +103,17 @@ export const weaverTier1Missions: Mission[] = [
     clientCharacterId: 'prof-weaver',
     clientBrief:
       "Two pink parents. I want a fully red child — Rw × Rw should give me one in every four tries. Prove me right.",
-    targetPhenotype: { color: 'R' },
+    targetPhenotype: { tail: 'T' },
     visibleGeneIds: ['color'],
     labStarters: [
       {
         sex: 'F',
-        genotype: { color: ['R', 'w'], antennae: ['a', 'a'], spots: ['s', 's'] },
+        genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
         defaultName: 'Pink F-04',
       },
       {
         sex: 'M',
-        genotype: { color: ['R', 'w'], antennae: ['a', 'a'], spots: ['s', 's'] },
+        genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
         defaultName: 'Pink M-04',
       },
     ],
@@ -128,17 +128,17 @@ export const weaverTier1Missions: Mission[] = [
     clientCharacterId: 'prof-weaver',
     clientBrief:
       "Same pink pair — this time bring me a WHITE child. Same 1/4 odds but rarer to sight-check.",
-    targetPhenotype: { color: 'w' },
+    targetPhenotype: { tail: 't' },
     visibleGeneIds: ['color'],
     labStarters: [
       {
         sex: 'F',
-        genotype: { color: ['R', 'w'], antennae: ['a', 'a'], spots: ['s', 's'] },
+        genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
         defaultName: 'Pink F-05',
       },
       {
         sex: 'M',
-        genotype: { color: ['R', 'w'], antennae: ['a', 'a'], spots: ['s', 's'] },
+        genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
         defaultName: 'Pink M-05',
       },
     ],
@@ -159,19 +159,19 @@ export const weaverTier1Missions: Mission[] = [
     labStarters: [
       {
         sex: 'F',
-        genotype: { color: ['R', 'w'], antennae: ['a', 'a'], spots: ['s', 's'] },
+        genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
         defaultName: 'Pink F',
       },
       {
         sex: 'M',
-        genotype: { color: ['R', 'w'], antennae: ['a', 'a'], spots: ['s', 's'] },
+        genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
         defaultName: 'Pink M',
       },
     ],
     mode: 'predict-only',
     rewardPreviewText: 'a paper napkin with the answer inked in',
     predictPrompt: {
-      focusGeneId: 'color',
+      focusGeneId: 'tail',
       motherGenotype: 'Rw',
       fatherGenotype: 'Rw',
       question:

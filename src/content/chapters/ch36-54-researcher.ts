@@ -140,7 +140,7 @@ Methylated regions are silenced. In our engine, methylating a gene forces its ph
   nextChapterId: 'ch43',
   interactionMode: {
     kind: 'methylation',
-    focusGeneId: 'color',
+    focusGeneId: 'tail',
     motherGenotype: ['R', 'R'],
     fatherGenotype: ['w', 'w'],
   },
