@@ -2,13 +2,15 @@ import { registerLayer, type LayerComponent } from '../layerRegistry'
 
 // Pattern layer — codominant.
 // Phenotype values (from expressCodominant):
-//   'R'  → stripes only    — thin horizontal dark lines across the body
-//   'B'  → blotches only   — irregular rust-brown teardrop patches
+//   'R'  → stripes only    — thick alternating bands recolouring the body
+//   'B'  → blotches only   — cow-print splashes, some deliberately at the
+//                            body's silhouette edge so they read as intended
 //   'RB' → both simultaneously (heterozygote codominant expression)
 //
-// The blotch design deliberately uses non-circular teardrop paths in a
-// rust-brown tone so it never gets confused with the (circular purple) spots
-// layer — same body region, distinctly different shape + colour.
+// Both variants recolour the body itself rather than sitting on top of it, so
+// the pattern looks like the blob's skin rather than paint stuck to it.
+// Everything is clipped to the body ellipse via the same pattern-body-clip
+// path that BlobRenderer's body uses (cx 50, cy 55, rx 35, ry 30).
 export const PatternLayer: LayerComponent = ({ phenotypeValue }) => {
   if (!phenotypeValue) return null
   const showStripes = phenotypeValue.includes('R')
@@ -16,7 +18,6 @@ export const PatternLayer: LayerComponent = ({ phenotypeValue }) => {
   if (!showStripes && !showBlotches) return null
   return (
     <g>
-      {/* Clip stripes + blotches inside the body ellipse via mask */}
       <defs>
         <clipPath id="pattern-body-clip">
           <ellipse cx="50" cy="55" rx="35" ry="30" />
@@ -24,19 +25,39 @@ export const PatternLayer: LayerComponent = ({ phenotypeValue }) => {
       </defs>
       <g clipPath="url(#pattern-body-clip)">
         {showStripes && (
-          <g stroke="#3f3f46" strokeWidth="1.4" strokeLinecap="round" opacity="0.7">
-            <line x1="14" y1="42" x2="86" y2="42" />
-            <line x1="14" y1="52" x2="86" y2="52" />
-            <line x1="14" y1="62" x2="86" y2="62" />
-            <line x1="14" y1="72" x2="86" y2="72" />
+          // Thick horizontal bands that recolour whole slabs of the body.
+          // Rendered as filled rects (not strokes) so they read as skin, not
+          // pinstripes. The band colours alternate warm/cool violet so they
+          // sit naturally on the base body without looking painted on. The
+          // top and bottom bands extend past the body's y-range and get
+          // clipped by pattern-body-clip so they follow the curved silhouette.
+          <g>
+            <rect x="10" y="26" width="80" height="10" fill="#9d7cf5" />
+            <rect x="10" y="46" width="80" height="10" fill="#7c5be0" />
+            <rect x="10" y="66" width="80" height="10" fill="#9d7cf5" />
+            {/* Thin darker seam between bands so eye reads them as bands, not
+                one solid colour block. */}
+            <line x1="10" y1="36" x2="90" y2="36" stroke="#4c1d95" strokeWidth="0.6" opacity="0.4" />
+            <line x1="10" y1="46" x2="90" y2="46" stroke="#4c1d95" strokeWidth="0.6" opacity="0.4" />
+            <line x1="10" y1="56" x2="90" y2="56" stroke="#4c1d95" strokeWidth="0.6" opacity="0.4" />
+            <line x1="10" y1="66" x2="90" y2="66" stroke="#4c1d95" strokeWidth="0.6" opacity="0.4" />
+            <line x1="10" y1="76" x2="90" y2="76" stroke="#4c1d95" strokeWidth="0.6" opacity="0.4" />
           </g>
         )}
         {showBlotches && (
-          <g fill="#7c2d12" opacity="0.6">
-            {/* Irregular teardrop-shaped patches — organic, non-circular. */}
-            <path d="M 24 55 Q 34 46 38 58 Q 32 67 24 55 Z" />
-            <path d="M 62 40 Q 74 40 74 52 Q 66 54 62 40 Z" />
-            <path d="M 46 70 Q 60 68 62 78 Q 52 82 46 70 Z" />
+          // Cow-print blotches — irregular, mostly interior but two ride the
+          // silhouette edge on purpose so it looks like natural coat markings
+          // rather than stickers. Dark ink-blue that reads as pigment against
+          // the violet body.
+          <g fill="#1e293b" opacity="0.82">
+            {/* Edge-hugging left blob (spills off the top-left curve, gets clipped) */}
+            <path d="M 12 32 Q 22 26 32 34 Q 36 44 28 48 Q 18 46 12 42 Z" />
+            {/* Interior right-middle blob — the classic irregular splash */}
+            <path d="M 54 44 Q 68 42 72 52 Q 66 60 58 58 Q 50 54 54 44 Z" />
+            {/* Edge-hugging bottom-right blob (spills off the bottom curve) */}
+            <path d="M 60 68 Q 74 66 80 76 Q 70 84 58 80 Q 54 74 60 68 Z" />
+            {/* Small interior blob for asymmetric detail */}
+            <path d="M 32 62 Q 42 60 44 68 Q 38 74 30 70 Q 28 66 32 62 Z" />
           </g>
         )}
       </g>
