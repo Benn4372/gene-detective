@@ -684,12 +684,28 @@ export const useGameStore = create<GameState & GameActions>()(
     }),
     {
       name: 'gene-detective-save-v4',
-      version: 5,
+      version: 6,
       storage: createJSONStorage(() => localStorage),
-      // v4 → v5 added environmentTemperature and per-chapter interaction
-      // modes. All existing v4 fields survive unchanged; the merge below
-      // supplies defaults for any newly-added top-level keys.
-      migrate: (persisted) => persisted as GameState,
+      // v5 → v6 renamed allele symbols to remove cross-gene letter collisions
+      // (pattern T→R, tailGrowth G→P, lethalCoat Y→C, sizeA/B/C X/Y/Z→D/E/V).
+      // Any persisted creature carrying the OLD allele ids would crash the
+      // new phenotype path with "unknown allele". Migrate discards old-shape
+      // saves entirely — the player loses in-flight scratch but their chapter
+      // completions survive via the merge step below.
+      migrate: (persisted, fromVersion) => {
+        const p = (persisted ?? {}) as Partial<GameState>
+        if (fromVersion < 6) {
+          // Keep only durable progress fields; nuke everything creature-shaped.
+          return {
+            completedChapters: p.completedChapters ?? [],
+            unlockedTraits: p.unlockedTraits ?? [],
+            unlockedTools: p.unlockedTools ?? [],
+            unlockedMentors: p.unlockedMentors ?? [],
+            hintsShownForChapter: p.hintsShownForChapter ?? {},
+          } as Partial<GameState> as GameState
+        }
+        return p as GameState
+      },
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<GameState>
         return {
@@ -698,6 +714,13 @@ export const useGameStore = create<GameState & GameActions>()(
           environmentTemperature: p.environmentTemperature ?? 50,
           notebookGuess: p.notebookGuess ?? {},
           notebookNotes: p.notebookNotes ?? {},
+          creatures: p.creatures ?? {},
+          chapterCreatures: p.chapterCreatures ?? {},
+          crossHistory: p.crossHistory ?? [],
+          hypotheses: p.hypotheses ?? {},
+          validated: p.validated ?? {},
+          trophyBlobs: p.trophyBlobs ?? {},
+          completedMissions: p.completedMissions ?? [],
         }
       },
     },

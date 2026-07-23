@@ -62,7 +62,21 @@ export function PedigreeViewer({
 
   const width = layout.width + PAD * 2
   const height = layout.height + PAD * 2
-  const affectedSymbol = focusGene ? dominantSymbol(focusGene) : '?'
+  const recSymbol = focusGene ? recessiveSymbol(focusGene) : '?'
+
+  // Whether THIS node's tracked-gene phenotype is the recessive one — used
+  // to colour the card amber. Derived from the correctGenotypes map (which
+  // is the answer key), not from the node.affected boolean; that boolean
+  // is authored per-mission and doesn't cleanly map to "recessive shows".
+  const showsRecessive = (n: PedigreeNode): boolean => {
+    if (!focusGene) return false
+    const g = correctGenotypes?.[n.id]
+    if (!g) return false
+    // Hemizygous single-allele form (X-linked male): just check the symbol.
+    if (g.length === 1) return g === recSymbol
+    // Diploid: recessive phenotype only when BOTH copies are the recessive.
+    return [...g].every(sym => sym === recSymbol)
+  }
 
   return (
     <div className="rounded-lg bg-white border border-stone-300 p-4">
@@ -72,7 +86,7 @@ export function PedigreeViewer({
         </div>
         {focusGene && (
           <div className="text-[10px] uppercase tracking-wide text-stone-500">
-            {focusGene.name} · amber = shows the trait
+            {focusGene.name} · amber = shows recessive ({recSymbol})
           </div>
         )}
       </div>
@@ -152,7 +166,7 @@ export function PedigreeViewer({
                   'absolute flex flex-col items-center rounded-lg border-2 p-2 ' +
                   (isCorrect
                     ? 'bg-emerald-50 border-emerald-400'
-                    : node.affected
+                    : showsRecessive(node)
                       ? 'bg-amber-50 border-amber-300'
                       : 'bg-white border-stone-300')
                 }
@@ -204,15 +218,16 @@ export function PedigreeViewer({
         </div>
       </div>
       <div className="text-[10px] italic text-stone-500 mt-3">
-        Amber = shows the trait ({affectedSymbol}) · Green = your genotype matches ·
+        Amber = shows the recessive phenotype ({recSymbol}) ·
+        Green = your genotype matches ·
         Horizontal bar = marriage · Vertical drop = descent · Sibship beam joins siblings.
       </div>
     </div>
   )
 }
 
-function dominantSymbol(gene: Gene): string {
-  const sorted = [...gene.alleles].sort((a, b) => b.dominanceRank - a.dominanceRank)
+function recessiveSymbol(gene: Gene): string {
+  const sorted = [...gene.alleles].sort((a, b) => a.dominanceRank - b.dominanceRank)
   return sorted[0]?.symbol ?? '?'
 }
 

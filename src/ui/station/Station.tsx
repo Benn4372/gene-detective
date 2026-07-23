@@ -26,20 +26,45 @@ export function Station() {
 
   const availableMentors = mentors.filter(m => unlockedMentors.includes(m.id))
 
+  const resetProgress = () => {
+    // Purge everything and reload so the game re-hydrates from a fresh state.
+    // Two-step confirmation because it deletes every unlocked chapter, trophy,
+    // and in-flight breeding scratch — no undo.
+    if (!window.confirm('Reset ALL progress? This deletes every completed chapter, trophy, and current breeding state. Cannot be undone.')) return
+    if (!window.confirm('Really reset? Last chance.')) return
+    try {
+      localStorage.removeItem('gene-detective-save-v4')
+    } catch {
+      // localStorage may be blocked in some browser modes; nothing to do.
+    }
+    window.location.reload()
+  }
+
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <div className="text-xs uppercase tracking-widest text-stone-500">
-            The
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <div className="text-xs uppercase tracking-widest text-stone-500">
+              The
+            </div>
+            <h1 className="text-4xl font-bold text-stone-800 font-serif">
+              Blob Research Station
+            </h1>
+            <div className="text-sm text-stone-600 italic mt-1">
+              {completedChapters.length} of {chapters.length} chapters completed
+            </div>
           </div>
-          <h1 className="text-4xl font-bold text-stone-800 font-serif">
-            Blob Research Station
-          </h1>
-          <div className="text-sm text-stone-600 italic mt-1">
-            {completedChapters.length} of {chapters.length} chapters completed
-          </div>
+          {/* Reset progress — always visible so a player who hits a stuck save
+              can wipe it without touching devtools. Two-step confirm inside. */}
+          <button
+            onClick={resetProgress}
+            className="text-[11px] uppercase tracking-wide text-stone-400 hover:text-rose-600 border border-stone-300 hover:border-rose-300 rounded px-2 py-1 flex-shrink-0"
+            title="Erase all local progress and start over"
+          >
+            Reset progress
+          </button>
         </div>
 
         {/* Chalkboard (decorative) */}
