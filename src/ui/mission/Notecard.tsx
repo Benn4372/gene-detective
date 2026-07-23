@@ -4,6 +4,7 @@ import { blobSpecies } from '../../content'
 import { useGameStore } from '../../state/gameStore'
 import { BlobRenderer } from '../../renderer/BlobRenderer'
 import { computePhenotype } from '../../engine/phenotype'
+import { phenotypeLabel } from '../../renderer/phenotypeLabels'
 import { SexBadge } from '../atoms/SexBadge'
 import { Modal } from '../atoms/Modal'
 import { GenotypeInput } from '../atoms/GenotypeInput'
@@ -114,7 +115,10 @@ function NotecardEditor({
             const val = phenotype[traitId]
             return (
               <div key={gId} className="text-sm">
-                {gene.name}: <span className="font-mono">{val}</span>
+                {gene.name}:{' '}
+                <span className="font-mono">
+                  {val ? phenotypeLabel(traitId, val) : '—'}
+                </span>
               </div>
             )
           })}
