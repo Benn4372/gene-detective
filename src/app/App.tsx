@@ -2,7 +2,7 @@ import { useGameStore } from '../state/gameStore'
 import { Station } from '../ui/station/Station'
 import { ChapterRunner } from '../ui/chapter/ChapterRunner'
 import { MissionsBoard } from '../ui/mission/MissionsBoard'
-import { MissionRunnerPlaceholder } from '../ui/mission/MissionRunnerPlaceholder'
+import { MissionRunner } from '../ui/mission/MissionRunner'
 import { TrophyShelf } from '../ui/trophy/TrophyShelf'
 import { TraitCodexDrawer } from '../ui/codex/TraitCodexDrawer'
 
@@ -19,7 +19,7 @@ export default function App() {
       {activeScreen.kind === 'station' && <Station />}
       {activeScreen.kind === 'chapter' && currentChapterId && <ChapterRunner />}
       {activeScreen.kind === 'missions-board' && <MissionsBoard />}
-      {activeScreen.kind === 'mission' && <MissionRunnerPlaceholder />}
+      {activeScreen.kind === 'mission' && <MissionRunner />}
       {activeScreen.kind === 'trophy-shelf' && <TrophyShelf />}
       <TraitCodexDrawer />
     </>

@@ -1,8 +1,17 @@
+import { motion } from 'framer-motion'
 import { useGameStore, useTrophyBlobs } from '../../state/gameStore'
 import { chapters, blobSpecies } from '../../content'
 import { BlobRenderer } from '../../renderer/BlobRenderer'
 import { computePhenotype } from '../../engine/phenotype'
 import { SexBadge } from '../atoms/SexBadge'
+
+// Deterministic-per-blob idle jiggle offsets so each trophy has its own
+// personality instead of moving in lockstep.
+function jiggleDelay(id: string): number {
+  let h = 0
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  return (h % 1000) / 1000
+}
 
 export function TrophyShelf() {
   const setActiveScreen = useGameStore(s => s.setActiveScreen)
@@ -47,9 +56,13 @@ export function TrophyShelf() {
                 const blob = trophyId ? trophyBlobs.find(t => t.id === trophyId) : null
                 if (!blob) return null
                 const phen = computePhenotype(blob, blobSpecies)
+                const delay = jiggleDelay(blob.id) * 2
                 return (
-                  <div
+                  <motion.div
                     key={ch.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 22 }}
                     className="rounded-xl border-2 border-stone-300 bg-[color:var(--paper)] p-4 shadow-md flex flex-col items-center"
                   >
                     <div className="text-xs uppercase tracking-widest text-stone-500 mb-1">
@@ -58,7 +71,17 @@ export function TrophyShelf() {
                     <div className="text-sm font-semibold text-stone-800 font-serif mb-2 text-center">
                       {ch.title}
                     </div>
-                    <BlobRenderer creature={blob} species={blobSpecies} size={80} />
+                    <motion.div
+                      animate={{ y: [0, -4, 0, -2, 0] }}
+                      transition={{
+                        duration: 2.4,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                        delay,
+                      }}
+                    >
+                      <BlobRenderer creature={blob} species={blobSpecies} size={80} />
+                    </motion.div>
                     <div className="flex items-center gap-1 mt-2 text-xs">
                       <SexBadge sex={blob.sex} />
                       <span className="text-stone-700">
@@ -70,7 +93,7 @@ export function TrophyShelf() {
                         .map(([_t, v]) => v)
                         .join(' · ')}
                     </div>
-                  </div>
+                  </motion.div>
                 )
               })}
           </div>

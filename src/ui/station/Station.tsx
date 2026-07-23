@@ -115,10 +115,14 @@ export function Station() {
           />
         </div>
 
-        {/* Attribution — subtle */}
-        <div className="mt-8 text-xs text-stone-500 italic">
+        {/* Attribution — subtle, softly pulsing to imply flickering lamp */}
+        <motion.div
+          animate={{ opacity: [0.55, 0.75, 0.55] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+          className="mt-8 text-xs text-stone-500 italic"
+        >
           A quiet lamp burns on the desk. Somewhere, a specimen jar clinks.
-        </div>
+        </motion.div>
       </div>
     </div>
   )
