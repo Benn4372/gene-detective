@@ -86,27 +86,33 @@ export function Workbench({
     if (record && onCrossComplete) onCrossComplete(record)
   }
 
+  // When there's only one female and one male available, showing a full
+  // picker of blob cards is just repeating what the mystery-pair block
+  // already showed above. Hide it entirely in that case.
+  const showPicker = females.length > 1 || males.length > 1
+
   return (
     <div className="space-y-4">
-      {/* Parent picker */}
-      <div className="grid grid-cols-2 gap-4">
-        <PickerColumn
-          label="Mother ♀"
-          creatures={females}
-          selectedId={motherId}
-          onSelect={onSelectMother}
-          visibleGeneIds={visibleGeneIds}
-          hue="rose"
-        />
-        <PickerColumn
-          label="Father ♂"
-          creatures={males}
-          selectedId={fatherId}
-          onSelect={onSelectFather}
-          visibleGeneIds={visibleGeneIds}
-          hue="sky"
-        />
-      </div>
+      {showPicker && (
+        <div className="grid grid-cols-2 gap-4">
+          <PickerColumn
+            label="Mother ♀"
+            creatures={females}
+            selectedId={motherId}
+            onSelect={onSelectMother}
+            visibleGeneIds={visibleGeneIds}
+            hue="rose"
+          />
+          <PickerColumn
+            label="Father ♂"
+            creatures={males}
+            selectedId={fatherId}
+            onSelect={onSelectFather}
+            visibleGeneIds={visibleGeneIds}
+            hue="sky"
+          />
+        </div>
+      )}
 
       {/* Environmental slider — only shown for temp-sensitive traits. */}
       {hasEnvGene && (

@@ -7,80 +7,36 @@ import type { Creature } from '../../engine/types'
 // The very first screen the player sees. Not a menu — just a title, a hint
 // of atmosphere, and a single "Begin" button. Vanishes once markStationSeen()
 // is called and never comes back on this save.
+//
+// Landing blobs are deliberately simple: three variations of ONE trait
+// (antennae) — the same trait Chapter 1 teaches. Every other gene is left
+// absent so the render stays clean and matches what a first-time player
+// will see when they open the first chapter.
 export function LandingScreen() {
   const markSeen = useGameStore(s => s.markStationSeen)
 
-  // Three demo blobs with different phenotypes for atmosphere.
   const demoBlobs: Creature[] = [
     {
-      id: 'landing-1',
+      id: 'landing-aa',
       speciesId: blobSpecies.id,
       sex: 'F',
-      genotype: {
-        antennae: ['A', 'a'],
-        spots: ['S', 's'],
-        color: ['R', 'w'],
-        pattern: ['B', 'B'],
-        horns: ['M', 'n'],
-        eyeGlow: ['G', 'g'],
-        coatPigment: ['C', 'C'],
-        sizeA: ['X', 'x'],
-        sizeB: ['Y', 'y'],
-        sizeC: ['Z', 'z'],
-        fins: ['f', 'f'],
-        heatSpot: ['h', 'h'],
-        sparkle: ['k', 'k'],
-        lethalCoat: ['y', 'y'],
-        mitoHalo: ['q'],
-      },
+      genotype: { antennae: ['a', 'a'] },
       age: 1,
       scope: 'trophy',
     },
     {
-      id: 'landing-2',
+      id: 'landing-Aa',
+      speciesId: blobSpecies.id,
+      sex: 'F',
+      genotype: { antennae: ['A', 'a'] },
+      age: 1,
+      scope: 'trophy',
+    },
+    {
+      id: 'landing-AA',
       speciesId: blobSpecies.id,
       sex: 'M',
-      genotype: {
-        antennae: ['A', 'A'],
-        spots: ['S', 'S'],
-        color: ['R', 'R'],
-        pattern: ['T', 'T'],
-        horns: ['L', 'L'],
-        eyeGlow: ['G'],
-        coatPigment: ['C', 'C'],
-        sizeA: ['X', 'X'],
-        sizeB: ['Y', 'Y'],
-        sizeC: ['Z', 'Z'],
-        fins: ['F', 'f'],
-        heatSpot: ['h', 'h'],
-        sparkle: ['k', 'k'],
-        lethalCoat: ['y', 'y'],
-        mitoHalo: ['q'],
-      },
-      age: 1,
-      scope: 'trophy',
-    },
-    {
-      id: 'landing-3',
-      speciesId: blobSpecies.id,
-      sex: 'F',
-      genotype: {
-        antennae: ['a', 'a'],
-        spots: ['s', 's'],
-        color: ['w', 'w'],
-        pattern: ['B', 'B'],
-        horns: ['n', 'n'],
-        eyeGlow: ['g', 'g'],
-        coatPigment: ['C', 'C'],
-        sizeA: ['x', 'x'],
-        sizeB: ['y', 'y'],
-        sizeC: ['z', 'z'],
-        fins: ['f', 'f'],
-        heatSpot: ['h', 'h'],
-        sparkle: ['k', 'k'],
-        lethalCoat: ['y', 'y'],
-        mitoHalo: ['q'],
-      },
+      genotype: { antennae: ['A', 'A'] },
       age: 1,
       scope: 'trophy',
     },
@@ -106,7 +62,8 @@ export function LandingScreen() {
           You'll help figure out what.
         </div>
 
-        {/* Trio of demo blobs, gently bobbing */}
+        {/* Three demo blobs — same species, different antennae genotypes.
+            Deliberately calm so the intro isn't visually overwhelming. */}
         <div className="flex items-center justify-center gap-8 mb-10">
           {demoBlobs.map((b, i) => (
             <motion.div
@@ -119,7 +76,7 @@ export function LandingScreen() {
                 delay: i * 0.6,
               }}
             >
-              <BlobRenderer creature={b} species={blobSpecies} size={100} />
+              <BlobRenderer creature={b} species={blobSpecies} size={110} />
             </motion.div>
           ))}
         </div>

@@ -300,7 +300,24 @@ export const useGameStore = create<GameState & GameActions>()(
       },
 
       advanceChapterStage(next) {
-        set({ currentChapterStage: next, breedsSinceLastNotebookProgress: 0 })
+        const state = get()
+        // Solo stage validates at a stricter tier (medium/strict) and needs
+        // real breeding evidence. If the loose-tier "validated" flags from
+        // the guided stage carry over, the solo stage detects allSolved
+        // instantly and skips itself. Clear per-mystery-pair validation on
+        // any advance so each stage re-earns its own solved state.
+        const chapterId = state.currentChapterId
+        const pair = chapterId ? state.chapterCreatures[chapterId] : null
+        const nextValidated = { ...state.validated }
+        if (pair) {
+          if (pair.motherId) delete nextValidated[pair.motherId]
+          if (pair.fatherId) delete nextValidated[pair.fatherId]
+        }
+        set({
+          currentChapterStage: next,
+          breedsSinceLastNotebookProgress: 0,
+          validated: nextValidated,
+        })
       },
 
       completeChapter() {
