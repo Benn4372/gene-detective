@@ -667,6 +667,7 @@ function StageWithWorkbench({
   )
 
   const litter = 'litterSize' in stage ? stage.litterSize : 6
+  const soloHints = stageKey === 'solo' && 'hints' in stage ? stage.hints : []
 
   return (
     <div className="space-y-4">
@@ -674,6 +675,9 @@ function StageWithWorkbench({
         <div className="rounded-lg p-3 bg-amber-50 border border-amber-200 text-sm text-amber-900">
           {hintText}
         </div>
+      )}
+      {soloHints.length > 0 && (
+        <SoloHintsPanel hints={soloHints} />
       )}
 
       {/* Mystery pair — small cards */}
@@ -742,6 +746,50 @@ function StageWithWorkbench({
           onSolvedRef.current()
         }}
       />
+    </div>
+  )
+}
+
+// Progressive-reveal hint bank for solo stages. Starts collapsed with just
+// a "Need a hint?" button; each click reveals the next escalating hint
+// (reframe → point → suggest). No penalty — the game just doesn't offer
+// hints unless the player asks.
+function SoloHintsPanel({ hints }: { hints: import('../../content/types').Hint[] }) {
+  const [shown, setShown] = useState(0)
+  const canReveal = shown < hints.length
+  return (
+    <div className="rounded-lg bg-amber-50/40 border border-amber-200 p-3">
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-xs uppercase tracking-widest text-amber-700">
+          Hints
+        </div>
+        {canReveal ? (
+          <button
+            onClick={() => setShown(shown + 1)}
+            className="text-xs px-3 py-1 rounded bg-amber-500 text-white hover:bg-amber-600"
+          >
+            {shown === 0 ? '💡 Need a hint?' : '💡 Next hint'}
+          </button>
+        ) : (
+          <span className="text-xs italic text-amber-800">All hints shown</span>
+        )}
+      </div>
+      {shown === 0 ? (
+        <div className="text-xs italic text-amber-800/80">
+          Stuck? Reveal hints one at a time — no penalty.
+        </div>
+      ) : (
+        <ol className="space-y-1 text-sm text-amber-900 list-decimal list-inside">
+          {hints.slice(0, shown).map((h, i) => (
+            <li key={i}>
+              <span className="uppercase tracking-widest text-[9px] text-amber-700 mr-1">
+                {h.stage}
+              </span>
+              {h.text}
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   )
 }
