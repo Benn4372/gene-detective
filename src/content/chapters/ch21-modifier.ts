@@ -103,6 +103,10 @@ Today's puzzle: the father is a known **Gg** carrier. The mother is a mystery â€
       },
     },
 
+    // Solo is the RECIPROCAL test cross â€” this time the mother is the known
+    // Gg carrier and the FATHER is the mystery. Every offspring inherits her
+    // g half the time. If any tail-less children appear, father must also be
+    // carrying g; if none appear across a big litter, he's GG.
     solo: {
       starterCreatures: [
         {
@@ -113,7 +117,7 @@ Today's puzzle: the father is a known **Gg** carrier. The mother is a mystery â€
             tail: ['T', 'T'],
             tailGrowth: ['G', 'g'],
           },
-          defaultName: 'Mystery mother',
+          defaultName: 'Known-carrier mother',
         },
         {
           role: 'father',
@@ -123,7 +127,7 @@ Today's puzzle: the father is a known **Gg** carrier. The mother is a mystery â€
             tail: ['T', 'T'],
             tailGrowth: ['G', 'g'],
           },
-          defaultName: 'Known Gg father',
+          defaultName: 'Mystery father',
         },
       ],
       correctAssertions: [
@@ -136,15 +140,15 @@ Today's puzzle: the father is a known **Gg** carrier. The mother is a mystery â€
       hints: [
         {
           stage: 'reframe',
-          text: 'A single tail-less offspring proves the mother is Gg â€” that offspring got a g from BOTH parents. No tail-less children across a big litter is your other answer.',
+          text: 'This time the mother is the known Gg â€” the father is the unknown. If no tail-less offspring appear across many litters, father must be GG.',
         },
         {
           stage: 'point',
-          text: "Watch the litter for any offspring without a tail. Cross a few times to be confident.",
+          text: "Tail-less offspring (gg) mean father carries g AND mother passed her g on the same gamete. Watch the tally.",
         },
         {
           stage: 'suggest',
-          text: 'If tail-less offspring appear, enter Gg for the mother. The father is stated as Gg in the brief.',
+          text: 'If tail-less offspring appear, enter Gg for the father. The mother is stated as Gg in the brief.',
         },
       ],
     },
