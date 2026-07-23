@@ -26,8 +26,8 @@ Both leave gene content intact — the carrier is usually fine. But offspring in
     },
     guided: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, tail: ['T', 't'] }, defaultName: 'Medium-tail ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, tail: ['T', 't'] }, defaultName: 'Medium-tail ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, tail: ['T', 't'] }, defaultName: 'Medium-tail mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, tail: ['T', 't'] }, defaultName: 'Medium-tail father' },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'tail', correctGenotype: 'Tt' },
@@ -38,8 +38,8 @@ Both leave gene content intact — the carrier is usually fine. But offspring in
     },
     solo: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, tail: ['T', 't'] }, defaultName: 'Medium-tail ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, tail: ['T', 't'] }, defaultName: 'Medium-tail ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, tail: ['T', 't'] }, defaultName: 'Medium-tail mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, tail: ['T', 't'] }, defaultName: 'Medium-tail father' },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'tail', correctGenotype: 'Tt' },

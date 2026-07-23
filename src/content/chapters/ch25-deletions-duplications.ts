@@ -26,8 +26,8 @@ Blob genome examples (schematic in the karyotype viewer above): a deletion on ch
     },
     guided: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, spots: ['S', 's'] }, defaultName: 'Ss ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, spots: ['s', 's'] }, defaultName: 'ss ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, spots: ['S', 's'] }, defaultName: 'Spotted mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, spots: ['s', 's'] }, defaultName: 'Plain father' },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'spots', correctGenotype: 'Ss' },
@@ -38,8 +38,8 @@ Blob genome examples (schematic in the karyotype viewer above): a deletion on ch
     },
     solo: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, spots: ['S', 's'] }, defaultName: 'Ss ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, spots: ['s', 's'] }, defaultName: 'ss ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, spots: ['S', 's'] }, defaultName: 'Spotted mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, spots: ['s', 's'] }, defaultName: 'Plain father' },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'spots', correctGenotype: 'Ss' },

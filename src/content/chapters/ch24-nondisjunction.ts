@@ -30,8 +30,8 @@ Most aneuploidies are lethal in embryo. A few survive with distinctive phenotype
     },
     guided: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, antennae: ['A', 'a'] }, defaultName: 'Aa ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, antennae: ['A', 'a'] }, defaultName: 'Aa ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, antennae: ['A', 'a'] }, defaultName: 'Test-cross mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, antennae: ['A', 'a'] }, defaultName: 'Test-cross father' },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'antennae', correctGenotype: 'Aa' },
@@ -42,8 +42,8 @@ Most aneuploidies are lethal in embryo. A few survive with distinctive phenotype
     },
     solo: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, antennae: ['A', 'a'] }, defaultName: 'Aa ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, antennae: ['A', 'a'] }, defaultName: 'Aa ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, antennae: ['A', 'a'] }, defaultName: 'Test-cross mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, antennae: ['A', 'a'] }, defaultName: 'Test-cross father' },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'antennae', correctGenotype: 'Aa' },

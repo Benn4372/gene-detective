@@ -35,12 +35,12 @@ Cross Ww × Ww: expect crests in half of male offspring, and in only the WW quar
         {
           role: 'mother', sex: 'F',
           genotype: { ...NEUTRAL_FEMALE, braincrest: ['W', 'w'] },
-          defaultName: 'Crest-carrier ♀',
+          defaultName: 'Crest-carrier mother',
         },
         {
           role: 'father', sex: 'M',
           genotype: { ...NEUTRAL_MALE, braincrest: ['W', 'w'] },
-          defaultName: 'Crested ♂',
+          defaultName: 'Crested father',
         },
       ],
       correctAssertions: [

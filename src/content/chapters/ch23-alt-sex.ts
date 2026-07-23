@@ -31,8 +31,8 @@ Real biology has more than one answer for the same problem.`,
     },
     guided: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, antennae: ['A', 'a'] }, defaultName: 'Blob ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, antennae: ['a', 'a'] }, defaultName: 'Blob ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, antennae: ['A', 'a'] }, defaultName: 'Blob mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, antennae: ['a', 'a'] }, defaultName: 'Blob father' },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'antennae', correctGenotype: 'Aa' },

@@ -27,8 +27,8 @@ Not modeled directly in blob crosses, but you'll see the concept in the pedigree
     },
     guided: {
       starterCreatures: [
-        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, sparkle: ['k', 'k'] }, defaultName: 'Stable ♀' },
-        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, sparkle: ['k', 'k'] }, defaultName: 'Stable ♂' },
+        { role: 'mother', sex: 'F', genotype: { ...NEUTRAL_FEMALE, sparkle: ['k', 'k'] }, defaultName: 'Stable mother' },
+        { role: 'father', sex: 'M', genotype: { ...NEUTRAL_MALE, sparkle: ['k', 'k'] }, defaultName: 'Stable father' },
       ],
       correctAssertions: [
         { creatureRole: 'mother', geneId: 'sparkle', correctGenotype: 'kk' },
