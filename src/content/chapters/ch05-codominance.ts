@@ -64,7 +64,7 @@ Cross two heterozygous TB parents and you'll still get 1:2:1 genotypes — but n
             spots: ['s', 's'],
             tail: ['t', 't'],
           },
-          defaultName: 'TB Blob-α',
+          defaultName: 'Patterned α',
         },
         {
           role: 'father',
@@ -75,7 +75,7 @@ Cross two heterozygous TB parents and you'll still get 1:2:1 genotypes — but n
             spots: ['s', 's'],
             tail: ['t', 't'],
           },
-          defaultName: 'TB Blob-β',
+          defaultName: 'Patterned β',
         },
       ],
       correctAssertions: [
@@ -99,49 +99,53 @@ Cross two heterozygous TB parents and you'll still get 1:2:1 genotypes — but n
       },
     },
 
+    // Solo poses the classic codominant F1: pure-striped × pure-blotched
+    // parents produce all-TB (both patterns) offspring. Different puzzle
+    // from guided's TB × TB (1:2:1) — teaches that codominant heterozygotes
+    // appear from either heterozygous pairings OR a single homozygous cross.
     solo: {
       starterCreatures: [
         {
           role: 'mother',
           sex: 'F',
           genotype: {
-            pattern: ['T', 'B'],
+            pattern: ['T', 'T'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             tail: ['t', 't'],
           },
-          defaultName: 'TB Blob-α',
+          defaultName: 'Striped-only mother',
         },
         {
           role: 'father',
           sex: 'M',
           genotype: {
-            pattern: ['T', 'B'],
+            pattern: ['B', 'B'],
             antennae: ['a', 'a'],
             spots: ['s', 's'],
             tail: ['t', 't'],
           },
-          defaultName: 'TB Blob-β',
+          defaultName: 'Blotched-only father',
         },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'pattern', correctGenotype: 'TB' },
-        { creatureRole: 'father', geneId: 'pattern', correctGenotype: 'TB' },
+        { creatureRole: 'mother', geneId: 'pattern', correctGenotype: 'TT' },
+        { creatureRole: 'father', geneId: 'pattern', correctGenotype: 'BB' },
       ],
       litterSize: 6,
       validationTier: 'medium',
       hints: [
         {
           stage: 'reframe',
-          text: 'Three possible phenotypes: stripes only, blotches only, or both. Which parent phenotype must both mother and father share?',
+          text: 'This time the parents look pure — one stripes-only, one blotches-only. Under codominance each pure phenotype maps to exactly one genotype.',
         },
         {
           stage: 'point',
-          text: 'Cross them; watch for three visually distinct offspring types. Roughly 1:2:1 confirms TB × TB.',
+          text: 'Every offspring inherits T from mother, B from father — all offspring are TB, showing BOTH patterns.',
         },
         {
           stage: 'suggest',
-          text: "Enter TB for both parents — codominant heterozygous, showing both stripes and blotches simultaneously.",
+          text: "Enter TT for the striped mother, BB for the blotched father.",
         },
       ],
     },
