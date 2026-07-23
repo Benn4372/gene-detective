@@ -6,13 +6,10 @@ import { cross as engineCross } from '../engine/cross'
 import { makeRandom } from '../engine/random'
 import { computePhenotype } from '../engine/phenotype'
 import { validateHypothesis, canonicalizeHypothesis } from '../engine/validators'
-import {
-  blobSpecies,
-  lessonById,
-  lessons,
-  orderTemplateById,
-} from '../content'
-import type { CrossRecord, DifficultyTier, GameState } from './types'
+import { blobSpecies, chapterById, chapters, missionById } from '../content'
+import type { ChapterStage, CrossRecord, DifficultyTier, GameState } from './types'
+
+// -- id helpers ------------------------------------------------------------
 
 let idCounter = 0
 function nextId(prefix: string): string {
@@ -20,157 +17,177 @@ function nextId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${idCounter}`
 }
 
-function initialState(): GameState {
-  return {
-    coins: 0,
-    difficultyTier: 'curious',
-    unlockedLessons: ['lesson-1'],
-    completedLessons: [],
-    currentLessonId: null,
-    unlockedTraits: ['antennae'],
-    unlockedCharacters: [],
-    hintsShownForLesson: {},
-    breedsSinceLastNotebookProgress: 0,
-    creatures: {},
-    stableCap: 25,
-    hypotheses: {},
-    validated: {},
-    crossHistory: [],
-    solvedGenes: [],
-    activeOrders: [],
-    completedOrders: [],
-    lessonCreatures: {},
-    notes: {},
-    activeLabOrderId: null,
-    justCompletedLessonId: null,
-    activeModal: null,
-    hasAutoOpened: false,
-    keptIds: [],
-  }
-}
-
-interface GameActions {
-  startLesson(lessonId: string): void
-  setCurrentLesson(lessonId: string | null): void
-  clearJustCompleted(): void
-  breed(
-    motherId: string,
-    fatherId: string,
-    litterSize?: number,
-  ): CrossRecord | null
-  setHypothesis(creatureId: string, geneId: string, text: string): void
-  setNote(creatureId: string, text: string): void
-  showNextHint(lessonId: string): void
-  openLab(orderTemplateId: string): void
-  closeLab(): void
-  fulfillOrder(orderTemplateId: string, creatureId: string): boolean
-  releaseCreature(creatureId: string): void
-  renameCreature(creatureId: string, name: string): void
-  setDifficultyTier(tier: DifficultyTier): void
-  setActiveModal(modal: 'orders' | 'breed' | 'shop' | null): void
-  markAutoOpened(): void
-  toggleKept(creatureId: string): void
-  reset(): void
-}
-
 // -- scope helpers ---------------------------------------------------------
 
-function lessonScope(lessonId: string): CreatureScope {
-  return { kind: 'lesson', lessonId }
+function chapterScope(chapterId: string, stage: 'guided' | 'solo' | 'master'): CreatureScope {
+  return { kind: 'chapter', chapterId, stage }
 }
-function labScope(orderId: string): CreatureScope {
-  return { kind: 'lab', orderId }
+function missionScope(missionId: string): CreatureScope {
+  return { kind: 'mission', missionId }
 }
-function isLessonScope(scope: CreatureScope, lessonId?: string): boolean {
+function isChapterScope(scope: CreatureScope, chapterId?: string): boolean {
   if (typeof scope === 'string') return false
-  if (scope.kind !== 'lesson') return false
-  return lessonId ? scope.lessonId === lessonId : true
+  if (scope.kind !== 'chapter') return false
+  return chapterId ? scope.chapterId === chapterId : true
 }
-function isLabScope(scope: CreatureScope, orderId?: string): boolean {
+function isMissionScope(scope: CreatureScope, missionId?: string): boolean {
   if (typeof scope === 'string') return false
-  if (scope.kind !== 'lab') return false
-  return orderId ? scope.orderId === orderId : true
+  if (scope.kind !== 'mission') return false
+  return missionId ? scope.missionId === missionId : true
 }
-function isVillageScope(scope: CreatureScope): boolean {
-  return scope === 'village'
+function isTrophyScope(scope: CreatureScope): boolean {
+  return scope === 'trophy'
 }
 
-// Determine which lessons should be unlocked given the current completion +
-// gate-order state. A lesson unlocks when the PREVIOUS lesson is completed
-// AND all of that previous lesson's gate orders are done. Lesson 1 is always
-// unlocked.
-function recomputeUnlockedLessons(
-  completedLessons: string[],
-  completedOrders: string[],
-): string[] {
-  const sorted = [...lessons].sort((a, b) => a.order - b.order)
-  const unlocked = new Set<string>([sorted[0]!.id])
-  for (let i = 0; i < sorted.length - 1; i++) {
-    const cur = sorted[i]!
-    const next = sorted[i + 1]!
-    const curDone = completedLessons.includes(cur.id)
-    const gatesDone = cur.gateOrderIds.every(id => completedOrders.includes(id))
-    if (curDone && gatesDone) unlocked.add(next.id)
+// -- initial state ---------------------------------------------------------
+
+function initialState(): GameState {
+  const firstChapterId = chapters[0]?.id ?? 'ch01'
+  return {
+    difficultyTier: 'curious',
+    unlockedChapters: [firstChapterId],
+    completedChapters: [],
+    currentChapterId: null,
+    currentChapterStage: 'show',
+    justCompletedChapterId: null,
+    hintsShownForChapter: {},
+    breedsSinceLastNotebookProgress: 0,
+    unlockedTraits: [],
+    unlockedAlleles: [],
+    unlockedTools: ['punnett-2x2'],
+    unlockedMentors: ['dr-mendel'],
+    activeMissionId: null,
+    completedMissions: [],
+    creatures: {},
+    chapterCreatures: {},
+    missionCreatures: {},
+    trophyBlobs: {},
+    hypotheses: {},
+    validated: {},
+    notes: {},
+    crossHistory: [],
+    solvedGenes: [],
+    activeScreen: { kind: 'station' },
+    codexOpen: false,
+    hasSeenStation: false,
   }
-  return [...unlocked]
 }
+
+// -- actions surface -------------------------------------------------------
+
+interface GameActions {
+  reset(): void
+  setDifficultyTier(tier: DifficultyTier): void
+  // Notebook
+  setHypothesis(creatureId: string, geneId: string, text: string): void
+  setNote(creatureId: string, text: string): void
+  showNextHint(chapterId: string): void
+  // Breeding — used by Workbench in any context.
+  breed(motherId: string, fatherId: string, litterSize?: number): CrossRecord | null
+  // Chapter flow
+  startChapter(chapterId: string): void
+  advanceChapterStage(next: ChapterStage): void
+  completeChapter(): void
+  exitChapter(): void
+  clearJustCompleted(): void
+  awardTrophyBlob(chapterId: string, creatureId: string): void
+  // Mission flow
+  openMission(missionId: string): void
+  closeMission(): void
+  submitMissionBlob(missionId: string, creatureId: string): boolean
+  // UI
+  setActiveScreen(next: GameState['activeScreen']): void
+  toggleCodex(): void
+  markStationSeen(): void
+}
+
+// -- store -----------------------------------------------------------------
 
 export const useGameStore = create<GameState & GameActions>()(
   persist(
     (set, get) => ({
       ...initialState(),
 
-      startLesson(lessonId) {
-        const lesson = lessonById[lessonId]
-        if (!lesson) return
-        const existing = get().lessonCreatures[lessonId]
-        if (existing) {
-          set({ currentLessonId: lessonId, breedsSinceLastNotebookProgress: 0 })
-          return
-        }
-        const newCreatures: Record<string, Creature> = {}
-        let motherId = ''
-        let fatherId = ''
-        for (const starter of lesson.starterCreatures) {
-          const id = nextId('c')
-          const creature: Creature = {
-            id,
-            speciesId: blobSpecies.id,
-            ownerName: starter.defaultName,
-            sex: starter.sex,
-            genotype: starter.genotype,
-            age: 1,
-            scope: lessonScope(lessonId),
+      reset() {
+        set(initialState())
+      },
+
+      setDifficultyTier(tier) {
+        set({ difficultyTier: tier })
+      },
+
+      // -- Notebook ------------------------------------------------------
+
+      setHypothesis(creatureId, geneId, text) {
+        const state = get()
+        const creature = state.creatures[creatureId]
+        if (!creature) return
+
+        const geneIds = geneId
+          ? [geneId]
+          : Object.keys(state.hypotheses[creatureId] ?? {})
+
+        const hypotheses = { ...state.hypotheses }
+        const validated = { ...state.validated }
+        let progressed = false
+        let anyValidated = false
+
+        for (const g of geneIds) {
+          const raw = geneId ? text : (state.hypotheses[creatureId]?.[g] ?? '')
+          const canonical = canonicalizeHypothesis(blobSpecies, g, raw)
+          if (!hypotheses[creatureId]) hypotheses[creatureId] = {}
+          hypotheses[creatureId] = { ...hypotheses[creatureId], [g]: canonical }
+
+          const correct = findCorrectGenotype(state, creatureId, g)
+          const wasValidated = state.validated[creatureId]?.[g] ?? false
+          let isValid = false
+          if (correct) {
+            isValid = validateHypothesis({
+              creature,
+              geneId: g,
+              hypothesizedGenotype: canonical,
+              correctGenotype: correct,
+              species: blobSpecies,
+              creatures: state.creatures,
+              crossHistory: state.crossHistory,
+              tier: findValidationTier(state) ?? 'medium',
+            })
           }
-          newCreatures[id] = creature
-          if (starter.role === 'mother') motherId = id
-          if (starter.role === 'father') fatherId = id
+          if (!validated[creatureId]) validated[creatureId] = {}
+          validated[creatureId] = { ...validated[creatureId], [g]: isValid }
+          if (isValid) anyValidated = true
+          if (isValid && !wasValidated) progressed = true
         }
-        set(state => ({
-          creatures: { ...state.creatures, ...newCreatures },
-          lessonCreatures: {
-            ...state.lessonCreatures,
-            [lessonId]: { motherId, fatherId },
+
+        const solved = new Set(state.solvedGenes)
+        if (anyValidated) {
+          for (const g of geneIds) if (validated[creatureId]?.[g]) solved.add(g)
+        }
+
+        set({
+          hypotheses,
+          validated,
+          solvedGenes: [...solved],
+          breedsSinceLastNotebookProgress: progressed
+            ? 0
+            : state.breedsSinceLastNotebookProgress,
+        })
+      },
+
+      setNote(creatureId, text) {
+        set(s => ({ notes: { ...s.notes, [creatureId]: text } }))
+      },
+
+      showNextHint(chapterId) {
+        set(s => ({
+          hintsShownForChapter: {
+            ...s.hintsShownForChapter,
+            [chapterId]: (s.hintsShownForChapter[chapterId] ?? 0) + 1,
           },
-          currentLessonId: lessonId,
-          breedsSinceLastNotebookProgress: 0,
         }))
       },
 
-      setCurrentLesson(lessonId) {
-        const prev = get().currentLessonId
-        if (prev && prev !== lessonId) {
-          // Leaving a lesson — run cleanup (promotes starters if this lesson
-          // awardsStarterBlobs; discards everything otherwise, but only if the
-          // lesson was completed).
-          finishLessonInternal(prev, set, get)
-        }
-        set({ currentLessonId: lessonId, breedsSinceLastNotebookProgress: 0 })
-      },
-
-      clearJustCompleted() {
-        set({ justCompletedLessonId: null })
-      },
+      // -- Breeding ------------------------------------------------------
 
       breed(motherId, fatherId, litterSize) {
         const state = get()
@@ -179,31 +196,13 @@ export const useGameStore = create<GameState & GameActions>()(
         if (!mom || !dad) return null
         if (mom.sex === dad.sex) return null
 
-        // Determine offspring scope. If either parent is non-village-scoped,
-        // offspring inherit that scope. Village breeding produces village-scoped
-        // offspring.
-        const nonVillageParentScope =
-          !isVillageScope(mom.scope) ? mom.scope
-          : !isVillageScope(dad.scope) ? dad.scope
-          : null
-        const offspringScope: CreatureScope = nonVillageParentScope ?? 'village'
+        // Offspring inherit their parents' scope (both parents will always
+        // share a scope in a valid session).
+        const offspringScope: CreatureScope = isTrophyScope(mom.scope)
+          ? 'trophy' // shouldn't happen — trophies don't breed — but harmless
+          : mom.scope
 
-        // Default litter size depends on context.
-        const lesson = state.currentLessonId ? lessonById[state.currentLessonId] : null
-        let requestedLitter = litterSize
-        if (requestedLitter === undefined) {
-          if (isLessonScope(offspringScope)) requestedLitter = lesson?.litterSize ?? 6
-          else if (isLabScope(offspringScope)) requestedLitter = 1
-          else requestedLitter = 1 // village breeding is one at a time
-        }
-
-        // Only village creatures count against the stable cap.
-        if (offspringScope === 'village') {
-          const villageSize = Object.values(state.creatures).filter(
-            c => isVillageScope(c.scope),
-          ).length
-          if (villageSize + requestedLitter > state.stableCap) return null
-        }
+        const requestedLitter = litterSize ?? defaultLitterSize(state)
 
         const rng = makeRandom()
         const offspring = engineCross(mom, dad, blobSpecies, rng, {
@@ -237,150 +236,227 @@ export const useGameStore = create<GameState & GameActions>()(
           breedsSinceLastNotebookProgress:
             s.breedsSinceLastNotebookProgress + 1,
         }))
-        // Re-validate any pending hypotheses on the parents — new evidence may
-        // just have made a previously-insufficient hypothesis pass.
+        // Re-validate hypotheses on the parents — new evidence may finally
+        // distinguish AA from Aa.
         get().setHypothesis(motherId, '', '')
         get().setHypothesis(fatherId, '', '')
         return record
       },
 
-      setHypothesis(creatureId, geneId, text) {
-        const state = get()
-        const creature = state.creatures[creatureId]
-        if (!creature) return
+      // -- Chapter flow --------------------------------------------------
 
-        const geneIds = geneId ? [geneId] : Object.keys(state.hypotheses[creatureId] ?? {})
-
-        const hypotheses = { ...state.hypotheses }
-        const validated = { ...state.validated }
-        let progressed = false
-        let anyValidated = false
-
-        for (const g of geneIds) {
-          const raw = geneId ? text : (state.hypotheses[creatureId]?.[g] ?? '')
-          const canonical = canonicalizeHypothesis(blobSpecies, g, raw)
-          if (!hypotheses[creatureId]) hypotheses[creatureId] = {}
-          hypotheses[creatureId] = { ...hypotheses[creatureId], [g]: canonical }
-
-          const correct = findCorrectGenotype(state, creatureId, g)
-          const wasValidated = state.validated[creatureId]?.[g] ?? false
-          let isValid = false
-          if (correct) {
-            isValid = validateHypothesis({
-              creature,
-              geneId: g,
-              hypothesizedGenotype: canonical,
-              correctGenotype: correct,
-              species: blobSpecies,
-              creatures: state.creatures,
-              crossHistory: state.crossHistory,
-              tier: (state.currentLessonId
-                ? lessonById[state.currentLessonId]?.validationTier
-                : 'medium') ?? 'medium',
-            })
+      startChapter(chapterId) {
+        const chapter = chapterById[chapterId]
+        if (!chapter) return
+        const existing = get().chapterCreatures[chapterId]
+        // If the player already has this chapter set up, resume where they were.
+        if (existing) {
+          set({
+            currentChapterId: chapterId,
+            currentChapterStage: 'show',
+            breedsSinceLastNotebookProgress: 0,
+            activeScreen: { kind: 'chapter', chapterId },
+          })
+          return
+        }
+        // Otherwise create starters for the guided stage (the first stage that
+        // needs real creatures). Solo + master stages reuse the same starters
+        // unless we later decide otherwise.
+        const starters = chapter.stages.guided.starterCreatures
+        const newCreatures: Record<string, Creature> = {}
+        let motherId = ''
+        let fatherId = ''
+        for (const starter of starters) {
+          const id = nextId('c')
+          newCreatures[id] = {
+            id,
+            speciesId: blobSpecies.id,
+            ownerName: starter.defaultName,
+            sex: starter.sex,
+            genotype: starter.genotype,
+            age: 1,
+            scope: chapterScope(chapterId, 'guided'),
           }
-          if (!validated[creatureId]) validated[creatureId] = {}
-          validated[creatureId] = { ...validated[creatureId], [g]: isValid }
-          if (isValid) anyValidated = true
-          if (isValid && !wasValidated) progressed = true
+          if (starter.role === 'mother') motherId = id
+          if (starter.role === 'father') fatherId = id
         }
-
-        const solved = new Set(state.solvedGenes)
-        if (anyValidated) {
-          for (const g of geneIds) if (validated[creatureId]?.[g]) solved.add(g)
-        }
-
-        set({
-          hypotheses,
-          validated,
-          solvedGenes: [...solved],
-          breedsSinceLastNotebookProgress: progressed
-            ? 0
-            : state.breedsSinceLastNotebookProgress,
-        })
-
-        if (state.currentLessonId) {
-          const lesson = lessonById[state.currentLessonId]
-          if (
-            lesson &&
-            lesson.correctAssertions.every(a => {
-              const assignments = get().lessonCreatures[lesson.id]
-              if (!assignments) return false
-              const cId = assignments[a.creatureRole === 'mother' ? 'motherId' : 'fatherId']
-              return get().validated[cId]?.[a.geneId]
-            })
-          ) {
-            completeCurrentLessonInternal(set, get)
-          }
-        }
-      },
-
-      setNote(creatureId, text) {
-        set(s => ({ notes: { ...s.notes, [creatureId]: text } }))
-      },
-
-      showNextHint(lessonId) {
-        set(s => ({
-          hintsShownForLesson: {
-            ...s.hintsShownForLesson,
-            [lessonId]: (s.hintsShownForLesson[lessonId] ?? 0) + 1,
+        set(state => ({
+          creatures: { ...state.creatures, ...newCreatures },
+          chapterCreatures: {
+            ...state.chapterCreatures,
+            [chapterId]: { motherId, fatherId },
           },
+          currentChapterId: chapterId,
+          currentChapterStage: 'show',
+          breedsSinceLastNotebookProgress: 0,
+          activeScreen: { kind: 'chapter', chapterId },
         }))
       },
 
-      openLab(orderTemplateId) {
-        const template = orderTemplateById[orderTemplateId]
-        if (!template) return
+      advanceChapterStage(next) {
+        set({ currentChapterStage: next, breedsSinceLastNotebookProgress: 0 })
+      },
+
+      completeChapter() {
         const state = get()
-        // Reuse existing lab creatures for this order if they already exist.
-        const hasExisting = Object.values(state.creatures).some(c =>
-          isLabScope(c.scope, orderTemplateId),
-        )
-        if (!hasExisting) {
-          const newCreatures: Record<string, Creature> = {}
-          for (const starter of template.labStarters) {
-            const id = nextId('c')
-            newCreatures[id] = {
-              id,
-              speciesId: blobSpecies.id,
-              ownerName: starter.defaultName,
-              sex: starter.sex,
-              genotype: starter.genotype,
-              age: 1,
-              scope: labScope(orderTemplateId),
-            }
-          }
-          set(s => ({
-            creatures: { ...s.creatures, ...newCreatures },
-            activeLabOrderId: orderTemplateId,
-          }))
-        } else {
-          set({ activeLabOrderId: orderTemplateId })
+        const chapterId = state.currentChapterId
+        if (!chapterId) return
+        if (state.completedChapters.includes(chapterId)) return
+        const chapter = chapterById[chapterId]
+        if (!chapter) return
+
+        const nextCompleted = [...state.completedChapters, chapterId]
+        const newUnlocked = new Set(state.unlockedChapters)
+        if (chapter.unlocks.nextChapterId) newUnlocked.add(chapter.unlocks.nextChapterId)
+
+        const newTraits = Array.from(new Set([
+          ...state.unlockedTraits,
+          ...(chapter.unlocks.traits ?? []),
+        ]))
+        const newAlleles = Array.from(new Set([
+          ...state.unlockedAlleles,
+          ...(chapter.unlocks.alleles ?? []),
+        ]))
+        const newTools = Array.from(new Set([
+          ...state.unlockedTools,
+          ...(chapter.unlocks.tools ?? []),
+        ]))
+        const newMentors = Array.from(new Set([
+          ...state.unlockedMentors,
+          ...(chapter.unlocks.mentors ?? []),
+        ]))
+
+        set({
+          completedChapters: nextCompleted,
+          unlockedChapters: [...newUnlocked],
+          unlockedTraits: newTraits,
+          unlockedAlleles: newAlleles,
+          unlockedTools: newTools,
+          unlockedMentors: newMentors,
+          justCompletedChapterId: chapterId,
+        })
+      },
+
+      exitChapter() {
+        const state = get()
+        const chapterId = state.currentChapterId
+        if (!chapterId) {
+          set({ activeScreen: { kind: 'station' } })
+          return
         }
+        const wasCompleted = state.completedChapters.includes(chapterId)
+        if (!wasCompleted) {
+          // Player leaving mid-chapter — keep the pool intact so they can resume.
+          set({
+            currentChapterId: null,
+            activeScreen: { kind: 'station' },
+          })
+          return
+        }
+        // Chapter completed — discard the scratch pool.
+        const nextCreatures: Record<string, Creature> = {}
+        for (const [id, c] of Object.entries(state.creatures)) {
+          if (isChapterScope(c.scope, chapterId)) {
+            // If this creature is the chosen trophy, keep it as scope 'trophy'.
+            const isTrophy = state.trophyBlobs[chapterId] === id
+            if (isTrophy) nextCreatures[id] = { ...c, scope: 'trophy' }
+          } else {
+            nextCreatures[id] = c
+          }
+        }
+        const nextHistory = state.crossHistory.filter(
+          r => nextCreatures[r.motherId] && nextCreatures[r.fatherId],
+        )
+        const { [chapterId]: _drop, ...remainingChapterCreatures } =
+          state.chapterCreatures
+        set({
+          creatures: nextCreatures,
+          crossHistory: nextHistory,
+          chapterCreatures: remainingChapterCreatures,
+          currentChapterId: null,
+          activeScreen: { kind: 'station' },
+        })
       },
 
-      closeLab() {
-        set({ activeLabOrderId: null })
+      clearJustCompleted() {
+        set({ justCompletedChapterId: null })
       },
 
-      fulfillOrder(orderTemplateId, creatureId) {
-        const template = orderTemplateById[orderTemplateId]
+      awardTrophyBlob(chapterId, creatureId) {
+        set(s => ({ trophyBlobs: { ...s.trophyBlobs, [chapterId]: creatureId } }))
+      },
+
+      // -- Mission flow --------------------------------------------------
+
+      openMission(missionId) {
+        const mission = missionById[missionId]
+        if (!mission) return
+        const state = get()
+        const existing = state.missionCreatures[missionId]
+        if (existing) {
+          set({
+            activeMissionId: missionId,
+            activeScreen: { kind: 'mission', missionId },
+          })
+          return
+        }
+        const [s1, s2] = mission.labStarters
+        const id1 = nextId('c')
+        const id2 = nextId('c')
+        const newCreatures: Record<string, Creature> = {
+          [id1]: {
+            id: id1,
+            speciesId: blobSpecies.id,
+            ownerName: s1.defaultName,
+            sex: s1.sex,
+            genotype: s1.genotype,
+            age: 1,
+            scope: missionScope(missionId),
+          },
+          [id2]: {
+            id: id2,
+            speciesId: blobSpecies.id,
+            ownerName: s2.defaultName,
+            sex: s2.sex,
+            genotype: s2.genotype,
+            age: 1,
+            scope: missionScope(missionId),
+          },
+        }
+        set(s => ({
+          creatures: { ...s.creatures, ...newCreatures },
+          missionCreatures: {
+            ...s.missionCreatures,
+            [missionId]: { sample1Id: id1, sample2Id: id2 },
+          },
+          activeMissionId: missionId,
+          activeScreen: { kind: 'mission', missionId },
+        }))
+      },
+
+      closeMission() {
+        set({ activeMissionId: null, activeScreen: { kind: 'missions-board' } })
+      },
+
+      submitMissionBlob(missionId, creatureId) {
+        const mission = missionById[missionId]
         const state = get()
         const creature = state.creatures[creatureId]
-        if (!template || !creature) return false
-        // Deliveries only accept a blob from THIS order's lab pool.
-        if (!isLabScope(creature.scope, orderTemplateId)) return false
+        if (!mission || !creature) return false
+        // Only mission-scoped bred offspring (not starters) can be submitted.
+        if (!isMissionScope(creature.scope, missionId)) return false
+        if (!creature.parentIds) return false
         const phenotype = computePhenotype(creature, blobSpecies)
-        for (const [traitId, expected] of Object.entries(template.requiredPhenotype)) {
+        for (const [traitId, expected] of Object.entries(mission.targetPhenotype)) {
           if (phenotype[traitId] !== expected) return false
         }
-        // Drop every creature in this order's lab pool + their notes/hypotheses.
+        // Clear this mission's pool + related history.
         const nextCreatures: Record<string, Creature> = {}
-        const nextNotes: Record<string, string> = { ...state.notes }
+        const nextNotes = { ...state.notes }
         const nextHypotheses = { ...state.hypotheses }
         const nextValidated = { ...state.validated }
         for (const [id, c] of Object.entries(state.creatures)) {
-          if (isLabScope(c.scope, orderTemplateId)) {
+          if (isMissionScope(c.scope, missionId)) {
             delete nextNotes[id]
             delete nextHypotheses[id]
             delete nextValidated[id]
@@ -388,216 +464,122 @@ export const useGameStore = create<GameState & GameActions>()(
             nextCreatures[id] = c
           }
         }
-        // Prune cross history whose participants no longer exist.
         const nextHistory = state.crossHistory.filter(
           r => nextCreatures[r.motherId] && nextCreatures[r.fatherId],
         )
-        const nextCompletedOrders = [...state.completedOrders, orderTemplateId]
-        const nextUnlockedLessons = recomputeUnlockedLessons(
-          state.completedLessons,
-          nextCompletedOrders,
-        )
-        set(s => ({
+        const { [missionId]: _drop, ...remainingMissionCreatures } =
+          state.missionCreatures
+        set({
           creatures: nextCreatures,
           notes: nextNotes,
           hypotheses: nextHypotheses,
           validated: nextValidated,
           crossHistory: nextHistory,
-          coins: s.coins + template.coinReward,
-          activeOrders: s.activeOrders.filter(id => id !== orderTemplateId),
-          completedOrders: nextCompletedOrders,
-          activeLabOrderId: null,
-          unlockedLessons: nextUnlockedLessons,
-        }))
+          missionCreatures: remainingMissionCreatures,
+          completedMissions: [...state.completedMissions, missionId],
+          activeMissionId: null,
+          activeScreen: { kind: 'missions-board' },
+        })
         return true
       },
 
-      releaseCreature(creatureId) {
-        set(s => {
-          if (!s.creatures[creatureId]) return {}
-          const { [creatureId]: _, ...rest } = s.creatures
-          return { creatures: rest }
-        })
+      // -- UI ------------------------------------------------------------
+
+      setActiveScreen(next) {
+        set({ activeScreen: next })
       },
 
-      renameCreature(creatureId, name) {
-        set(s => {
-          const creature = s.creatures[creatureId]
-          if (!creature) return {}
-          return {
-            creatures: {
-              ...s.creatures,
-              [creatureId]: { ...creature, ownerName: name },
-            },
-          }
-        })
+      toggleCodex() {
+        set(s => ({ codexOpen: !s.codexOpen }))
       },
 
-      setDifficultyTier(tier) {
-        set({ difficultyTier: tier })
-      },
-
-      setActiveModal(modal) {
-        set({ activeModal: modal })
-      },
-
-      markAutoOpened() {
-        set({ hasAutoOpened: true })
-      },
-
-      toggleKept(creatureId) {
-        set(s => ({
-          keptIds: s.keptIds.includes(creatureId)
-            ? s.keptIds.filter(id => id !== creatureId)
-            : [...s.keptIds, creatureId],
-        }))
-      },
-
-      reset() {
-        set(initialState())
+      markStationSeen() {
+        set({ hasSeenStation: true })
       },
     }),
     {
-      name: 'gene-detective-save-v3',
-      version: 3,
+      name: 'gene-detective-save-v4',
+      version: 4,
       storage: createJSONStorage(() => localStorage),
     },
   ),
 )
 
-// -- lesson-completion logic (kept outside the action object so setHypothesis
-//    can call it without going through the action lookup) ------------------
+// -- helpers ----------------------------------------------------------------
 
-// Mark the lesson complete: unlock rewards, note completion. Do NOT touch
-// currentLessonId or activeModal — the runner stays open so the player can
-// keep reading. Creature cleanup happens later in finishLessonInternal when
-// the player leaves the runner.
-function completeCurrentLessonInternal(
-  set: (partial: Partial<GameState>) => void,
-  get: () => GameState & GameActions,
-): void {
-  const state = get()
-  const lessonId = state.currentLessonId
-  if (!lessonId) return
-  if (state.completedLessons.includes(lessonId)) return
-  const lesson = lessonById[lessonId]
-  if (!lesson) return
-
-  const nextCompletedLessons = [...state.completedLessons, lessonId]
-  const nextUnlockedLessons = recomputeUnlockedLessons(
-    nextCompletedLessons,
-    state.completedOrders,
-  )
-  const newChars = Array.from(new Set([
-    ...state.unlockedCharacters,
-    ...(lesson.unlocks.characters ?? []),
-  ]))
-  const newTraits = Array.from(new Set([
-    ...state.unlockedTraits,
-    ...(lesson.unlocks.traits ?? []),
-  ]))
-
-  set({
-    completedLessons: nextCompletedLessons,
-    unlockedLessons: nextUnlockedLessons,
-    unlockedCharacters: newChars,
-    unlockedTraits: newTraits,
-    justCompletedLessonId: lessonId,
-  })
-}
-
-// Called when the player leaves an active lesson (Return-to-orders / X close).
-// If the lesson was completed:
-//   - and lesson.awardsStarterBlobs → promote the two starters to the village,
-//     discard other lesson-scoped offspring for this lesson.
-//   - otherwise → discard the whole lesson pool.
-// If the lesson was NOT completed, keep the pool intact so the player can
-// resume where they left off.
-function finishLessonInternal(
-  lessonId: string,
-  set: (partial: Partial<GameState>) => void,
-  get: () => GameState & GameActions,
-): void {
-  const state = get()
-  const lesson = lessonById[lessonId]
-  if (!lesson) return
-  const wasCompleted = state.completedLessons.includes(lessonId)
-  if (!wasCompleted) return
-
-  const assignments = state.lessonCreatures[lessonId]
-  const keepIds = new Set<string>()
-  if (lesson.awardsStarterBlobs && assignments) {
-    keepIds.add(assignments.motherId)
-    keepIds.add(assignments.fatherId)
+function defaultLitterSize(state: GameState): number {
+  const activeChapter = state.currentChapterId
+    ? chapterById[state.currentChapterId]
+    : null
+  if (activeChapter) {
+    const stageDef =
+      state.currentChapterStage === 'master'
+        ? activeChapter.stages.master
+        : state.currentChapterStage === 'solo'
+          ? activeChapter.stages.solo
+          : activeChapter.stages.guided
+    return stageDef?.litterSize ?? 6
   }
-
-  const nextCreatures: Record<string, Creature> = {}
-  for (const [id, c] of Object.entries(state.creatures)) {
-    if (isLessonScope(c.scope, lessonId)) {
-      if (keepIds.has(id)) nextCreatures[id] = { ...c, scope: 'village' }
-    } else {
-      nextCreatures[id] = c
-    }
-  }
-  const nextHistory = state.crossHistory.filter(
-    r => nextCreatures[r.motherId] && nextCreatures[r.fatherId],
-  )
-  const { [lessonId]: _drop, ...remainingLessonCreatures } = state.lessonCreatures
-  set({
-    creatures: nextCreatures,
-    crossHistory: nextHistory,
-    lessonCreatures: remainingLessonCreatures,
-    justCompletedLessonId: null,
-  })
+  // Mission and everything else: one at a time.
+  return 1
 }
-
-// -- read helpers ----------------------------------------------------------
 
 function findCorrectGenotype(
   state: GameState,
   creatureId: string,
   geneId: string,
 ): string | null {
-  for (const [lessonId, assignments] of Object.entries(state.lessonCreatures)) {
-    const lesson = lessonById[lessonId]
-    if (!lesson) continue
-    if (assignments.motherId === creatureId) {
-      const a = lesson.correctAssertions.find(
-        x => x.creatureRole === 'mother' && x.geneId === geneId,
-      )
-      if (a) return a.correctGenotype
-    }
-    if (assignments.fatherId === creatureId) {
-      const a = lesson.correctAssertions.find(
-        x => x.creatureRole === 'father' && x.geneId === geneId,
-      )
-      if (a) return a.correctGenotype
-    }
+  // Look up whichever chapter this creature is starring in, then find the
+  // matching correctAssertion for the current stage.
+  for (const [chapterId, assignments] of Object.entries(state.chapterCreatures)) {
+    const chapter = chapterById[chapterId]
+    if (!chapter) continue
+    const role: 'mother' | 'father' | null =
+      assignments.motherId === creatureId
+        ? 'mother'
+        : assignments.fatherId === creatureId
+          ? 'father'
+          : null
+    if (!role) continue
+    // Try current stage first, else fall back to solo (canonical answer).
+    const stageDef =
+      state.currentChapterStage === 'guided'
+        ? chapter.stages.guided
+        : state.currentChapterStage === 'master' && chapter.stages.master
+          ? chapter.stages.master
+          : chapter.stages.solo
+    const a = stageDef.correctAssertions.find(
+      x => x.creatureRole === role && x.geneId === geneId,
+    )
+    if (a) return a.correctGenotype
   }
   return null
 }
 
-// Village creatures (the player's permanent collection).
-export function useVillageCreatures(): Creature[] {
-  const creatures = useGameStore(s => s.creatures)
-  return useMemo(
-    () => Object.values(creatures).filter(c => isVillageScope(c.scope)),
-    [creatures],
-  )
+function findValidationTier(state: GameState): 'loose' | 'medium' | 'strict' | null {
+  const chapter = state.currentChapterId ? chapterById[state.currentChapterId] : null
+  if (!chapter) return null
+  if (state.currentChapterStage === 'solo') return chapter.stages.solo.validationTier
+  if (state.currentChapterStage === 'guided') return 'loose'
+  return 'medium'
 }
 
-// Lab creatures for a specific order (i.e., the current lab session's pool).
-export function useLabCreatures(orderId: string | null): Creature[] {
+// -- Selectors --------------------------------------------------------------
+
+export function useTrophyBlobs(): Creature[] {
+  const trophyBlobs = useGameStore(s => s.trophyBlobs)
   const creatures = useGameStore(s => s.creatures)
   return useMemo(
     () =>
-      orderId
-        ? Object.values(creatures).filter(c => isLabScope(c.scope, orderId))
-        : [],
-    [creatures, orderId],
+      Object.values(trophyBlobs)
+        .map(id => creatures[id])
+        .filter((c): c is Creature => !!c),
+    [trophyBlobs, creatures],
   )
 }
 
-export function useCurrentLesson() {
-  return useGameStore(s => (s.currentLessonId ? lessonById[s.currentLessonId] : null))
+export function useCurrentChapter() {
+  return useGameStore(s =>
+    s.currentChapterId ? chapterById[s.currentChapterId] : null,
+  )
 }

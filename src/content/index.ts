@@ -1,6 +1,12 @@
 export { blobSpecies } from './species/blob'
 export { glossaryTerms, glossaryById } from './glossary'
-export { lessons, lessonById } from './lessons'
-export { characters, characterById } from './characters'
-export { orderTemplates, orderTemplateById } from './orders'
+export { chapters, chapterById } from './chapters/index'
+export { missions, missionById } from './missions/index'
+export {
+  characters,
+  characterById,
+  mentors,
+  mentorById,
+  clients,
+} from './characters'
 export type * from './types'

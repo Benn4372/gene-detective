@@ -2,6 +2,8 @@ import type { Creature } from '../engine/types'
 
 export type DifficultyTier = 'curious' | 'student' | 'researcher'
 
+export type ChapterStage = 'show' | 'guided' | 'solo' | 'master' | 'outro'
+
 export interface CrossRecord {
   id: string
   motherId: string
@@ -11,54 +13,58 @@ export interface CrossRecord {
 }
 
 export interface GameState {
-  // Player
-  coins: number
+  // -- Player-side progression ---------------------------------------------
   difficultyTier: DifficultyTier
-  unlockedLessons: string[]
-  completedLessons: string[]
-  currentLessonId: string | null
-  unlockedTraits: string[]
-  unlockedCharacters: string[]
-  hintsShownForLesson: Record<string, number>
+  // Chapter progression
+  unlockedChapters: string[]
+  completedChapters: string[]
+  currentChapterId: string | null
+  currentChapterStage: ChapterStage
+  // Chapter with a "just now completed the outro" flag — the UI can flash a
+  // celebration once and then clear it.
+  justCompletedChapterId: string | null
+  // Per-chapter, how many solo-stage hints have been shown.
+  hintsShownForChapter: Record<string, number>
+  // Rolling counter for hint gating within the current chapter.
   breedsSinceLastNotebookProgress: number
 
-  // Stable
-  creatures: Record<string, Creature>
-  stableCap: number
+  // What the player can use in the world
+  unlockedTraits: string[]
+  unlockedAlleles: string[]
+  unlockedTools: string[]
+  unlockedMentors: string[]
 
-  // Notebook
+  // -- Missions ------------------------------------------------------------
+  activeMissionId: string | null
+  completedMissions: string[]
+
+  // -- Creatures -----------------------------------------------------------
+  creatures: Record<string, Creature>
+  // Per-chapter starter creature assignments (motherId / fatherId).
+  // Keyed by chapterId, keeps solo-stage's mystery pair reference.
+  chapterCreatures: Record<string, { motherId: string; fatherId: string }>
+  // Per-mission starter creature assignments — mission's sample-1 / sample-2.
+  missionCreatures: Record<string, { sample1Id: string; sample2Id: string }>
+  // Blob figurines shown on the Trophy Shelf, one per completed chapter.
+  trophyBlobs: Record<string, string> // chapterId → creatureId
+
+  // -- Notebook ------------------------------------------------------------
   hypotheses: Record<string, Record<string, string>>
   validated: Record<string, Record<string, boolean>>
+  notes: Record<string, string>
   crossHistory: CrossRecord[]
   solvedGenes: string[]
 
-  // Orders
-  activeOrders: string[]
-  completedOrders: string[]
-
-  // Lesson-scoped creature assignments (creatureId is looked up in `creatures`)
-  lessonCreatures: Record<string, { motherId: string; fatherId: string }>
-
-  // Freeform per-creature notes (used mainly in labs, but works anywhere).
-  notes: Record<string, string>
-
-  // Which order's lab modal is currently open (null = no lab open).
-  activeLabOrderId: string | null
-
-  // Which lesson (if any) has just been marked complete but hasn't been
-  // acknowledged by the UI yet. The auto-close runs when this transitions
-  // from null → an id, then the UI clears it.
-  justCompletedLessonId: string | null
-
-  // Which nav modal is currently open. Persisted so it survives HMR/strict-mode
-  // remounts that would otherwise wipe local component state.
-  activeModal: 'orders' | 'breed' | 'shop' | null
-  // Set true after the auto-open effect fires so subsequent App mounts don't
-  // re-open the modal against the player's wishes.
-  hasAutoOpened: boolean
-
-  // Creature ids the player has explicitly "kept" — pinned so they remain in
-  // the breeding picker after future litters are bred. Used only inside
-  // lessons; the village never trims and the lab uses starters + all bred.
-  keptIds: string[]
+  // -- UI-visible state that survives remounts ----------------------------
+  // Which nav destination is currently open at the top of the Station stack.
+  activeScreen:
+    | { kind: 'station' }
+    | { kind: 'chapter'; chapterId: string }
+    | { kind: 'mission'; missionId: string }
+    | { kind: 'missions-board' }
+    | { kind: 'trophy-shelf' }
+  // Trait Codex drawer (right-side slide-in) — global, persisted.
+  codexOpen: boolean
+  // Runs the "auto-open Chapter Book on first-ever load" effect exactly once.
+  hasSeenStation: boolean
 }

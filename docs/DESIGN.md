@@ -1,6 +1,12 @@
 # Gene Detective — Design Document
 
-**Status:** v1 (first pass, greenlit for implementation)
+> ⚠️ **Archived — this is design v1.** The full UI rewrite is planned in
+> `~/.claude/plans/majestic-gathering-sloth.md` (Blob Research Station).
+> Everything below reflects the pre-rewrite vision (Village + Orders + Lab).
+> The genetics engine, content data types, glossary, and Blob renderer
+> described here are preserved; the UI architecture is superseded.
+
+**Status:** v1 (archived 2026-07-22 — see Blob Research Station rewrite plan)
 **Last updated:** 2026-07-21
 **Owner:** Benjamin Pritchard
 

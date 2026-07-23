@@ -91,16 +91,17 @@ export interface Creature {
   age: number
   parentIds?: [string, string]
   birthCrossId?: string
-  // Where this creature "lives". Lesson-scoped creatures are scratch — they exist
-  // only for observation during that lesson and are discarded on completion.
-  // Village-scoped creatures are permanent residents.
+  // Where this creature "lives".
+  //   'trophy'   — a permanent Trophy Shelf figurine, one per completed chapter.
+  //   'chapter'  — scratch inside a Chapter Runner stage. Discarded on exit.
+  //   'mission'  — scratch inside a Mission Runner. Discarded on submit / exit.
   scope: CreatureScope
 }
 
 export type CreatureScope =
-  | 'village'
-  | { kind: 'lesson'; lessonId: string }
-  | { kind: 'lab'; orderId: string }
+  | 'trophy'
+  | { kind: 'chapter'; chapterId: string; stage: 'guided' | 'solo' | 'master' }
+  | { kind: 'mission'; missionId: string }
 
 export interface Gamete {
   alleles: Record<string, AlleleId>

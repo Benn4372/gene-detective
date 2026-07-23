@@ -54,7 +54,7 @@ export function makeCreature(overrides: Partial<Creature>): Creature {
     sex: 'F',
     genotype: {},
     age: 1,
-    scope: 'village',
+    scope: 'trophy',
     ...overrides,
   }
 }

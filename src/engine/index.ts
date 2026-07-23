@@ -1,4 +1,6 @@
 export * from './types'
+export { computeGenotypeTable, makePreviewCreature, orderedPair } from './codex'
+export type { GenotypeTableRow } from './codex'
 export { makeRandom } from './random'
 export type { Random } from './random'
 export { alleleById, allelesAt, genotypeString, makeGenotype } from './genotype'

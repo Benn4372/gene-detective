@@ -1,0 +1,242 @@
+import { useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import type { Creature } from '../../engine/types'
+import { useGameStore } from '../../state/gameStore'
+import { blobSpecies } from '../../content'
+import { computePhenotype } from '../../engine/phenotype'
+import { BlobRenderer } from '../../renderer/BlobRenderer'
+import { SexBadge } from '../atoms/SexBadge'
+import { PunnettGrid } from './PunnettGrid'
+import { PhenotypeTally } from '../atoms/PhenotypeTally'
+import type { CrossRecord } from '../../state/types'
+
+interface Props {
+  pool: Creature[]
+  motherId: string | null
+  fatherId: string | null
+  onSelectMother(id: string | null): void
+  onSelectFather(id: string | null): void
+  visibleGeneIds: string[]
+  litterSize?: number
+  onCrossComplete?(record: CrossRecord): void
+  // Extra label to hint the player about scarcity — e.g. "3 crosses left"
+  breedBudgetHint?: string
+}
+
+// The primary breeding interaction. Wraps parent picker + Punnett grid(s) +
+// Execute cross + offspring tray + rolling phenotype tally. Used inside both
+// Chapter Runner (solo/master stages) and Mission Runner.
+export function Workbench({
+  pool,
+  motherId,
+  fatherId,
+  onSelectMother,
+  onSelectFather,
+  visibleGeneIds,
+  litterSize,
+  onCrossComplete,
+  breedBudgetHint,
+}: Props) {
+  const breed = useGameStore(s => s.breed)
+  const crossHistory = useGameStore(s => s.crossHistory)
+  const creatures = useGameStore(s => s.creatures)
+
+  const poolIds = useMemo(() => new Set(pool.map(c => c.id)), [pool])
+  const females = pool.filter(c => c.sex === 'F')
+  const males = pool.filter(c => c.sex === 'M')
+
+  // Filter crossHistory down to crosses whose participants are still in the
+  // current pool — accurate rolling stats even after other creatures churn.
+  const relevantCrosses = useMemo(
+    () =>
+      crossHistory.filter(r => poolIds.has(r.motherId) && poolIds.has(r.fatherId)),
+    [crossHistory, poolIds],
+  )
+  const latestCross = relevantCrosses[relevantCrosses.length - 1]
+
+  // Every offspring bred in this session (for the tally).
+  const allOffspring: Creature[] = []
+  for (const r of relevantCrosses) {
+    for (const oId of r.offspringIds) {
+      const c = creatures[oId]
+      if (c) allOffspring.push(c)
+    }
+  }
+
+  const canCross =
+    motherId !== null && fatherId !== null && motherId !== fatherId
+  const handleCross = () => {
+    if (!canCross || !motherId || !fatherId) return
+    const record = breed(motherId, fatherId, litterSize)
+    if (record && onCrossComplete) onCrossComplete(record)
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Parent picker */}
+      <div className="grid grid-cols-2 gap-4">
+        <PickerColumn
+          label="Mother ♀"
+          creatures={females}
+          selectedId={motherId}
+          onSelect={onSelectMother}
+          visibleGeneIds={visibleGeneIds}
+          hue="rose"
+        />
+        <PickerColumn
+          label="Father ♂"
+          creatures={males}
+          selectedId={fatherId}
+          onSelect={onSelectFather}
+          visibleGeneIds={visibleGeneIds}
+          hue="sky"
+        />
+      </div>
+
+      {/* Punnett grids — one per gene */}
+      {motherId && fatherId && (
+        <div className="rounded-lg bg-stone-50 border border-stone-300 p-3">
+          <div className="flex flex-wrap gap-6">
+            {visibleGeneIds.map(geneId => (
+              <PunnettGrid
+                key={geneId}
+                motherId={motherId}
+                fatherId={fatherId}
+                geneId={geneId}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Execute + budget hint */}
+      <div className="flex items-center justify-between">
+        <motion.button
+          whileHover={{ scale: canCross ? 1.03 : 1 }}
+          whileTap={{ scale: canCross ? 0.97 : 1 }}
+          onClick={handleCross}
+          disabled={!canCross}
+          className={
+            'px-6 py-3 rounded-lg font-medium shadow-sm text-lg ' +
+            (canCross
+              ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+              : 'bg-stone-200 text-stone-400 cursor-not-allowed')
+          }
+        >
+          🧬 Execute cross
+        </motion.button>
+        {breedBudgetHint && (
+          <div className="text-sm text-stone-600 italic">{breedBudgetHint}</div>
+        )}
+      </div>
+
+      {/* Latest litter reveal */}
+      {latestCross && (
+        <div className="rounded-lg bg-white border border-stone-300 p-3">
+          <div className="text-xs uppercase tracking-wide text-stone-500 mb-2">
+            Latest litter · {latestCross.offspringIds.length} offspring
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <AnimatePresence mode="popLayout">
+              {latestCross.offspringIds.map((id, idx) => {
+                const child = creatures[id]
+                if (!child) return null
+                const phen = computePhenotype(child, blobSpecies)
+                return (
+                  <motion.div
+                    key={id}
+                    initial={{ opacity: 0, scale: 0.5, y: -8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    transition={{
+                      delay: idx * 0.05,
+                      type: 'spring',
+                      stiffness: 260,
+                      damping: 20,
+                    }}
+                    className="flex flex-col items-center"
+                  >
+                    <BlobRenderer creature={child} species={blobSpecies} size={64} />
+                    <div className="flex items-center gap-1 text-xs mt-1">
+                      <SexBadge sex={child.sex} />
+                      <span className="font-mono text-stone-600">
+                        {visibleGeneIds.map(t => phen[t]).join(' · ')}
+                      </span>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
+
+      {/* Running tally */}
+      {allOffspring.length > 0 && (
+        <PhenotypeTally
+          offspring={allOffspring}
+          visibleTraitIds={visibleGeneIds}
+          label={`Running totals across ${allOffspring.length} offspring`}
+        />
+      )}
+    </div>
+  )
+}
+
+function PickerColumn({
+  label,
+  creatures,
+  selectedId,
+  onSelect,
+  visibleGeneIds,
+  hue,
+}: {
+  label: string
+  creatures: Creature[]
+  selectedId: string | null
+  onSelect(id: string | null): void
+  visibleGeneIds: string[]
+  hue: 'rose' | 'sky'
+}) {
+  const labelCls =
+    hue === 'rose' ? 'text-rose-700' : 'text-sky-700'
+  return (
+    <div>
+      <div className={'text-xs uppercase tracking-wide font-semibold mb-2 ' + labelCls}>
+        {label}
+      </div>
+      {creatures.length === 0 ? (
+        <div className="text-stone-500 italic text-sm">None available.</div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {creatures.map(c => {
+            const phen = computePhenotype(c, blobSpecies)
+            const isSel = selectedId === c.id
+            const name = c.ownerName ?? `Blob #${c.id.slice(-4)}`
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => onSelect(isSel ? null : c.id)}
+                className={
+                  'flex flex-col items-center rounded-lg border-2 bg-white p-2 transition-colors ' +
+                  (isSel
+                    ? 'border-amber-500 shadow-md ring-2 ring-amber-100'
+                    : 'border-stone-300 hover:border-stone-400')
+                }
+              >
+                <BlobRenderer creature={c} species={blobSpecies} size={54} />
+                <div className="text-[10px] text-stone-500 truncate max-w-[90px]">
+                  {name}
+                </div>
+                <div className="font-mono text-[10px] text-stone-700 mt-0.5">
+                  {visibleGeneIds.map(t => phen[t]).join(' · ')}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
