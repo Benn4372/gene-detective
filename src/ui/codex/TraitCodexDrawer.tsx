@@ -201,11 +201,19 @@ function TraitsTab({
       {filtered.map(gene => {
         const rows = computeGenotypeTable(gene, blobSpecies)
         const chromosome = blobSpecies.chromosomes.find(c => c.id === gene.chromosome)
+        const primaryTrait = gene.expressesTraits[0]
+          ? blobSpecies.traits.find(t => t.id === gene.expressesTraits[0])
+          : null
         return (
           <section key={gene.id}>
             <h3 className="text-base font-semibold text-stone-800 mb-1 font-serif">
               {gene.name}
             </h3>
+            {primaryTrait?.description && (
+              <div className="text-xs text-stone-700 italic mb-2 leading-snug">
+                {primaryTrait.description}
+              </div>
+            )}
             <div className="text-xs text-stone-500 mb-3 space-y-0.5">
               <div>
                 <span className="text-stone-600 uppercase tracking-wide text-[10px]">Model</span>{' '}
