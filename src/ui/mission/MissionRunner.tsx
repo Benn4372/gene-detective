@@ -24,6 +24,7 @@ export function MissionRunner() {
   const [motherId, setMotherId] = useState<string | null>(null)
   const [fatherId, setFatherId] = useState<string | null>(null)
   const [deliverOpen, setDeliverOpen] = useState(false)
+  const [lastRejectedId, setLastRejectedId] = useState<string | null>(null)
 
   const mission = activeMissionId ? missionById[activeMissionId] : null
   const client = mission ? characterById[mission.clientCharacterId] : null
@@ -58,21 +59,9 @@ export function MissionRunner() {
     return <div className="min-h-screen p-6 text-stone-500 italic">No mission open.</div>
   }
 
-  const targetText = Object.entries(mission.targetPhenotype)
-    .map(([t, v]) => {
-      const trait = blobSpecies.traits.find(x => x.id === t)
-      return `${trait?.name ?? t}: ${phenotypeLabel(t, v)}`
-    })
-    .join(' · ')
-
-  const isDeliverable = (c: Creature) => {
-    if (!c.parentIds) return false
-    const phen = computePhenotype(c, blobSpecies)
-    return Object.entries(mission.targetPhenotype).every(
-      ([t, v]) => phen[t] === v,
-    )
-  }
-  const deliverable = offspring.filter(isDeliverable)
+  // Only bred offspring (with parentIds) count as deliverables; the two
+  // starter samples belong to the lab and never leave.
+  const deliverableOffspring = offspring.filter(c => !!c.parentIds)
 
   return (
     <div className="min-h-screen p-6">
@@ -99,10 +88,11 @@ export function MissionRunner() {
               {client.name}
             </div>
             <div className="text-sm text-stone-800 italic">"{mission.clientBrief}"</div>
-            <div className="text-xs text-stone-600 mt-2 font-mono">
-              Target phenotype: {targetText}
-              {mission.breedBudget ? ` · Budget: ${mission.breedBudget} crosses` : ''}
-            </div>
+            {mission.breedBudget && (
+              <div className="text-xs text-stone-600 mt-2 font-mono">
+                Budget: {mission.breedBudget} crosses
+              </div>
+            )}
           </div>
         </div>
 
@@ -205,15 +195,22 @@ export function MissionRunner() {
 
       <DeliverPicker
         open={deliverOpen}
-        onClose={() => setDeliverOpen(false)}
-        deliverable={deliverable}
-        offspringCount={offspring.length}
+        onClose={() => {
+          setDeliverOpen(false)
+          setLastRejectedId(null)
+        }}
+        offspring={deliverableOffspring}
         starterCount={starters.length}
-        targetText={targetText}
         visibleGeneIds={mission.visibleGeneIds}
+        lastRejectedId={lastRejectedId}
         onDeliver={id => {
           const ok = submit(mission.id, id)
-          if (ok) setDeliverOpen(false)
+          if (ok) {
+            setDeliverOpen(false)
+            setLastRejectedId(null)
+          } else {
+            setLastRejectedId(id)
+          }
         }}
       />
     </div>
@@ -389,22 +386,20 @@ function computeExpectedRatio(prompt: {
 interface DeliverProps {
   open: boolean
   onClose(): void
-  deliverable: Creature[]
-  offspringCount: number
+  offspring: Creature[]
   starterCount: number
-  targetText: string
   visibleGeneIds: string[]
+  lastRejectedId: string | null
   onDeliver(id: string): void
 }
 
 function DeliverPicker({
   open,
   onClose,
-  deliverable,
-  offspringCount,
+  offspring,
   starterCount,
-  targetText,
   visibleGeneIds,
+  lastRejectedId,
   onDeliver,
 }: DeliverProps) {
   return (
@@ -413,27 +408,31 @@ function DeliverPicker({
         Only bred offspring can be delivered — the {starterCount} starter samples
         belong to the lab and never leave.
       </div>
-      <div className="mb-4 text-sm">
-        <strong>Target phenotype:</strong>{' '}
-        <span className="font-mono">{targetText}</span>
+      <div className="mb-4 text-sm text-stone-700 italic">
+        Delivered blobs go straight to the client — no take-backs. Pick the
+        one you think matches what they asked for.
       </div>
-      {deliverable.length === 0 ? (
+      {lastRejectedId && (
+        <div className="mb-3 p-2 text-xs bg-rose-50 border border-rose-200 rounded text-rose-900">
+          That one wasn't what the client wanted. Look at the sample cards
+          again and pick a different one.
+        </div>
+      )}
+      {offspring.length === 0 ? (
         <div className="p-4 bg-amber-50 border border-amber-200 rounded text-sm text-stone-700">
-          {offspringCount === 0
-            ? 'No offspring bred yet. Cross the sample pair to produce your first offspring.'
-            : `None of your ${offspringCount} bred offspring match the target yet. Keep crossing.`}
+          No offspring bred yet. Cross a sample pair to produce your first offspring.
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-3">
           <AnimatePresence>
-            {deliverable.map(c => {
+            {offspring.map(c => {
               const phen = computePhenotype(c, blobSpecies)
               return (
                 <motion.div
                   key={c.id}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="rounded-lg border-2 border-emerald-300 bg-emerald-50 p-3 flex flex-col items-center"
+                  className="rounded-lg border-2 border-stone-300 bg-white p-3 flex flex-col items-center"
                 >
                   <BlobRenderer creature={c} species={blobSpecies} size={72} />
                   <div className="flex items-center gap-1 text-xs mt-2 text-stone-700">
@@ -448,7 +447,7 @@ function DeliverPicker({
                     onClick={() => onDeliver(c.id)}
                     className="mt-3 w-full px-3 py-2 bg-emerald-600 text-white text-sm rounded font-medium hover:bg-emerald-700"
                   >
-                    Deliver this one ✓
+                    Deliver this one
                   </motion.button>
                 </motion.div>
               )

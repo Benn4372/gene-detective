@@ -43,8 +43,10 @@ export interface GameState {
   // Per-chapter starter creature assignments (motherId / fatherId).
   // Keyed by chapterId, keeps solo-stage's mystery pair reference.
   chapterCreatures: Record<string, { motherId: string; fatherId: string }>
-  // Per-mission starter creature assignments — mission's sample-1 / sample-2.
-  missionCreatures: Record<string, { sample1Id: string; sample2Id: string }>
+  // Per-mission starter creature assignments — the mission's whole sample
+  // pool. Missions can ship with 2, 3, or 4 samples; the player has to
+  // choose which pair to breed.
+  missionCreatures: Record<string, { starterIds: string[] }>
   // Blob figurines shown on the Trophy Shelf, one per completed chapter.
   trophyBlobs: Record<string, string> // chapterId → creatureId
 

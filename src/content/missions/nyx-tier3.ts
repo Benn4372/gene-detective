@@ -1,52 +1,73 @@
 import type { Mission } from '../types'
 
 // Dr. Nyx's mission set — unlocks after Ch 41 (molecular chapters). Bright,
-// visible traits acting as stand-ins for sequence-level puzzles.
+// visible traits acting as stand-ins for sequence-level puzzles. Multi-
+// starter benches so the player picks which pair to breed.
 export const nyxTier3Missions: Mission[] = [
+  // Mutation rate calibration: 4 plain (kk) samples. Any pair works; the
+  // choice is really about how quickly a spontaneous mutation appears.
+  // Multiple candidates simulate "which lineage was the mutation from?"
   {
     id: 'mission-nyx-01',
     chapterTier: 'researcher',
     minCompletedChapters: 41,
     clientCharacterId: 'dr-nyx',
     clientBrief:
-      "I need a live sparkle (K-carrier) from two non-sparkling parents — mutation frequency measurement.",
+      "I need a live sparkle (K-carrier) from non-sparkling parents. Four plain samples on the bench — pick a lineage and breed until the mutation happens.",
     targetPhenotype: { sparkle: 'K' },
     visibleGeneIds: ['sparkle'],
     labStarters: [
       {
         sex: 'F',
         genotype: { sparkle: ['k', 'k'], antennae: ['a', 'a'], spots: ['s', 's'] },
-        defaultName: 'Nyx F-01',
+        defaultName: 'Nyx F-α',
+      },
+      {
+        sex: 'F',
+        genotype: { sparkle: ['k', 'k'], antennae: ['a', 'a'], spots: ['s', 's'] },
+        defaultName: 'Nyx F-β',
       },
       {
         sex: 'M',
         genotype: { sparkle: ['k', 'k'], antennae: ['a', 'a'], spots: ['s', 's'] },
-        defaultName: 'Nyx M-01',
+        defaultName: 'Nyx M-α',
+      },
+      {
+        sex: 'M',
+        genotype: { sparkle: ['k', 'k'], antennae: ['a', 'a'], spots: ['s', 's'] },
+        defaultName: 'Nyx M-β',
       },
     ],
     breedBudget: 30, // rare event
     mode: 'breed',
     rewardPreviewText: 'contributes to the mutation-rate reference dataset',
   },
+  // CRISPR calibration: 3 samples on heatSpot. HH F, hh F, hh M.
+  // Target = H-carrier. HH × hh guarantees Hh in F1; hh × hh cannot produce.
   {
     id: 'mission-nyx-02',
     chapterTier: 'researcher',
     minCompletedChapters: 48,
     clientCharacterId: 'dr-nyx',
     clientBrief:
-      "CRISPR calibration. Bring me a heat-spot carrier (H-showing at warm temp) from two non-showing parents. Emulates a directed-edit outcome.",
+      "CRISPR calibration. Deliver a heat-spot carrier (H-carrier). Three samples on the bench — pick the pair that guarantees the trait passes.",
     targetPhenotype: { heatSpot: 'H' },
     visibleGeneIds: ['heatSpot'],
     labStarters: [
       {
         sex: 'F',
-        genotype: { heatSpot: ['H', 'h'], antennae: ['a', 'a'], spots: ['s', 's'] },
-        defaultName: 'Nyx F-02',
+        genotype: { heatSpot: ['H', 'H'], antennae: ['a', 'a'], spots: ['s', 's'] },
+        defaultName: 'Homoz H F',
+      },
+      {
+        sex: 'F',
+        genotype: { heatSpot: ['h', 'h'], antennae: ['a', 'a'], spots: ['s', 's'] },
+        defaultName: 'Plain F',
       },
       {
         sex: 'M',
-        genotype: { heatSpot: ['H', 'h'], antennae: ['a', 'a'], spots: ['s', 's'] },
-        defaultName: 'Nyx M-02',
+        genotype: { heatSpot: ['h', 'h'], antennae: ['a', 'a'], spots: ['s', 's'] },
+        defaultName: 'Plain M',
       },
     ],
     breedBudget: 4,

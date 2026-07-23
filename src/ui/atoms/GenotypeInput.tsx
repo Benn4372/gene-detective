@@ -74,8 +74,6 @@ export function GenotypeInput({
 
   const showWrong =
     !noValidation && !valid && isComplete && matchesAnswer === false
-  const showGatherEvidence =
-    !noValidation && !valid && isComplete && matchesAnswer !== false
 
   const borderCls = valid && !noValidation
     ? 'border-emerald-400 bg-emerald-50 text-emerald-800'
@@ -94,16 +92,12 @@ export function GenotypeInput({
         className={'w-36 px-2 py-1 border-2 rounded text-center font-mono text-sm ' + borderCls}
       />
       {noValidation ? null : valid ? (
-        <span className="text-emerald-600 text-lg" title="Confirmed by evidence">
+        <span className="text-emerald-600 text-lg" title="Correct">
           ✓
         </span>
       ) : showWrong ? (
         <span className="text-rose-700 text-xs italic">
           not that one
-        </span>
-      ) : showGatherEvidence ? (
-        <span className="text-stone-500 text-xs italic">
-          gather evidence
         </span>
       ) : null}
     </div>

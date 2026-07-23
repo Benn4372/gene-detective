@@ -1,7 +1,6 @@
 import { useGameStore } from '../../state/gameStore'
-import { missions, characterById, blobSpecies } from '../../content'
+import { missions, characterById } from '../../content'
 import { motion } from 'framer-motion'
-import { phenotypeLabel } from '../../renderer/phenotypeLabels'
 
 // Phase 3 stub: Missions list without the actual runner. Clicking a mission
 // currently just shows an "arriving in Phase 4" note. Full mission flow
@@ -46,12 +45,6 @@ export function MissionsBoard() {
           <div className="space-y-3">
             {available.map(m => {
               const client = characterById[m.clientCharacterId]
-              const traits = Object.entries(m.targetPhenotype)
-                .map(([t, v]) => {
-                  const trait = blobSpecies.traits.find(x => x.id === t)
-                  return `${trait?.name ?? t}: ${phenotypeLabel(t, v)}`
-                })
-                .join(' · ')
               return (
                 <motion.button
                   key={m.id}
@@ -66,10 +59,11 @@ export function MissionsBoard() {
                       <div className="font-semibold text-stone-800">
                         {client?.name}
                       </div>
-                      <div className="text-xs text-stone-500 font-mono">
-                        target: {traits}
-                        {m.breedBudget ? ` · budget: ${m.breedBudget} crosses` : ''}
-                      </div>
+                      {m.breedBudget && (
+                        <div className="text-xs text-stone-500 font-mono">
+                          budget: {m.breedBudget} crosses
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="text-sm text-stone-700 italic">

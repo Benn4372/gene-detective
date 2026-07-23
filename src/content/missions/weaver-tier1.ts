@@ -1,54 +1,57 @@
 import type { Mission } from '../types'
 
-// Prof. Weaver's mission set — unlocked after Ch3 (Independent Assortment).
-// All missions here are two-trait puzzles that exercise the 4×4 Punnett and
-// the phenotype-ratio reasoning she trained the player on.
+// Prof. Weaver's tier-1 mission set — unlocked after Ch 3 (independent
+// assortment). Two-trait puzzles where the player has to pick the RIGHT
+// pair from a 3-4 blob bench; wrong choices force F2 breeding.
 
-// Starter pair: two dihybrid heterozygotes (AaSs × AaSs). 9:3:3:1 ratio in
-// offspring. Every phenotype combination is reachable but the 1/16 "double
-// recessive" is scarce — a real test of patience.
-const dihybridStarters: Mission['labStarters'] = [
+// 4-blob dihybrid bench. Hidden genotypes:
+//   F-01: AASS  (antennae + spots, pure dominant)
+//   F-02: AaSs  (antennae + spots, double carrier)
+//   M-01: AaSs  (antennae + spots, double carrier)
+//   M-02: aass  (no antennae, no spots, pure recessive)
+// Any target genotype is reachable, but the shortest path depends on
+// which pair the player picks.
+const dihybridBench: Mission['labStarters'] = [
+  {
+    sex: 'F',
+    genotype: { antennae: ['A', 'A'], spots: ['S', 'S'] },
+    defaultName: 'Sample F-01',
+  },
   {
     sex: 'F',
     genotype: { antennae: ['A', 'a'], spots: ['S', 's'] },
-    defaultName: 'Weaver F-01',
+    defaultName: 'Sample F-02',
   },
   {
     sex: 'M',
     genotype: { antennae: ['A', 'a'], spots: ['S', 's'] },
-    defaultName: 'Weaver M-01',
-  },
-]
-
-// Starter pair for a testcross-ish scenario: one dihybrid heterozygote
-// crossed with a double recessive. Cleaner 1:1:1:1 ratio; useful for
-// "prove the parent is truly dihybrid heterozygous" reasoning.
-const dihybridTestcrossStarters: Mission['labStarters'] = [
-  {
-    sex: 'F',
-    genotype: { antennae: ['A', 'a'], spots: ['S', 's'] },
-    defaultName: 'Weaver F-02',
+    defaultName: 'Sample M-01',
   },
   {
     sex: 'M',
     genotype: { antennae: ['a', 'a'], spots: ['s', 's'] },
-    defaultName: 'Weaver M-02',
+    defaultName: 'Sample M-02',
   },
 ]
 
-// Third pair: an antennae-only parent (AaSS) crossed with a spots-only parent
-// (aaSs). Every offspring gets at least one dominant of each — the puzzle is
-// finding one that shows only ONE trait cleanly.
-const complementaryStarters: Mission['labStarters'] = [
+// 3-blob tail bench for the Ch 4 incomplete-dominance missions. Player has
+// to spot which pair produces what.
+//   Long-tail female (TT), Medium female (Tt), Short-tail male (tt).
+const tailBench: Mission['labStarters'] = [
   {
     sex: 'F',
-    genotype: { antennae: ['A', 'a'], spots: ['S', 'S'] },
-    defaultName: 'Weaver F-03',
+    genotype: { tail: ['T', 'T'], antennae: ['a', 'a'], spots: ['s', 's'] },
+    defaultName: 'Long-tail F',
+  },
+  {
+    sex: 'F',
+    genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
+    defaultName: 'Medium-tail F',
   },
   {
     sex: 'M',
-    genotype: { antennae: ['a', 'a'], spots: ['S', 's'] },
-    defaultName: 'Weaver M-03',
+    genotype: { tail: ['t', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
+    defaultName: 'Short-tail M',
   },
 ]
 
@@ -59,11 +62,11 @@ export const weaverTier1Missions: Mission[] = [
     minCompletedChapters: 3,
     clientCharacterId: 'prof-weaver',
     clientBrief:
-      "A collector's after the rarest phenotype from a dihybrid pair — no antennae AND no spots. Bring me one and I'll write it up.",
+      "A collector's after the rarest phenotype from the dihybrid bench — no antennae AND no spots. Pick a pair and see if you can produce one.",
     targetPhenotype: { antennae: 'a', spots: 's' },
     visibleGeneIds: ['antennae', 'spots'],
-    labStarters: dihybridStarters,
-    breedBudget: 8,
+    labStarters: dihybridBench,
+    breedBudget: 10,
     mode: 'breed',
     rewardPreviewText:
       'unlocks a follow-up dihybrid mission and edges the anomaly hunt forward',
@@ -74,11 +77,11 @@ export const weaverTier1Missions: Mission[] = [
     minCompletedChapters: 3,
     clientCharacterId: 'prof-weaver',
     clientBrief:
-      "Testcross work. This dihybrid parent claims to be AaSs — help me prove it by producing every phenotype class from the aa/ss partner. I need one that shows antennae only.",
+      "Testcross work. Bring me a blob showing antennae but no spots — pick the two samples that make the cross reveal a hidden carrier.",
     targetPhenotype: { antennae: 'A', spots: 's' },
     visibleGeneIds: ['antennae', 'spots'],
-    labStarters: dihybridTestcrossStarters,
-    breedBudget: 4,
+    labStarters: dihybridBench,
+    breedBudget: 6,
     mode: 'breed',
     rewardPreviewText: 'confirmation notes for the dihybrid testcross record',
   },
@@ -88,11 +91,11 @@ export const weaverTier1Missions: Mission[] = [
     minCompletedChapters: 3,
     clientCharacterId: 'prof-weaver',
     clientBrief:
-      'A curious cross — one parent carries antennae, the other only spots. Bring me an offspring that shows spots but no antennae.',
+      'Reverse of the last one — an offspring that shows spots but no antennae. Which pair produces it fastest?',
     targetPhenotype: { antennae: 'a', spots: 'S' },
     visibleGeneIds: ['antennae', 'spots'],
-    labStarters: complementaryStarters,
-    breedBudget: 4,
+    labStarters: dihybridBench,
+    breedBudget: 6,
     mode: 'breed',
     rewardPreviewText: "adds a chart to the Station's dihybrid noticeboard",
   },
@@ -102,22 +105,11 @@ export const weaverTier1Missions: Mission[] = [
     minCompletedChapters: 4,
     clientCharacterId: 'prof-weaver',
     clientBrief:
-      "Two medium-tail parents. I want a fully long-tailed child — Tt × Tt should give me one in every four tries. Prove me right.",
+      "I want a fully long-tailed child. Three tail samples on the bench — one pairing wins in a single cross.",
     targetPhenotype: { tail: 'T' },
     visibleGeneIds: ['tail'],
-    labStarters: [
-      {
-        sex: 'F',
-        genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
-        defaultName: 'Medium-tail F-04',
-      },
-      {
-        sex: 'M',
-        genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
-        defaultName: 'Medium-tail M-04',
-      },
-    ],
-    breedBudget: 4,
+    labStarters: tailBench,
+    breedBudget: 5,
     mode: 'breed',
     rewardPreviewText: 'a note on incomplete-dominant ratios for the record',
   },
@@ -127,22 +119,11 @@ export const weaverTier1Missions: Mission[] = [
     minCompletedChapters: 4,
     clientCharacterId: 'prof-weaver',
     clientBrief:
-      "Same medium-tail pair — this time bring me a SHORT-tail child. Same 1/4 odds but rarer to sight-check.",
+      "This time a SHORT-tail child. Same three samples. Some crosses can never produce one; pick the right pair.",
     targetPhenotype: { tail: 't' },
     visibleGeneIds: ['tail'],
-    labStarters: [
-      {
-        sex: 'F',
-        genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
-        defaultName: 'Medium-tail F-05',
-      },
-      {
-        sex: 'M',
-        genotype: { tail: ['T', 't'], antennae: ['a', 'a'], spots: ['s', 's'] },
-        defaultName: 'Medium-tail M-05',
-      },
-    ],
-    breedBudget: 4,
+    labStarters: tailBench,
+    breedBudget: 5,
     mode: 'breed',
     rewardPreviewText: 'field notes on the wild-population tail-length distribution',
   },

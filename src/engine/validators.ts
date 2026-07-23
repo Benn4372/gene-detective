@@ -1,6 +1,5 @@
 import type { Creature, Species } from './types'
 import { alleleById } from './genotype'
-import { computePhenotype } from './phenotype'
 
 export type ValidationTier = 'loose' | 'medium' | 'strict'
 
@@ -23,178 +22,26 @@ export interface ValidationContext {
   tier: ValidationTier
 }
 
-// Returns true iff the hypothesis is correct AND the tier's evidence bar is met.
+// Returns true iff the hypothesis is correct.
+//
+// Historically medium/strict tiers also required breeding evidence — the
+// player had to have bred enough offspring to distinguish e.g. Aa from AA
+// before their "Aa" hypothesis was accepted. Playtesting showed this gate
+// jammed chapters where the mystery genotype was already deducible from
+// the parents' visible phenotype (Ch 5 codominance, incomplete-dominance
+// stages, sex-linked crosses where a single-son observation is enough).
+// The "gather evidence" nudge became the top failure mode, so the gate is
+// removed: as soon as the player types the correct genotype, it validates.
+// Strict tier still runs a chi-square when there's enough data — but no
+// longer BLOCKS validation when data is scarce.
 export function validateHypothesis(ctx: ValidationContext): boolean {
   if (!genotypesEqual(ctx.hypothesizedGenotype, ctx.correctGenotype)) return false
-  if (ctx.tier === 'loose') return true
-  if (ctx.tier === 'strict') return hasStrictEvidence(ctx)
-  return hasMediumEvidence(ctx)
+  return true
 }
 
 // Compare two genotype strings, ignoring the order the player typed the letters.
 function genotypesEqual(a: string, b: string): boolean {
   return a.split('').sort().join('') === b.split('').sort().join('')
-}
-
-function hasMediumEvidence(ctx: ValidationContext): boolean {
-  const gene = ctx.species.genes.find(g => g.id === ctx.geneId)
-  if (!gene) return false
-
-  const symbols = [...ctx.hypothesizedGenotype]
-  // Hemizygous case (single allele — X-linked in XY males, Z-linked in ZW
-  // females, mitochondrial, etc.): phenotype uniquely determines the allele,
-  // so no additional cross evidence is required.
-  if (symbols.length === 1) return true
-  const isHomozygous = symbols.length === 2 && symbols[0] === symbols[1]
-
-  const crossesInvolving = ctx.crossHistory.filter(
-    r => r.motherId === ctx.creature.id || r.fatherId === ctx.creature.id,
-  )
-  if (crossesInvolving.length === 0) return false
-
-  if (isHomozygous) {
-    // Homozygous hypothesis: any breeding data at all is enough. The creature's
-    // own phenotype already narrows to two options (dominant → AA or Aa;
-    // recessive → aa), and if breeding confirmed no contrary offspring appeared,
-    // that's sufficient evidence at this tier.
-    return true
-  }
-
-  // Heterozygous hypothesis: need to have observed at least one offspring whose
-  // phenotype reveals the hidden recessive allele.
-  const recessiveAllele = [...gene.alleles].sort(
-    (a, b) => a.dominanceRank - b.dominanceRank,
-  )[0]!
-  for (const record of crossesInvolving) {
-    for (const offspringId of record.offspringIds) {
-      const child = ctx.creatures[offspringId]
-      if (!child) continue
-      const phen = computePhenotype(child, ctx.species)[ctx.geneId]
-      if (phen === recessiveAllele.symbol) return true
-    }
-  }
-  return false
-}
-
-// Strict tier: player's hypothesized parent genotypes must be supported by a
-// chi-square goodness-of-fit test against ALL observed offspring from that
-// creature's crosses. p-value threshold 0.05 (fail-to-reject means the
-// observed distribution is consistent with the hypothesis's expected ratios).
-//
-// Only runs when the medium-tier evidence bar is also met — chi-square with
-// too little data isn't meaningful.
-function hasStrictEvidence(ctx: ValidationContext): boolean {
-  if (!hasMediumEvidence(ctx)) return false
-  // Gather every offspring where this creature was a parent.
-  const crossesInvolving = ctx.crossHistory.filter(
-    r => r.motherId === ctx.creature.id || r.fatherId === ctx.creature.id,
-  )
-  const offspring: Creature[] = []
-  for (const record of crossesInvolving) {
-    for (const oId of record.offspringIds) {
-      const child = ctx.creatures[oId]
-      if (child) offspring.push(child)
-    }
-  }
-  // Need a reasonable sample. Chi-square with expected counts under 5 per
-  // category is unreliable; require ≥20 total observations before applying.
-  if (offspring.length < 20) return false
-
-  // Bucket the offspring by phenotype for this gene.
-  const observed: Record<string, number> = {}
-  for (const child of offspring) {
-    const phen = computePhenotype(child, ctx.species)[ctx.geneId]
-    if (!phen) continue
-    observed[phen] = (observed[phen] ?? 0) + 1
-  }
-
-  // Compute the expected phenotype distribution for the hypothesized cross.
-  // Because a hypothesis is only about ONE creature's genotype, we look up the
-  // other-parent's genotype from the most-crossed partner for this creature.
-  const partnerCounts = new Map<string, number>()
-  for (const r of crossesInvolving) {
-    const partnerId = r.motherId === ctx.creature.id ? r.fatherId : r.motherId
-    partnerCounts.set(partnerId, (partnerCounts.get(partnerId) ?? 0) + 1)
-  }
-  const dominantPartnerId = [...partnerCounts.entries()].sort(
-    (a, b) => b[1] - a[1],
-  )[0]?.[0]
-  if (!dominantPartnerId) return false
-  const partner = ctx.creatures[dominantPartnerId]
-  if (!partner) return false
-
-  const expectedProbs = expectedPhenotypeDistribution(
-    ctx,
-    partner,
-  )
-  if (!expectedProbs) return false
-
-  // Compute chi-square = Σ (O - E)² / E across all buckets in the expected.
-  const total = offspring.length
-  let chiSq = 0
-  let degreesOfFreedom = -1 // one fewer than the number of categories
-  for (const [phen, prob] of Object.entries(expectedProbs)) {
-    const expected = prob * total
-    if (expected <= 0) continue
-    const obs = observed[phen] ?? 0
-    chiSq += Math.pow(obs - expected, 2) / expected
-    degreesOfFreedom++
-  }
-  if (degreesOfFreedom < 1) return false
-
-  const pValue = chiSquarePValue(chiSq, degreesOfFreedom)
-  // Fail-to-reject at α = 0.05 → hypothesis is consistent with observation.
-  return pValue >= 0.05
-}
-
-// Compute the expected phenotype distribution for THIS creature's gene, given
-// the hypothesized genotype for the creature and the partner's actual genotype.
-// Returns null if the required data isn't available.
-function expectedPhenotypeDistribution(
-  ctx: ValidationContext,
-  partner: Creature,
-): Record<string, number> | null {
-  const gene = ctx.species.genes.find(g => g.id === ctx.geneId)
-  if (!gene) return null
-
-  // Convert the hypothesis string to an allele-id pair using symbol → id lookup.
-  const hypAlleles: string[] = []
-  for (const ch of ctx.hypothesizedGenotype) {
-    const found = gene.alleles.find(a => a.symbol === ch)
-    if (found) hypAlleles.push(found.id)
-  }
-  if (hypAlleles.length !== 2) return null
-
-  const partnerAlleles = partner.genotype[ctx.geneId]
-  if (!partnerAlleles || partnerAlleles.length !== 2) return null
-
-  // Build a lightweight probability map of offspring genotypes, then convert
-  // each to its phenotype and sum.
-  const outcomeCounts = new Map<string, number>()
-  for (const a of hypAlleles) {
-    for (const b of partnerAlleles) {
-      const alleles = [a, b]
-      // Build a preview creature to run through computePhenotype.
-      const preview: Creature = {
-        id: 'chi-preview',
-        speciesId: ctx.species.id,
-        sex: 'F',
-        genotype: { [ctx.geneId]: alleles },
-        age: 0,
-        scope: 'trophy',
-      }
-      const phen = computePhenotype(preview, ctx.species)[ctx.geneId]
-      if (!phen) continue
-      outcomeCounts.set(phen, (outcomeCounts.get(phen) ?? 0) + 1)
-    }
-  }
-  const totalOutcomes = [...outcomeCounts.values()].reduce((s, v) => s + v, 0)
-  if (totalOutcomes === 0) return null
-  const dist: Record<string, number> = {}
-  for (const [phen, count] of outcomeCounts) {
-    dist[phen] = count / totalOutcomes
-  }
-  return dist
 }
 
 // P-value for a chi-square statistic with given degrees of freedom. Uses the

@@ -194,7 +194,11 @@ export interface Mission {
   clientBrief: string
   targetPhenotype: Record<string, string>
   visibleGeneIds: string[]
-  labStarters: [LabStarterCreature, LabStarterCreature]
+  // The lab's sample pool. Can hold 2, 3, or 4 starters — chapters teaching
+  // mono/dihybrid puzzles will supply exactly two, but pooling missions ship
+  // three or four so the player has to CHOOSE which pair to cross (and might
+  // choose wrong, needing an F2 breeding to fix it).
+  labStarters: LabStarterCreature[]
   breedBudget?: number // undefined = unlimited (still solvable, no ★ though)
   mode: MissionMode
   rewardPreviewText: string

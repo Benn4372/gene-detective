@@ -551,34 +551,26 @@ export const useGameStore = create<GameState & GameActions>()(
           })
           return
         }
-        const [s1, s2] = mission.labStarters
-        const id1 = nextId('c')
-        const id2 = nextId('c')
-        const newCreatures: Record<string, Creature> = {
-          [id1]: {
-            id: id1,
+        const newCreatures: Record<string, Creature> = {}
+        const starterIds: string[] = []
+        for (const s of mission.labStarters) {
+          const id = nextId('c')
+          starterIds.push(id)
+          newCreatures[id] = {
+            id,
             speciesId: blobSpecies.id,
-            ownerName: s1.defaultName,
-            sex: s1.sex,
-            genotype: s1.genotype,
+            ownerName: s.defaultName,
+            sex: s.sex,
+            genotype: s.genotype,
             age: 1,
             scope: missionScope(missionId),
-          },
-          [id2]: {
-            id: id2,
-            speciesId: blobSpecies.id,
-            ownerName: s2.defaultName,
-            sex: s2.sex,
-            genotype: s2.genotype,
-            age: 1,
-            scope: missionScope(missionId),
-          },
+          }
         }
         set(s => ({
           creatures: { ...s.creatures, ...newCreatures },
           missionCreatures: {
             ...s.missionCreatures,
-            [missionId]: { sample1Id: id1, sample2Id: id2 },
+            [missionId]: { starterIds },
           },
           activeMissionId: missionId,
           activeScreen: { kind: 'mission', missionId },
