@@ -85,6 +85,7 @@ Today's puzzle: the father is a known **Gg** carrier. The mother is a mystery â€
         { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'Gg' },
         { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'Gg' },
       ],
+      supportingGeneIds: ['tail'],
       litterSize: 8,
       scaffolding: {
         onOpen:
@@ -129,6 +130,7 @@ Today's puzzle: the father is a known **Gg** carrier. The mother is a mystery â€
         { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'Gg' },
         { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'Gg' },
       ],
+      supportingGeneIds: ['tail'],
       litterSize: 8,
       validationTier: 'medium',
       hints: [

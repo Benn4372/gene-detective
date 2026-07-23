@@ -595,9 +595,23 @@ function StageWithWorkbench({
     chapterCreatures.fatherId,
   )
 
-  const geneIds = useMemo(
+  // answerGeneIds = the genes the player MUST solve (correctAssertions).
+  // visibleGeneIds = answer genes plus any supporting genes the chapter
+  // declared for context (e.g. Ch 9 shows 'tail' alongside 'tailGrowth' so
+  // the epistasis interaction is legible in the offspring tally, even
+  // though the player only answers for tailGrowth).
+  const answerGeneIds = useMemo(
     () => [...new Set(stage.correctAssertions.map(a => a.geneId))],
     [stage],
+  )
+  const geneIds = useMemo(
+    () => [
+      ...new Set([
+        ...answerGeneIds,
+        ...('supportingGeneIds' in stage ? stage.supportingGeneIds ?? [] : []),
+      ]),
+    ],
+    [answerGeneIds, stage],
   )
 
   const pool: Creature[] = useMemo(
@@ -697,7 +711,7 @@ function StageWithWorkbench({
         <AnswerPanel
           motherId={chapterCreatures.motherId}
           fatherId={chapterCreatures.fatherId}
-          geneIds={geneIds}
+          geneIds={answerGeneIds}
           correctAssertions={stage.correctAssertions}
           guidedScaffolding={
             stageKey === 'guided' && 'scaffolding' in stage

@@ -7,6 +7,10 @@ import { genotypePlaceholder } from '../../renderer/genotypePlaceholder'
 import { phenotypeLabel } from '../../renderer/phenotypeLabels'
 import { SexBadge } from '../atoms/SexBadge'
 import { computePhenotype } from '../../engine/phenotype'
+import { PunnettGrid } from '../workbench/PunnettGrid'
+import { PunnettGridDihybrid } from '../workbench/PunnettGridDihybrid'
+import { PunnettGridSexLinked } from '../workbench/PunnettGridSexLinked'
+import { LinkageNotice } from '../workbench/LinkageNotice'
 
 interface Props {
   blobs: Creature[]
@@ -25,6 +29,20 @@ export function MissionNotebook({ blobs, visibleGeneIds }: Props) {
   const focused = blobs.find(b => b.id === focusId) ?? blobs[0]
   if (!focused) return null
   const phen = computePhenotype(focused, blobSpecies)
+
+  // Pick the two starter samples (parentIds === undefined) — those are the
+  // "parents" for the Punnett drawn below the notes. Missions rarely have
+  // an obvious F+M pair, so we pick the first female + first male we find.
+  const starters = blobs.filter(b => !b.parentIds)
+  const motherStarter = starters.find(b => b.sex === 'F')
+  const fatherStarter = starters.find(b => b.sex === 'M')
+  const canPunnett = !!motherStarter && !!fatherStarter && visibleGeneIds.length > 0
+
+  const firstGene = visibleGeneIds[0]
+    ? blobSpecies.genes.find(g => g.id === visibleGeneIds[0])
+    : null
+  const isMonohybridSexLinked =
+    visibleGeneIds.length === 1 && firstGene?.inheritanceModel === 'sexLinked'
   return (
     <div className="rounded-xl bg-[color:var(--paper)] border border-stone-300 p-4">
       <div className="flex items-center justify-between mb-3">
@@ -89,6 +107,42 @@ export function MissionNotebook({ blobs, visibleGeneIds }: Props) {
           })}
         </div>
       </div>
+
+      {/* Live Punnett of the two starter samples, driven by their notebook
+          guesses. Mission style — passive, always visible below the notes. */}
+      {canPunnett && (
+        <div className="mt-4 pt-4 border-t border-stone-200">
+          <div className="text-xs uppercase tracking-widest text-stone-500 mb-2">
+            Cross of the sample pair
+          </div>
+          {visibleGeneIds.length === 2 && (
+            <LinkageNotice geneIds={visibleGeneIds} />
+          )}
+          <div className="flex justify-center mt-2">
+            {isMonohybridSexLinked && visibleGeneIds[0] && (
+              <PunnettGridSexLinked
+                motherId={motherStarter!.id}
+                fatherId={fatherStarter!.id}
+                geneId={visibleGeneIds[0]}
+              />
+            )}
+            {!isMonohybridSexLinked && visibleGeneIds.length === 1 && visibleGeneIds[0] && (
+              <PunnettGrid
+                motherId={motherStarter!.id}
+                fatherId={fatherStarter!.id}
+                geneId={visibleGeneIds[0]}
+              />
+            )}
+            {visibleGeneIds.length === 2 && (
+              <PunnettGridDihybrid
+                motherId={motherStarter!.id}
+                fatherId={fatherStarter!.id}
+                geneIds={[visibleGeneIds[0]!, visibleGeneIds[1]!]}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

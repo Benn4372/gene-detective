@@ -89,6 +89,10 @@ So a tail-less blob could secretly be TT, Tt, or tt — you can't tell without b
         { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'Gg' },
         { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'Gg' },
       ],
+      // Tail is the observable trait — it goes on the offspring tally so
+      // the player can literally see "long × 3 / no tail × 1" ratios that
+      // reveal the gg homozygote hiding inside the tailGrowth cross.
+      supportingGeneIds: ['tail'],
       litterSize: 8,
       scaffolding: {
         onOpen:
@@ -137,6 +141,7 @@ So a tail-less blob could secretly be TT, Tt, or tt — you can't tell without b
         { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'Gg' },
         { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'gg' },
       ],
+      supportingGeneIds: ['tail'],
       litterSize: 8,
       validationTier: 'medium',
       hints: [

@@ -53,6 +53,12 @@ export interface ShowStage {
 export interface GuidedStage {
   starterCreatures: LessonStarterCreature[]
   correctAssertions: NotebookAssertion[]
+  // Extra genes to display alongside the answer genes — visible in the
+  // mystery-pair phenotype line, the offspring tally, and the notebook, but
+  // NOT required in the Final Answer. Useful when the observable phenotype
+  // depends on a gene the player doesn't need to solve for (Ch 9's tail
+  // gene shows up here alongside the answer's tailGrowth).
+  supportingGeneIds?: string[]
   litterSize: number
   scaffolding: {
     onOpen: string
@@ -65,6 +71,7 @@ export interface GuidedStage {
 export interface SoloStage {
   starterCreatures: LessonStarterCreature[]
   correctAssertions: NotebookAssertion[]
+  supportingGeneIds?: string[]
   litterSize: number
   validationTier: 'loose' | 'medium' | 'strict'
   hints: Hint[]
