@@ -1,46 +1,63 @@
 import { motion } from 'framer-motion'
 import { useGameStore } from '../../state/gameStore'
 import { BlobRenderer } from '../../renderer/BlobRenderer'
-import { blobSpecies } from '../../content'
+import { blobSpecies, chapters } from '../../content'
 import type { Creature } from '../../engine/types'
 
 // The very first screen the player sees. Not a menu — just a title, a hint
 // of atmosphere, and a single "Begin" button. Vanishes once markStationSeen()
 // is called and never comes back on this save.
 //
-// Landing blobs are deliberately simple: three variations of ONE trait
-// (antennae) — the same trait Chapter 1 teaches. Every other gene is left
-// absent so the render stays clean and matches what a first-time player
-// will see when they open the first chapter.
+// Three landing blobs, each a different personality: a horned striped
+// creature with a long tail, a finned no-glow-eyed blotched creature, and a
+// sparkling haloed creature. They show off the trait variety the player will
+// unlock while breeding through the game.
 export function LandingScreen() {
   const markSeen = useGameStore(s => s.markStationSeen)
 
   const demoBlobs: Creature[] = [
+    // "The warrior" — long horns, stripes, long tail
     {
-      id: 'landing-aa',
-      speciesId: blobSpecies.id,
-      sex: 'F',
-      genotype: { antennae: ['a', 'a'] },
-      age: 1,
-      scope: 'trophy',
-    },
-    {
-      id: 'landing-Aa',
-      speciesId: blobSpecies.id,
-      sex: 'F',
-      genotype: { antennae: ['A', 'a'] },
-      age: 1,
-      scope: 'trophy',
-    },
-    {
-      id: 'landing-AA',
+      id: 'landing-warrior',
       speciesId: blobSpecies.id,
       sex: 'M',
-      genotype: { antennae: ['A', 'A'] },
+      genotype: {
+        horns: ['L', 'L'],
+        pattern: ['R', 'R'],
+        tail: ['T', 'T'],
+      },
+      age: 1,
+      scope: 'trophy',
+    },
+    // "The angel" — mitochondrial halo, sparkle, antennae
+    {
+      id: 'landing-angel',
+      speciesId: blobSpecies.id,
+      sex: 'F',
+      genotype: {
+        mitoHalo: ['Q'],
+        sparkle: ['K', 'K'],
+        antennae: ['A', 'A'],
+      },
+      age: 1,
+      scope: 'trophy',
+    },
+    // "The sea blob" — fins, blotches, glowing eyes
+    {
+      id: 'landing-sea',
+      speciesId: blobSpecies.id,
+      sex: 'F',
+      genotype: {
+        fins: ['F', 'F'],
+        pattern: ['B', 'B'],
+        eyeGlow: ['G', 'G'],
+      },
       age: 1,
       scope: 'trophy',
     },
   ]
+
+  const chapterCount = chapters.length
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8 bg-[color:var(--paper)]">
@@ -62,9 +79,10 @@ export function LandingScreen() {
           You'll help figure out what.
         </div>
 
-        {/* Three demo blobs — same species, different antennae genotypes.
-            Deliberately calm so the intro isn't visually overwhelming. */}
-        <div className="flex items-center justify-center gap-8 mb-10">
+        {/* Three demo blobs — each a distinct personality, showing off
+            different traits the player will unlock over the game. Idle
+            float with varying delay so they don't move in lockstep. */}
+        <div className="flex items-end justify-center gap-8 mb-10">
           {demoBlobs.map((b, i) => (
             <motion.div
               key={b.id}
@@ -76,16 +94,18 @@ export function LandingScreen() {
                 delay: i * 0.6,
               }}
             >
-              <BlobRenderer creature={b} species={blobSpecies} size={110} />
+              <BlobRenderer creature={b} species={blobSpecies} size={140} />
             </motion.div>
           ))}
         </div>
 
         <div className="text-sm text-stone-600 mb-8 leading-relaxed">
           You are an apprentice at the <strong>Blob Research Station</strong>,
-          learning from Dr. Mendel and — later — a growing bench of mentors.
-          Fifty-four chapters. Every major concept in genetics, taught by
-          doing.
+          learning from Dr. Mendel and Prof. Weaver. {chapterCount} chapters
+          take you from simple dominance through linkage, epistasis,
+          modifier genes, mitochondrial inheritance, and more — every idea
+          taught by breeding a blob that proves it. Finish the arc to unlock
+          endless procedural puzzles in the field.
         </div>
 
         <motion.button
