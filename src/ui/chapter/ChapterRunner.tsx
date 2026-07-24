@@ -249,6 +249,40 @@ function WorkedExample({
   const [step, setStep] = useState(0)
   const [pMother, pFather] = worked.parents
 
+  // Detect any environmental genes in either parent. If present, we mount a
+  // temperature slider next to the demo so the player can actually SEE the
+  // gene switch on and off — the reason Ch11's show stage previously
+  // appeared to do nothing (default temp 50 < heatSpot threshold 70 means
+  // the H phenotype never expressed on the demo blobs).
+  const environmentalGeneIds = useMemo(() => {
+    const ids: string[] = []
+    for (const gene of blobSpecies.genes) {
+      if (gene.environmentalThreshold === undefined) continue
+      if (pMother[gene.id] || pFather[gene.id]) ids.push(gene.id)
+    }
+    return ids
+  }, [pMother, pFather])
+  const temperature = useGameStore(s => s.environmentTemperature)
+  const setTemperature = useGameStore(s => s.setEnvironmentTemperature)
+  // On mount for an environmental-gene demo, ensure the slider starts ABOVE
+  // any threshold so the effect is immediately visible; player can drag it
+  // down to see the gene switch off. Restored on unmount.
+  useEffect(() => {
+    if (environmentalGeneIds.length === 0) return
+    const previousTemp = temperature
+    const maxThreshold = Math.max(
+      ...environmentalGeneIds.map(id => {
+        const g = blobSpecies.genes.find(gg => gg.id === id)
+        return g?.environmentalThreshold ?? 0
+      }),
+    )
+    setTemperature(Math.min(100, maxThreshold + 15))
+    return () => {
+      setTemperature(previousTemp)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [environmentalGeneIds.join(',')])
+
   // Show a tiny "example blob" pair with narration steps.
   const motherPreview: Creature = {
     id: 'demo-mother',
@@ -358,6 +392,29 @@ function WorkedExample({
           />
         )}
 
+      {environmentalGeneIds.length > 0 && (
+        <div className="mt-3 rounded bg-amber-50 border border-amber-200 p-3">
+          <div className="text-[11px] uppercase tracking-wide text-amber-800 mb-1">
+            Temperature
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-stone-600">cold</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={temperature}
+              onChange={e => setTemperature(Number(e.target.value))}
+              className="flex-1 accent-amber-500"
+            />
+            <span className="text-xs text-stone-600">warm</span>
+            <span className="text-xs font-mono text-stone-700 w-8 text-right">{temperature}°</span>
+          </div>
+          <div className="text-[11px] italic text-stone-600 mt-1">
+            Drag to see the environmental gene switch on/off. Genotype doesn't change; phenotype does.
+          </div>
+        </div>
+      )}
       <div className="text-sm text-stone-800 italic text-center min-h-[3em] mt-3">
         {worked.narration[step]}
       </div>
