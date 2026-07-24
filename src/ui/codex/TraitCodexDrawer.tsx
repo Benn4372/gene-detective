@@ -205,35 +205,41 @@ function TraitsTab({
           ? blobSpecies.traits.find(t => t.id === gene.expressesTraits[0])
           : null
         return (
-          <section key={gene.id}>
+          <section key={gene.id} className="pb-6 border-b border-stone-200 last:border-b-0 last:pb-0">
             <h3 className="text-base font-semibold text-stone-800 mb-1 font-serif">
               {gene.name}
             </h3>
             {primaryTrait?.description && (
-              <div className="text-xs text-stone-700 italic mb-2 leading-snug">
+              <div className="text-xs text-stone-700 italic mb-3 leading-snug">
                 {primaryTrait.description}
               </div>
             )}
-            <div className="text-xs text-stone-500 mb-3 space-y-0.5">
-              <div>
-                <span className="text-stone-600 uppercase tracking-wide text-[10px]">Model</span>{' '}
-                <span className="font-mono">{gene.inheritanceModel.replace(/([A-Z])/g, ' $1').toLowerCase()}</span>
+            {/* Meta lines: each row has its own line with a distinct label
+                column and a value column that wraps below the label if it
+                overflows. Prevents adjacent-row visual collisions when the
+                drawer is narrow (mobile / split view). */}
+            <div className="text-xs text-stone-500 mb-4 space-y-1.5">
+              <div className="flex gap-2 flex-wrap items-baseline">
+                <span className="text-stone-600 uppercase tracking-wide text-[10px] w-14 flex-shrink-0">Model</span>
+                <span className="font-mono text-stone-700">{gene.inheritanceModel.replace(/([A-Z])/g, ' $1').toLowerCase()}</span>
               </div>
-              <div>
-                <span className="text-stone-600 uppercase tracking-wide text-[10px]">Locus</span>{' '}
-                <span className="font-mono">{gene.chromosome} @ {gene.locusCM} cM</span>
-                {chromosome && (
-                  <span className="italic text-stone-500 ml-1">({chromosome.type})</span>
-                )}
+              <div className="flex gap-2 flex-wrap items-baseline">
+                <span className="text-stone-600 uppercase tracking-wide text-[10px] w-14 flex-shrink-0">Locus</span>
+                <span className="font-mono text-stone-700">
+                  {gene.chromosome} @ {gene.locusCM} cM
+                  {chromosome && (
+                    <span className="italic text-stone-500 ml-1">({chromosome.type})</span>
+                  )}
+                </span>
               </div>
-              <div>
-                <span className="text-stone-600 uppercase tracking-wide text-[10px]">Alleles</span>{' '}
-                <span className="font-mono">
+              <div className="flex gap-2 flex-wrap items-baseline">
+                <span className="text-stone-600 uppercase tracking-wide text-[10px] w-14 flex-shrink-0">Alleles</span>
+                <span className="font-mono text-stone-700">
                   {[...gene.alleles].sort((a, b) => b.dominanceRank - a.dominanceRank).map(a => a.symbol).join(' > ')}
                 </span>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {rows.map((row, i) => {
                 const preview = makePreviewCreature(
                   gene,
