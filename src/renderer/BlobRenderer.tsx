@@ -1,6 +1,6 @@
 import type { Creature, Species } from '../engine/types'
 import { computePhenotype } from '../engine/phenotype'
-import { getLayer } from './layerRegistry'
+import { getLayer, getLayerRenderOrder } from './layerRegistry'
 import './layers/antennae'
 import './layers/spots'
 import './layers/pattern'
@@ -46,6 +46,16 @@ export function BlobRenderer({ creature, species, size = 120 }: Props) {
     >
       {/* All blob content scaled around the body's center (50, 55). */}
       <g transform={`translate(50 55) scale(${scale}) translate(-50 -55)`}>
+        {/* Under-body pass: layers that must tuck BEHIND the body silhouette
+            (tail base, side fins, heat aura). Their bases get overpainted by
+            the body ellipse so they look attached rather than pasted on. */}
+        {species.traits.map(t => {
+          if (t.id === 'size' || t.id === 'tailGrowth') return null
+          if (getLayerRenderOrder(t.id) !== 'under-body') return null
+          const Layer = getLayer(t.id)
+          return Layer ? <Layer key={`u-${t.id}`} phenotypeValue={phenotype[t.id]} creature={creature} /> : null
+        })}
+
         {/* Base blob body — neutral purple, colour is no longer a genotype. */}
         <ellipse cx="50" cy="55" rx="35" ry="30" fill="#c4b5fd" stroke="#7c3aed" strokeWidth="1.5" />
 
@@ -57,12 +67,14 @@ export function BlobRenderer({ creature, species, size = 120 }: Props) {
         {/* Mouth */}
         <path d="M 42 66 Q 50 71 58 66" stroke="#1e293b" strokeWidth="1.8" fill="none" strokeLinecap="round" />
 
-        {/* Trait-driven layers */}
+        {/* Over-body pass: everything that sits on the skin (spots, pattern),
+            protrudes from the head (antennae, horns, crest), or floats above
+            (halo, sparkle). */}
         {species.traits.map(t => {
-          if (t.id === 'size') return null // size drives group scale
-          if (t.id === 'tailGrowth') return null // masks tail, no direct render
+          if (t.id === 'size' || t.id === 'tailGrowth') return null
+          if (getLayerRenderOrder(t.id) === 'under-body') return null
           const Layer = getLayer(t.id)
-          return Layer ? <Layer key={t.id} phenotypeValue={phenotype[t.id]} creature={creature} /> : null
+          return Layer ? <Layer key={`o-${t.id}`} phenotypeValue={phenotype[t.id]} creature={creature} /> : null
         })}
       </g>
     </svg>

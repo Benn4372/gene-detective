@@ -1,22 +1,33 @@
 import { registerLayer, type LayerComponent } from '../layerRegistry'
 
-// Heat-spot layer — a bright orange radial glow on the blob's back when
-// phenotype is 'H'. Only appears at warm ambient temperatures (the phenotype
-// itself has been gated to recessive under the temperature threshold).
+// Heat-spot — a full-body radiating warmth aura when 'H' expresses. The
+// phenotype only expresses above the environmental temperature threshold
+// (70°) — below that the gene reads as recessive and no aura draws.
+//
+// Rendered UNDER the body so the aura's inner (transparent) region is
+// overpainted by the body itself, and only the outer bright ring reads.
+// Result: the blob looks like it's glowing from within, radiating outward.
 export const HeatSpotLayer: LayerComponent = ({ phenotypeValue }) => {
   if (phenotypeValue !== 'H') return null
   return (
     <g>
       <defs>
-        <radialGradient id="heat-spot-grad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#fb923c" stopOpacity="0.9" />
-          <stop offset="60%" stopColor="#f97316" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
+        <radialGradient
+          id="heat-body-aura"
+          cx="50"
+          cy="55"
+          r="46"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0.55" stopColor="#f97316" stopOpacity="0" />
+          <stop offset="0.72" stopColor="#fb923c" stopOpacity="0.7" />
+          <stop offset="0.88" stopColor="#f97316" stopOpacity="0.35" />
+          <stop offset="1" stopColor="#f97316" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <circle cx="50" cy="45" r="10" fill="url(#heat-spot-grad)" />
+      <ellipse cx="50" cy="55" rx="48" ry="43" fill="url(#heat-body-aura)" />
     </g>
   )
 }
 
-registerLayer('heatSpot', HeatSpotLayer)
+registerLayer('heatSpot', HeatSpotLayer, { renderOrder: 'under-body' })

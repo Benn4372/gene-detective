@@ -1,29 +1,73 @@
 import { registerLayer, type LayerComponent } from '../layerRegistry'
 
-// Horns layer — three phenotype variants sized by allele.
-// Phenotype value is the dominant allele's symbol: L / M / n.
-// Anything else (absent, unknown) → no horns drawn at all so blobs from
-// chapters that don't touch the horns gene stay clean.
+// Horns — three phenotype variants sized by the dominant allele's symbol.
+// Filled tapered horns instead of thin arcs so they read as biological
+// horns rather than pencil scribbles.
+//   'L' → long, tall tapered spikes with a shading stripe
+//   'M' → medium, shorter tapered spikes
+//   'n' → short, small round nubs (still visible at card size)
 export const HornsLayer: LayerComponent = ({ phenotypeValue }) => {
-  if (phenotypeValue !== 'L' && phenotypeValue !== 'M' && phenotypeValue !== 'n') {
-    return null
+  if (phenotypeValue === 'L') {
+    return (
+      <g>
+        <path
+          d="M 32 26 Q 30 12 27 3 Q 32 10 38 26 Z"
+          fill="#b45309"
+          stroke="#451a03"
+          strokeWidth="0.8"
+        />
+        <path
+          d="M 68 26 Q 70 12 73 3 Q 68 10 62 26 Z"
+          fill="#b45309"
+          stroke="#451a03"
+          strokeWidth="0.8"
+        />
+        {/* Shading stripe along each horn for dimension */}
+        <path
+          d="M 33 24 Q 31 15 29 8"
+          stroke="#78350f"
+          strokeWidth="0.6"
+          opacity="0.6"
+          fill="none"
+        />
+        <path
+          d="M 67 24 Q 69 15 71 8"
+          stroke="#78350f"
+          strokeWidth="0.6"
+          opacity="0.6"
+          fill="none"
+        />
+      </g>
+    )
   }
-  const height =
-    phenotypeValue === 'L' ? 20 : phenotypeValue === 'M' ? 12 : 5
-  if (height <= 0) return null
-  // Two symmetric horns curving outward from the top of the head. Height
-  // scales with allele length; short horns are still visible nubs.
-  const yTop = 25 - height
-  return (
-    <g stroke="#78350f" strokeWidth="2.2" strokeLinecap="round" fill="none">
-      <path
-        d={`M 36 25 Q 30 ${25 - height / 2} 28 ${yTop}`}
-      />
-      <path
-        d={`M 64 25 Q 70 ${25 - height / 2} 72 ${yTop}`}
-      />
-    </g>
-  )
+  if (phenotypeValue === 'M') {
+    return (
+      <g>
+        <path
+          d="M 32 26 Q 31 18 29 12 Q 34 16 38 26 Z"
+          fill="#b45309"
+          stroke="#451a03"
+          strokeWidth="0.8"
+        />
+        <path
+          d="M 68 26 Q 69 18 71 12 Q 66 16 62 26 Z"
+          fill="#b45309"
+          stroke="#451a03"
+          strokeWidth="0.8"
+        />
+      </g>
+    )
+  }
+  if (phenotypeValue === 'n') {
+    // Short — small round nubs. Still readable at card size.
+    return (
+      <g fill="#b45309" stroke="#451a03" strokeWidth="0.6">
+        <ellipse cx="35" cy="24" rx="3" ry="2.2" />
+        <ellipse cx="65" cy="24" rx="3" ry="2.2" />
+      </g>
+    )
+  }
+  return null
 }
 
 registerLayer('horns', HornsLayer)

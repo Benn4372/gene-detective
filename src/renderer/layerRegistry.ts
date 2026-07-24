@@ -11,14 +11,35 @@ export interface LayerProps {
 
 export type LayerComponent = ComponentType<LayerProps>
 
-const registry: Record<string, LayerComponent> = {}
+// A layer can opt into being drawn BEFORE the body ellipse — used for tails,
+// fins, heat auras, and anything else that should visually tuck behind the
+// body silhouette. Default is 'over-body' (drawn after body + eyes + mouth).
+export type RenderOrder = 'under-body' | 'over-body'
 
-export function registerLayer(traitId: string, component: LayerComponent): void {
-  registry[traitId] = component
+interface RegisteredLayer {
+  component: LayerComponent
+  renderOrder: RenderOrder
+}
+
+const registry: Record<string, RegisteredLayer> = {}
+
+export function registerLayer(
+  traitId: string,
+  component: LayerComponent,
+  opts?: { renderOrder?: RenderOrder },
+): void {
+  registry[traitId] = {
+    component,
+    renderOrder: opts?.renderOrder ?? 'over-body',
+  }
 }
 
 export function getLayer(traitId: string): LayerComponent | undefined {
-  return registry[traitId]
+  return registry[traitId]?.component
+}
+
+export function getLayerRenderOrder(traitId: string): RenderOrder {
+  return registry[traitId]?.renderOrder ?? 'over-body'
 }
 
 export function allLayerTraitIds(): string[] {
