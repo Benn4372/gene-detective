@@ -154,13 +154,39 @@ export function makePreviewCreature(
   // Only set the FOCUS gene. Every other gene is left absent so its layer's
   // `if (phenotypeValue !== '<dominant symbol>')` guard hides it — no
   // spurious antennae, no default horn nubs, no default blotches, no
-  // epistasis mask firing on a defaulted upstream, no polygenic collapsing
-  // to "smallest". The preview shows exactly the trait you're previewing.
+  // epistasis mask firing on a defaulted upstream. The preview shows
+  // exactly the trait you're previewing.
+  const genotype: Record<string, AlleleId[]> = { [gene.id]: [...alleles] }
+
+  // Polygenic exception: a size-gene preview with only itself set would run
+  // through expressPolygenic and materialise as "2" or "0" (a fraction of the
+  // full 6-allele range), rendering as a small blob. That's actively
+  // misleading — the point of the codex row is to compare THIS gene's states,
+  // not to show the aggregate size trait. Neutralise it by fixing every
+  // other polygenic gene to the SAME allele pattern as the focus so the
+  // aggregate always cancels out and every preview renders at neutral size.
+  if (gene.inheritanceModel === 'polygenic') {
+    // Every polygenic size gene contributes; set them all to the equivalent
+    // heterozygote-of-their-own-alleles so the "large-allele count" for the
+    // full trait always resolves to a moderate constant regardless of what
+    // the focus gene is set to. Preview scale becomes uniform, so the DD /
+    // Dd / dd cards differ only in whatever their own layer paints — nothing
+    // for size, so they read as identical body renders with different labels.
+    for (const g of species.genes) {
+      if (g.id === gene.id) continue
+      if (g.inheritanceModel !== 'polygenic') continue
+      // Pick the dominant + recessive alleles of that gene as a placeholder.
+      const dom = [...g.alleles].sort((a, b) => b.dominanceRank - a.dominanceRank)[0]
+      const rec = [...g.alleles].sort((a, b) => a.dominanceRank - b.dominanceRank)[0]
+      if (dom && rec) genotype[g.id] = [dom.id, rec.id]
+    }
+  }
+
   return {
     id: `preview-${gene.id}-${alleles.join('')}-${sex}`,
     speciesId: species.id,
     sex,
-    genotype: { [gene.id]: [...alleles] },
+    genotype,
     age: 0,
     scope: 'trophy',
   }
