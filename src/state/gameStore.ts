@@ -83,6 +83,7 @@ function initialState(): GameState {
     codexOpen: false,
     hasSeenStation: false,
     environmentTemperature: 50,
+    metabolismAssayEnabled: false,
   }
 }
 
@@ -122,6 +123,7 @@ interface GameActions {
   toggleCodex(): void
   markStationSeen(): void
   setEnvironmentTemperature(t: number): void
+  setMetabolismAssayEnabled(on: boolean): void
 }
 
 // -- store -----------------------------------------------------------------
@@ -783,6 +785,10 @@ export const useGameStore = create<GameState & GameActions>()(
         setEnvironmentTemperature(clamped)
         set({ environmentTemperature: clamped })
       },
+
+      setMetabolismAssayEnabled(on) {
+        set({ metabolismAssayEnabled: on })
+      },
     }),
     {
       name: 'gene-detective-save-v4',
@@ -824,6 +830,7 @@ export const useGameStore = create<GameState & GameActions>()(
           trophyBlobs: p.trophyBlobs ?? {},
           completedMissions: p.completedMissions ?? [],
           fieldAssignment: p.fieldAssignment ?? null,
+          metabolismAssayEnabled: p.metabolismAssayEnabled ?? false,
         }
       },
     },

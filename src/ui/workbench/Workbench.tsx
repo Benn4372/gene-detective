@@ -42,6 +42,9 @@ export function Workbench({
   const creatures = useGameStore(s => s.creatures)
   const envTemp = useGameStore(s => s.environmentTemperature ?? 50)
   const setEnvTemp = useGameStore(s => s.setEnvironmentTemperature)
+  const unlockedTraits = useGameStore(s => s.unlockedTraits)
+  const metabolismAssayEnabled = useGameStore(s => s.metabolismAssayEnabled)
+  const setMetabolismAssayEnabled = useGameStore(s => s.setMetabolismAssayEnabled)
 
   // Show a temperature slider when any tracked gene is temperature-sensitive.
   // Introduced in Ch11; hidden for chapters that don't touch it.
@@ -52,6 +55,15 @@ export function Workbench({
         return g?.environmentalThreshold !== undefined
       }),
     [visibleGeneIds],
+  )
+
+  // Show a metabolism-assay toggle whenever the antennae gene is in play AND
+  // the metabolism trait has been unlocked (Ch15+). Off by default; player
+  // flips it to reveal the pleiotropic flask on antennae-carrying blobs.
+  const showMetabolismAssay = useMemo(
+    () =>
+      unlockedTraits.includes('metabolism') && visibleGeneIds.includes('antennae'),
+    [unlockedTraits, visibleGeneIds],
   )
 
   const poolIds = useMemo(() => new Set(pool.map(c => c.id)), [pool])
@@ -169,6 +181,33 @@ export function Workbench({
             visibleGeneIds={visibleGeneIds}
             hue="sky"
           />
+        </div>
+      )}
+
+      {/* Metabolism assay toggle — only shown for chapters/missions where
+          the antennae gene matters AND the metabolism trait is unlocked. */}
+      {showMetabolismAssay && (
+        <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 flex items-center justify-between">
+          <div>
+            <div className="text-xs uppercase tracking-wide text-emerald-800 mb-0.5">
+              🧪 Metabolism assay
+            </div>
+            <div className="text-[11px] italic text-emerald-800">
+              Off by default. Turn on to reveal the pleiotropic flask on
+              antennae-carrying blobs.
+            </div>
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <span className="text-xs text-emerald-800">
+              {metabolismAssayEnabled ? 'on' : 'off'}
+            </span>
+            <input
+              type="checkbox"
+              checked={metabolismAssayEnabled}
+              onChange={e => setMetabolismAssayEnabled(e.target.checked)}
+              className="w-4 h-4 accent-emerald-600"
+            />
+          </label>
         </div>
       )}
 

@@ -91,4 +91,9 @@ export interface GameState {
   // Ambient temperature (0=cold, 100=hot). Used from Ch11 onwards by
   // temperature-sensitive traits. Default 50 (temperate).
   environmentTemperature: number
+  // Ch15 pleiotropy: the metabolism flask is invisible until the player
+  // enables an "assay" that reveals it. Off by default so post-Ch15 blobs
+  // don't wear a flask everywhere they render — the flask should be a
+  // deliberate check the player runs, not permanent decoration.
+  metabolismAssayEnabled: boolean
 }

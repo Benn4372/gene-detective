@@ -24,7 +24,7 @@ export const ch15: Chapter = {
     show: {
       body: `A **pleiotropic** gene affects more than one trait. The antennae gene is a classic case: A grows antennae AND boosts a specific metabolic marker; a does neither.
 
-See that tiny **green chemistry flask** on the blob's shoulder? That's the metabolic marker. Every blob with antennae has one; every antennae-less blob doesn't. Look through the bench: they always segregate together, because they're driven by the same gene.
+Flip on the **🧪 Metabolism assay** on the workbench below to reveal the marker — a small green chemistry flask on the shoulder of every antennae-carrying blob. Look through the bench: flask and antennae always segregate together, because they're driven by the same gene.
 
 The Codex (📖) also lists the metabolism trait — same genotype table as antennae, because it IS the same gene.`,
     },
