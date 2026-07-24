@@ -15,6 +15,7 @@ import './layers/braincrest'
 import './layers/broodPouch'
 import './layers/imprintMark'
 import './layers/tail'
+import './layers/metabolism'
 
 interface Props {
   creature: Creature
@@ -60,7 +61,6 @@ export function BlobRenderer({ creature, species, size = 120 }: Props) {
         {species.traits.map(t => {
           if (t.id === 'size') return null // size drives group scale
           if (t.id === 'tailGrowth') return null // masks tail, no direct render
-          if (t.id === 'metabolism') return null // pleiotropic chemical, invisible
           const Layer = getLayer(t.id)
           return Layer ? <Layer key={t.id} phenotypeValue={phenotype[t.id]} /> : null
         })}
