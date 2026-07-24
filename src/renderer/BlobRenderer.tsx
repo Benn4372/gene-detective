@@ -23,29 +23,19 @@ interface Props {
 }
 
 // Map the polygenic size phenotype (a numeric string 0-6, or undefined) to a
-// visual scale multiplier applied to the whole blob group.
+// visual scale multiplier applied to the whole blob group. Range is wide on
+// purpose so a size-0 and a size-6 read as noticeably different sizes at a
+// glance — no ring / dot markers, the scale alone carries the info.
 function scaleFor(sizePhenotype: string | undefined): number {
   const n = sizePhenotype === undefined ? NaN : Number(sizePhenotype)
   if (!Number.isFinite(n)) return 1
-  // 0 → 0.7, 6 → 1.3, linear in between; unset falls to 1.
-  return 0.7 + (0.6 * n) / 6
-}
-
-// The raw scale change alone isn't loud enough for players to distinguish a
-// small blob from a medium one at a glance. Add a categorical size marker:
-// outer halo ring for above-average, inner solid dot for below-average.
-function sizeMarker(sizePhenotype: string | undefined): 'large' | 'small' | null {
-  const n = sizePhenotype === undefined ? NaN : Number(sizePhenotype)
-  if (!Number.isFinite(n)) return null
-  if (n >= 4) return 'large'
-  if (n <= 2) return 'small'
-  return null
+  // 0 → 0.45, 6 → 1.55, linear in between; unset falls to 1.
+  return 0.45 + (1.1 * n) / 6
 }
 
 export function BlobRenderer({ creature, species, size = 120 }: Props) {
   const phenotype = computePhenotype(creature, species)
   const scale = scaleFor(phenotype.size)
-  const marker = sizeMarker(phenotype.size)
   return (
     <svg
       viewBox="0 0 100 100"
@@ -55,23 +45,9 @@ export function BlobRenderer({ creature, species, size = 120 }: Props) {
     >
       {/* All blob content scaled around the body's center (50, 55). */}
       <g transform={`translate(50 55) scale(${scale}) translate(-50 -55)`}>
-        {/* Large-size halo — sits outside the body, dashed emerald ring. */}
-        {marker === 'large' && (
-          <ellipse
-            cx="50" cy="55" rx="41" ry="36"
-            fill="none"
-            stroke="#10b981"
-            strokeWidth="1.4"
-            strokeDasharray="3 2"
-            opacity="0.85"
-          />
-        )}
         {/* Base blob body — neutral purple, colour is no longer a genotype. */}
         <ellipse cx="50" cy="55" rx="35" ry="30" fill="#c4b5fd" stroke="#7c3aed" strokeWidth="1.5" />
-        {/* Small-size marker — a small solid dot inside the body's centre. */}
-        {marker === 'small' && (
-          <circle cx="50" cy="55" r="3.5" fill="#4c1d95" opacity="0.55" />
-        )}
+
         {/* Eyes */}
         <circle cx="40" cy="50" r="3.5" fill="#1e293b" />
         <circle cx="60" cy="50" r="3.5" fill="#1e293b" />
