@@ -22,42 +22,14 @@ import { ch20 } from './ch20-x-inactivation'
 import { ch21 } from './ch21-modifier'
 import { ch22 } from './ch22-anticipation'
 import { ch23 } from './ch23-alt-sex'
-import { ch24 } from './ch24-nondisjunction'
-import { ch25 } from './ch25-deletions-duplications'
-import { ch26 } from './ch26-translocations'
-import {
-  ch27,
-  ch28,
-  ch29,
-  ch30,
-  ch31,
-  ch32,
-  ch33,
-  ch34,
-  ch35,
-} from './ch27-35-evolutionary'
-import {
-  ch36,
-  ch37,
-  ch38,
-  ch39,
-  ch40,
-  ch41,
-  ch42,
-  ch43,
-  ch44,
-  ch45,
-  ch46,
-  ch47,
-  ch48,
-  ch49,
-  ch50,
-  ch51,
-  ch52,
-  ch53,
-  ch54,
-} from './ch36-54-researcher'
 
+// Ch 24-54 removed: chromosome-disorder karyotype puzzles, evolutionary
+// population-drift sims, and researcher-tier widgets shipped as placeholder
+// content — the interaction modes were half-built (karyotype had no puzzle,
+// population sandbox showed percent readouts without the underlying blob
+// evolution rendering, and researcher widgets were mostly one-paragraph
+// stubs). Cutting them lets the game end at the coherent Mendel→through→
+// modifier→anticipation→alt-sex arc.
 export const chapters: Chapter[] = [
   ch01,
   ch02,
@@ -82,37 +54,6 @@ export const chapters: Chapter[] = [
   ch21,
   ch22,
   ch23,
-  ch24,
-  ch25,
-  ch26,
-  ch27,
-  ch28,
-  ch29,
-  ch30,
-  ch31,
-  ch32,
-  ch33,
-  ch34,
-  ch35,
-  ch36,
-  ch37,
-  ch38,
-  ch39,
-  ch40,
-  ch41,
-  ch42,
-  ch43,
-  ch44,
-  ch45,
-  ch46,
-  ch47,
-  ch48,
-  ch49,
-  ch50,
-  ch51,
-  ch52,
-  ch53,
-  ch54,
 ]
 
 export const chapterById: Record<string, Chapter> = Object.fromEntries(
