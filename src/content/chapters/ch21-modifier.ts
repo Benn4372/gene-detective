@@ -103,10 +103,11 @@ Today's puzzle: the father is a known **Pp** carrier. The mother is a mystery �
       },
     },
 
-    // Solo is the RECIPROCAL test cross — this time the mother is the known
-    // Pp carrier and the FATHER is the mystery. Every offspring inherits her
-    // p half the time. If any tail-less children appear, father must also be
-    // carrying p; if none appear across a big litter, he's PP.
+    // Solo is a fresh puzzle rather than the reciprocal — otherwise the
+    // "answer" is exactly the same Pp × Pp the guided asked for. This one
+    // pairs a known-tail-less (pp) mother with a mystery long-tailed father.
+    // Any tail-less offspring settles it: the father must be Pp carrying a
+    // silent p. If none appear across many crosses, father is PP.
     solo: {
       starterCreatures: [
         {
@@ -115,9 +116,9 @@ Today's puzzle: the father is a known **Pp** carrier. The mother is a mystery �
           genotype: {
             ...NEUTRAL_FEMALE,
             tail: ['T', 'T'],
-            tailGrowth: ['P', 'p'],
+            tailGrowth: ['p', 'p'],
           },
-          defaultName: 'Known-carrier mother',
+          defaultName: 'Tail-less mother',
         },
         {
           role: 'father',
@@ -131,7 +132,7 @@ Today's puzzle: the father is a known **Pp** carrier. The mother is a mystery �
         },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'Pp' },
+        { creatureRole: 'mother', geneId: 'tailGrowth', correctGenotype: 'pp' },
         { creatureRole: 'father', geneId: 'tailGrowth', correctGenotype: 'Pp' },
       ],
       supportingGeneIds: ['tail'],
@@ -140,15 +141,15 @@ Today's puzzle: the father is a known **Pp** carrier. The mother is a mystery �
       hints: [
         {
           stage: 'reframe',
-          text: 'This time the mother is the known Pp — the father is the unknown. If no tail-less offspring appear across many litters, father must be PP.',
+          text: 'Mother is visibly tail-less — she has to be pp. Every offspring inherits one of her p alleles automatically. So the father alone controls whether that offspring grows a tail.',
         },
         {
           stage: 'point',
-          text: "Tail-less offspring (pp) mean father carries p AND mother passed her p on the same gamete. Watch the tally.",
+          text: 'If ALL offspring grow tails → father is PP. If ROUGHLY HALF are tail-less → father is Pp, carrying one silent p.',
         },
         {
           stage: 'suggest',
-          text: 'If tail-less offspring appear, enter Pp for the father. The mother is stated as Pp in the brief.',
+          text: 'Look at the offspring tally. About 50/50 tailed vs tail-less → mother pp, father Pp.',
         },
       ],
     },

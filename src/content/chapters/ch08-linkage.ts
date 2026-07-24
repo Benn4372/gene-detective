@@ -119,53 +119,58 @@ Our antennae gene is at locus 50 on chromosome 1. Our new fins gene is at locus 
     // but the parental gamete classes flip — the rare classes are now AF and
     // af, while Af and aF dominate. Teaches that "linkage" doesn't automatically
     // mean "dominants travel together".
+    // Solo posts a DIFFERENT puzzle: a fully-dominant AAFF mother crossed
+    // with an Aa Ff double-heterozygote father in repulsion (Af / aF). The
+    // notebook answers are now AAFF for the mother and AaFf for the father —
+    // genuinely different from the guided AaFf × aa ff testcross so the
+    // player can't just retype what worked before.
     solo: {
       starterCreatures: [
         {
           role: 'mother',
           sex: 'F',
           genotype: {
-            antennae: ['A', 'a'],
-            fins: ['f', 'F'], // A on homolog 0 paired with f; a on homolog 1 with F
+            antennae: ['A', 'A'],
+            fins: ['F', 'F'],
             spots: ['s', 's'],
             tail: ['t', 't'],
             eyeGlow: ['g', 'g'],
           },
-          defaultName: 'Linked mother β',
+          defaultName: 'Double-dominant mother',
         },
         {
           role: 'father',
           sex: 'M',
           genotype: {
-            antennae: ['a', 'a'],
-            fins: ['f', 'f'],
+            antennae: ['A', 'a'],
+            fins: ['f', 'F'], // repulsion phase — Af on one homolog, aF on the other
             spots: ['s', 's'],
             tail: ['t', 't'],
             eyeGlow: ['g'],
           },
-          defaultName: 'Recessive tester',
+          defaultName: 'Repulsion father',
         },
       ],
       correctAssertions: [
-        { creatureRole: 'mother', geneId: 'antennae', correctGenotype: 'Aa' },
-        { creatureRole: 'mother', geneId: 'fins', correctGenotype: 'Ff' },
-        { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'aa' },
-        { creatureRole: 'father', geneId: 'fins', correctGenotype: 'ff' },
+        { creatureRole: 'mother', geneId: 'antennae', correctGenotype: 'AA' },
+        { creatureRole: 'mother', geneId: 'fins', correctGenotype: 'FF' },
+        { creatureRole: 'father', geneId: 'antennae', correctGenotype: 'Aa' },
+        { creatureRole: 'father', geneId: 'fins', correctGenotype: 'Ff' },
       ],
       litterSize: 10,
       validationTier: 'medium',
       hints: [
         {
           stage: 'reframe',
-          text: "Same mother genotype as before — Aa for antennae, Ff for fins — but the PHASE is different. Which pair of gametes will dominate this time?",
+          text: "Every offspring gets A from the mother AND F from the mother — she's pure double-dominant. So every child shows both traits, and the RECESSIVE-looking offspring reveal what the father hid.",
         },
         {
           stage: 'point',
-          text: 'This mother\'s alleles started as Af on one homolog, aF on the other. The parental gametes are now Af and aF; AF and af are the rare recombinants.',
+          text: 'The father is a linked double-heterozygote in REPULSION (Af on one homolog, aF on the other). His parental gametes are Af and aF — not AF/af as in the previous coupling puzzle.',
         },
         {
           stage: 'suggest',
-          text: 'The per-gene answer is still Aa Ff for mother and aa ff for father — the change is in which linkage phase the offspring reveal.',
+          text: 'Mother is AAFF (breeds true). Father is AaFf. The linkage phase only shows up in which parental class dominates the offspring.',
         },
       ],
     },
