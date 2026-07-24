@@ -182,6 +182,21 @@ export function Station() {
             accent="rose"
             onClick={() => setActiveScreen({ kind: 'settings' })}
           />
+
+          {/* Field Assignments unlock only once the player has finished the
+              main learning arc. Before that, showing an endless-puzzle mode
+              alongside the chapter progression is more distracting than
+              inviting. */}
+          {completedChapters.includes('ch23') && (
+            <StationCard
+              icon="🎲"
+              title="Field Assignments"
+              subtitle="Endless puzzles"
+              body="Rolls a random target phenotype and four starter blobs. Breed until it matches. No time limit, no scoring — just breeding."
+              accent="violet"
+              onClick={() => setActiveScreen({ kind: 'field-assignments' })}
+            />
+          )}
         </div>
 
         {/* Attribution — subtle, softly pulsing to imply flickering lamp */}
@@ -212,7 +227,7 @@ function StationCard({
   title: string
   subtitle: string
   body: string
-  accent: 'amber' | 'sky' | 'emerald' | 'rose'
+  accent: 'amber' | 'sky' | 'emerald' | 'rose' | 'violet'
   onClick(): void
   enabled?: boolean
 }) {
@@ -221,6 +236,7 @@ function StationCard({
     sky: 'bg-sky-100 border-sky-300',
     emerald: 'bg-emerald-100 border-emerald-300',
     rose: 'bg-rose-100 border-rose-300',
+    violet: 'bg-violet-100 border-violet-300',
   }
   return (
     <motion.button

@@ -38,6 +38,15 @@ export interface GameState {
   activeMissionId: string | null
   completedMissions: string[]
 
+  // -- Field Assignments ---------------------------------------------------
+  // Endless procedural puzzle mode unlocked after finishing Ch 23. Each
+  // roll generates a random target phenotype and 4 solvable starter blobs.
+  // Persists the CURRENT puzzle so a reload doesn't lose progress.
+  fieldAssignment: {
+    targetPhenotype: Record<string, string>
+    starterIds: string[]
+  } | null
+
   // -- Creatures -----------------------------------------------------------
   creatures: Record<string, Creature>
   // Per-chapter starter creature assignments (motherId / fatherId).
@@ -74,6 +83,7 @@ export interface GameState {
     | { kind: 'missions-board' }
     | { kind: 'trophy-shelf' }
     | { kind: 'settings' }
+    | { kind: 'field-assignments' }
   // Trait Codex drawer (right-side slide-in) — global, persisted.
   codexOpen: boolean
   // Runs the "auto-open Chapter Book on first-ever load" effect exactly once.

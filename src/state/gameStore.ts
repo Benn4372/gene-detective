@@ -7,6 +7,7 @@ import { makeRandom } from '../engine/random'
 import { computePhenotype } from '../engine/phenotype'
 import { validateHypothesis, canonicalizeHypothesis } from '../engine/validators'
 import { setEnvironmentTemperature } from '../engine/environment'
+import { generateFieldPuzzle } from '../engine/fieldAssignment'
 import { blobSpecies, chapterById, chapters, missionById } from '../content'
 import type { ChapterStage, CrossRecord, DifficultyTier, GameState } from './types'
 
@@ -39,6 +40,12 @@ function isMissionScope(scope: CreatureScope, missionId?: string): boolean {
 function isTrophyScope(scope: CreatureScope): boolean {
   return scope === 'trophy'
 }
+function fieldAssignmentScope(): CreatureScope {
+  return { kind: 'field-assignment' }
+}
+function isFieldAssignmentScope(scope: CreatureScope): boolean {
+  return typeof scope !== 'string' && scope.kind === 'field-assignment'
+}
 
 // -- initial state ---------------------------------------------------------
 
@@ -60,6 +67,7 @@ function initialState(): GameState {
     unlockedMentors: ['dr-mendel'],
     activeMissionId: null,
     completedMissions: [],
+    fieldAssignment: null,
     creatures: {},
     chapterCreatures: {},
     missionCreatures: {},
@@ -105,6 +113,10 @@ interface GameActions {
   // Non-breed missions (deduce-only, predict-only) complete without an actual
   // creature delivery — the mission ends when the puzzle is solved instead.
   completeMissionByPuzzle(missionId: string): void
+  // Field Assignments (procedural puzzles)
+  rollFieldAssignment(): void
+  clearFieldAssignment(): void
+  submitFieldAssignmentBlob(creatureId: string): boolean
   // UI
   setActiveScreen(next: GameState['activeScreen']): void
   toggleCodex(): void
@@ -656,6 +668,102 @@ export const useGameStore = create<GameState & GameActions>()(
         return true
       },
 
+      // -- Field Assignments -------------------------------------------
+
+      rollFieldAssignment() {
+        const state = get()
+        // Wipe any previous assignment's creatures + related scratch so a
+        // fresh roll starts clean.
+        const surviving: Record<string, Creature> = {}
+        const nextHypotheses = { ...state.hypotheses }
+        const nextValidated = { ...state.validated }
+        const nextNotebookGuess = { ...state.notebookGuess }
+        const nextNotebookNotes = { ...state.notebookNotes }
+        const nextNotes = { ...state.notes }
+        for (const [id, c] of Object.entries(state.creatures)) {
+          if (isFieldAssignmentScope(c.scope)) {
+            delete nextHypotheses[id]
+            delete nextValidated[id]
+            delete nextNotebookGuess[id]
+            delete nextNotebookNotes[id]
+            delete nextNotes[id]
+          } else {
+            surviving[id] = c
+          }
+        }
+        const nextHistory = state.crossHistory.filter(
+          r => surviving[r.motherId] && surviving[r.fatherId],
+        )
+
+        // Roll a fresh puzzle using currently-unlocked traits.
+        const puzzle = generateFieldPuzzle(state.unlockedTraits, blobSpecies)
+        const spawned: Record<string, Creature> = {}
+        const starterIds: string[] = []
+        for (const s of puzzle.starters) {
+          const id = nextId('c')
+          starterIds.push(id)
+          spawned[id] = {
+            id,
+            speciesId: blobSpecies.id,
+            ownerName: s.defaultName,
+            sex: s.sex,
+            genotype: s.genotype,
+            age: 1,
+            scope: fieldAssignmentScope(),
+          }
+        }
+        set({
+          creatures: { ...surviving, ...spawned },
+          hypotheses: nextHypotheses,
+          validated: nextValidated,
+          notebookGuess: nextNotebookGuess,
+          notebookNotes: nextNotebookNotes,
+          notes: nextNotes,
+          crossHistory: nextHistory,
+          fieldAssignment: {
+            targetPhenotype: puzzle.targetPhenotype,
+            starterIds,
+          },
+          activeScreen: { kind: 'field-assignments' },
+        })
+      },
+
+      clearFieldAssignment() {
+        // Discards the current puzzle + all field-scoped creatures. Called
+        // from the Return to Station button.
+        const state = get()
+        const surviving: Record<string, Creature> = {}
+        for (const [id, c] of Object.entries(state.creatures)) {
+          if (!isFieldAssignmentScope(c.scope)) surviving[id] = c
+        }
+        const nextHistory = state.crossHistory.filter(
+          r => surviving[r.motherId] && surviving[r.fatherId],
+        )
+        set({
+          creatures: surviving,
+          crossHistory: nextHistory,
+          fieldAssignment: null,
+          activeScreen: { kind: 'station' },
+        })
+      },
+
+      submitFieldAssignmentBlob(creatureId) {
+        const state = get()
+        const assignment = state.fieldAssignment
+        if (!assignment) return false
+        const creature = state.creatures[creatureId]
+        if (!creature) return false
+        if (!isFieldAssignmentScope(creature.scope)) return false
+        if (!creature.parentIds) return false
+        const phenotype = computePhenotype(creature, blobSpecies)
+        for (const [traitId, expected] of Object.entries(assignment.targetPhenotype)) {
+          if (phenotype[traitId] !== expected) return false
+        }
+        // Success — clear the puzzle so the runner can offer a new roll.
+        get().clearFieldAssignment()
+        return true
+      },
+
       // -- UI ------------------------------------------------------------
 
       setActiveScreen(next) {
@@ -715,6 +823,7 @@ export const useGameStore = create<GameState & GameActions>()(
           validated: p.validated ?? {},
           trophyBlobs: p.trophyBlobs ?? {},
           completedMissions: p.completedMissions ?? [],
+          fieldAssignment: p.fieldAssignment ?? null,
         }
       },
     },

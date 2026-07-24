@@ -7,6 +7,7 @@ import { TrophyShelf } from '../ui/trophy/TrophyShelf'
 import { SettingsScreen } from '../ui/settings/SettingsScreen'
 import { LandingScreen } from '../ui/landing/LandingScreen'
 import { TraitCodexDrawer } from '../ui/codex/TraitCodexDrawer'
+import { FieldAssignmentsRunner } from '../ui/field/FieldAssignmentsRunner'
 
 // Top-level screen router. `activeScreen` in the store drives which screen
 // renders. The Trait Codex drawer is always mounted so its 📖 button is
@@ -30,6 +31,7 @@ export default function App() {
       {activeScreen.kind === 'mission' && <MissionRunner />}
       {activeScreen.kind === 'trophy-shelf' && <TrophyShelf />}
       {activeScreen.kind === 'settings' && <SettingsScreen />}
+      {activeScreen.kind === 'field-assignments' && <FieldAssignmentsRunner />}
       <TraitCodexDrawer />
     </>
   )
