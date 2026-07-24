@@ -71,6 +71,13 @@ export function MissionRunner() {
   // starter samples belong to the lab and never leave.
   const deliverableOffspring = offspring.filter(c => !!c.parentIds)
 
+  const targetText = Object.entries(mission.targetPhenotype)
+    .map(([t, v]) => {
+      const trait = blobSpecies.traits.find(x => x.id === t)
+      return `${trait?.name ?? t}: ${phenotypeLabel(t, v)}`
+    })
+    .join(' · ')
+
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-5xl mx-auto">
@@ -96,11 +103,11 @@ export function MissionRunner() {
               {client.name}
             </div>
             <div className="text-sm text-stone-800 italic">"{mission.clientBrief}"</div>
-            {mission.breedBudget && (
-              <div className="text-xs text-stone-600 mt-2 font-mono">
-                Budget: {mission.breedBudget} crosses
-              </div>
-            )}
+            <div className="text-xs text-stone-700 mt-2 font-mono">
+              <strong className="text-amber-800">Wanted phenotype:</strong>{' '}
+              {targetText}
+              {mission.breedBudget ? ` · Budget: ${mission.breedBudget} crosses` : ''}
+            </div>
           </div>
         </div>
 
@@ -108,12 +115,11 @@ export function MissionRunner() {
             own panels and don't touch the sample bench. */}
         {mission.mode === 'breed' && (
           <div className="mb-4 rounded p-3 bg-stone-100 border border-stone-200 text-sm text-stone-700">
-            <strong>Lab rules:</strong> two unknown samples are on the bench.
-            Their genotypes are a mystery — you'll have to figure them out on
-            your own, with no notebook validation to help. Breed to test
-            hypotheses, fill in the notecards, and deliver a bred offspring
-            that matches the target. The two starter samples belong to the
-            lab and can never be delivered.
+            <strong>Lab rules:</strong> the samples on the bench are unknown —
+            no notebook validation here, only the client's wanted phenotype
+            to check against. Pick a pair, breed, inspect the offspring, and
+            deliver one whose phenotype matches. Starter samples belong to
+            the lab and can't be delivered; only offspring you breed can.
           </div>
         )}
 
@@ -211,6 +217,7 @@ export function MissionRunner() {
         starterCount={starters.length}
         visibleGeneIds={mission.visibleGeneIds}
         lastRejectedId={lastRejectedId}
+        targetText={targetText}
         onDeliver={id => {
           const ok = submit(mission.id, id)
           if (ok) {
@@ -398,6 +405,7 @@ interface DeliverProps {
   starterCount: number
   visibleGeneIds: string[]
   lastRejectedId: string | null
+  targetText: string
   onDeliver(id: string): void
 }
 
@@ -408,6 +416,7 @@ function DeliverPicker({
   starterCount,
   visibleGeneIds,
   lastRejectedId,
+  targetText,
   onDeliver,
 }: DeliverProps) {
   return (
@@ -416,9 +425,13 @@ function DeliverPicker({
         Only bred offspring can be delivered — the {starterCount} starter samples
         belong to the lab and never leave.
       </div>
+      <div className="mb-3 text-sm rounded p-2 bg-amber-50 border border-amber-200">
+        <strong className="text-amber-800">Wanted phenotype:</strong>{' '}
+        <span className="font-mono text-stone-800">{targetText}</span>
+      </div>
       <div className="mb-4 text-sm text-stone-700 italic">
         Delivered blobs go straight to the client — no take-backs. Pick the
-        one you think matches what they asked for.
+        one you think matches.
       </div>
       {lastRejectedId && (
         <div className="mb-3 p-2 text-xs bg-rose-50 border border-rose-200 rounded text-rose-900">
