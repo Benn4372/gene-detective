@@ -106,7 +106,11 @@ export function Workbench({
           <div className="text-xs uppercase tracking-wide text-stone-500 mb-2">
             Latest litter · {latestCross.offspringIds.length} offspring
           </div>
-          <div className="flex flex-wrap gap-3">
+          {/* Single horizontally-scrollable row instead of wrapping. Big
+              litters (10+ from polygenic chapters) used to eat 3-4 rows and
+              push the picker + Punnett off-screen. Scroll bar shows up only
+              when the row overflows the container. */}
+          <div className="flex gap-3 overflow-x-auto pb-2">
             {latestCross.offspringIds.map((id, idx) => {
               const child = creatures[id]
               if (!child) return null
@@ -122,12 +126,12 @@ export function Workbench({
                     stiffness: 260,
                     damping: 20,
                   }}
-                  className="flex flex-col items-center"
+                  className="flex flex-col items-center flex-shrink-0"
                 >
-                  <BlobRenderer creature={child} species={blobSpecies} size={64} />
+                  <BlobRenderer creature={child} species={blobSpecies} size={72} />
                   <div className="flex items-center gap-1 text-xs mt-1">
                     <SexBadge sex={child.sex} />
-                    <span className="font-mono text-stone-600">
+                    <span className="font-mono text-stone-600 whitespace-nowrap">
                       {visibleGeneIds.map(t => phenotypeLabel(t, phen[t])).join(' · ')}
                     </span>
                   </div>
@@ -250,7 +254,14 @@ function PickerColumn({
       {creatures.length === 0 ? (
         <div className="text-stone-500 italic text-sm">None available.</div>
       ) : (
-        <div className="flex flex-wrap gap-2">
+        // Cap the picker's height at ~2 rows of 88px cards and scroll
+        // vertically past that. Otherwise a pool of 12+ bred blobs pushes the
+        // Execute button below the fold. Overflow is inset so the scrollbar
+        // sits outside the card grid.
+        <div
+          className="flex flex-wrap gap-2 overflow-y-auto pr-1"
+          style={{ maxHeight: 250 }}
+        >
           {creatures.map(c => {
             const phen = computePhenotype(c, blobSpecies)
             const isSel = selectedId === c.id
@@ -267,8 +278,8 @@ function PickerColumn({
                     : 'border-stone-300 hover:border-stone-400')
                 }
               >
-                <BlobRenderer creature={c} species={blobSpecies} size={54} />
-                <div className="text-[10px] text-stone-500 truncate max-w-[90px]">
+                <BlobRenderer creature={c} species={blobSpecies} size={72} />
+                <div className="text-[10px] text-stone-500 truncate max-w-[110px]">
                   {name}
                 </div>
                 <div className="font-mono text-[10px] text-stone-700 mt-0.5">

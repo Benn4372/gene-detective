@@ -718,14 +718,17 @@ function StageWithWorkbench({
         />
       )}
 
-      {/* Mystery pair — small cards */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Mystery pair — big cards. Old 80px was too small to actually see
+          the redesigned trait art (tail tuft, spots, cow-print blotches
+          etc.). Bumped to 140 with wider gap; still fits comfortably in a
+          two-column grid at typical viewport widths. */}
+      <div className="grid grid-cols-2 gap-6">
         <div>
           <div className="text-xs text-stone-500 mb-1">Mother (mystery)</div>
           <BlobCard
             creature={creatures[chapterCreatures.motherId]!}
             visibleTraitIds={geneIds}
-            size={80}
+            size={140}
           />
         </div>
         <div>
@@ -733,7 +736,7 @@ function StageWithWorkbench({
           <BlobCard
             creature={creatures[chapterCreatures.fatherId]!}
             visibleTraitIds={geneIds}
-            size={80}
+            size={140}
           />
         </div>
       </div>

@@ -125,18 +125,20 @@ export function MissionRunner() {
 
         {mission.mode === 'breed' && (
           <>
-            {/* Sample notecards */}
+            {/* Sample notecards — horizontal scroll for benches with 4
+                starters, so cards can be reasonably sized without wrapping. */}
             <div className="mb-4">
               <div className="text-xs uppercase tracking-widest text-stone-500 mb-2">
                 Samples
               </div>
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-3 overflow-x-auto pb-2">
                 {starters.map(c => (
-                  <Notecard
-                    key={c.id}
-                    creature={c}
-                    visibleGeneIds={mission.visibleGeneIds}
-                  />
+                  <div key={c.id} className="flex-shrink-0">
+                    <Notecard
+                      creature={c}
+                      visibleGeneIds={mission.visibleGeneIds}
+                    />
+                  </div>
                 ))}
               </div>
             </div>
@@ -146,13 +148,17 @@ export function MissionRunner() {
                 <div className="text-xs uppercase tracking-widest text-stone-500 mb-2">
                   Bred offspring ({offspring.length})
                 </div>
-                <div className="flex gap-2 flex-wrap">
+                {/* Horizontal scroll — a mission with a budget of 20 and 6
+                    offspring per cross piles up 100+ blobs. Row scroll keeps
+                    them in one strip so the Deliver button stays on-screen. */}
+                <div className="flex gap-2 overflow-x-auto pb-2">
                   {offspring.map(c => (
-                    <Notecard
-                      key={c.id}
-                      creature={c}
-                      visibleGeneIds={mission.visibleGeneIds}
-                    />
+                    <div key={c.id} className="flex-shrink-0">
+                      <Notecard
+                        creature={c}
+                        visibleGeneIds={mission.visibleGeneIds}
+                      />
+                    </div>
                   ))}
                 </div>
               </div>
