@@ -62,7 +62,7 @@ export function BlobRenderer({ creature, species, size = 120 }: Props) {
           if (t.id === 'size') return null // size drives group scale
           if (t.id === 'tailGrowth') return null // masks tail, no direct render
           const Layer = getLayer(t.id)
-          return Layer ? <Layer key={t.id} phenotypeValue={phenotype[t.id]} /> : null
+          return Layer ? <Layer key={t.id} phenotypeValue={phenotype[t.id]} creature={creature} /> : null
         })}
       </g>
     </svg>

@@ -23,7 +23,7 @@ export const ch20: Chapter = {
     show: {
       body: `In female mammals, one X per cell is silenced during early development — the "**Barr body**". Which X gets silenced is random. Result: a heterozygous female is a **mosaic** of two different cell populations, each expressing a different X allele.
 
-Gg heterozygous females for the eyeGlow gene should show a patchy expression — some cells glow, some don't. In our simplified renderer we still show them as glowing overall.`,
+Look at the Gg mothers on the bench. One eye glows brightly, the other only faintly — the eye whose lineage cells silenced the G-carrying X reads dim. Small glow-flecks scatter across the body from cells that happened to keep the G-X active. Same genotype, mosaic phenotype.`,
     },
     guided: {
       starterCreatures: [
