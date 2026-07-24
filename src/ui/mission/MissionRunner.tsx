@@ -43,17 +43,25 @@ export function MissionRunner() {
   const starters = useMemo(() => pool.filter(c => !c.parentIds), [pool])
   const offspring = useMemo(() => pool.filter(c => !!c.parentIds), [pool])
 
-  // Default the workbench picker to the two starters on first load.
+  // Reset picker + seed the first F/M starter pair on mission change ONLY.
+  // Previously this depended on pool.length, which fired the effect after
+  // every breed and yanked the player's picks back to the starters — so
+  // newly-bred blobs could never be used as parents in a follow-up cross.
+  //
+  // Seeded once per mission id, only after starters exist. Once seeded we
+  // never overwrite the player's picks, no matter how the pool changes.
+  const missionKey = activeMissionId ?? ''
+  const seededForRef = useRef<string>('')
   useEffect(() => {
-    setMotherId(null)
-    setFatherId(null)
+    if (seededForRef.current === missionKey) return
+    const starterPool = pool.filter(c => !c.parentIds)
+    if (starterPool.length === 0) return // wait for starters to spawn
+    seededForRef.current = missionKey
     setDeliverOpen(false)
-    const s = pool.filter(c => !c.parentIds)
-    const f = s.find(c => c.sex === 'F')
-    const m = s.find(c => c.sex === 'M')
-    if (f) setMotherId(f.id)
-    if (m) setFatherId(m.id)
-  }, [activeMissionId, pool.length]) // eslint-disable-line react-hooks/exhaustive-deps
+    setMotherId(starterPool.find(c => c.sex === 'F')?.id ?? null)
+    setFatherId(starterPool.find(c => c.sex === 'M')?.id ?? null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missionKey, pool.length])
 
   if (!mission || !client) {
     return <div className="min-h-screen p-6 text-stone-500 italic">No mission open.</div>
